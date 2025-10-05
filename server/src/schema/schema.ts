@@ -1,0 +1,92 @@
+import { pgTable, text, timestamp, uuid, varchar, integer, primaryKey } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+
+// Korisnici - Povezujemo se s Firebase Auth putem ID-a
+export const users = pgTable('users', {
+  id: text('id').primaryKey(), // Firebase UID je string
+  email: text('email').notNull().unique(),
+});
+
+// Projekti - Glavni kontejner za priču
+export const projects = pgTable('projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 256 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  logline: text('logline'),
+  premise: text('premise'),
+  theme: text('theme'),
+});
+
+// Likovi
+export const characters = pgTable('characters', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 256 }).notNull(),
+    role: text('role'),
+    motivation: text('motivation'),
+    arcStart: text('arc_start'),
+    arcEnd: text('arc_end'),
+    projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+});
+
+// Lokacije
+export const locations = pgTable('locations', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 256 }).notNull(),
+    description: text('description'),
+    projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+});
+
+// Scene
+export const scenes = pgTable('scenes', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 256 }).notNull(),
+    summary: text('summary'),
+    order: integer('order').notNull().default(0),
+    projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+    locationId: uuid('location_id').references(() => locations.id),
+});
+
+// VEZNA TABLICA: Many-to-Many veza između Likova i Scena
+export const charactersToScenes = pgTable('characters_to_scenes', {
+    characterId: uuid('character_id').notNull().references(() => characters.id, { onDelete: 'cascade' }),
+    sceneId: uuid('scene_id').notNull().references(() => scenes.id, { onDelete: 'cascade' }),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.characterId, t.sceneId] }),
+}));
+
+
+// DEFINIRANJE RELACIJA (kako Drizzle razumije veze)
+
+export const usersRelations = relations(users, ({ many }) => ({
+    projects: many(projects),
+}));
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+    user: one(users, { fields: [projects.userId], references: [users.id] }),
+    characters: many(characters),
+    locations: many(locations),
+    scenes: many(scenes),
+}));
+
+export const charactersRelations = relations(characters, ({ one, many }) => ({
+    project: one(projects, { fields: [characters.projectId], references: [projects.id] }),
+    charactersToScenes: many(charactersToScenes),
+}));
+
+export const locationsRelations = relations(locations, ({ one, many }) => ({
+    project: one(projects, { fields: [locations.projectId], references: [projects.id] }),
+    scenes: many(scenes),
+}));
+
+export const scenesRelations = relations(scenes, ({ one, many }) => ({
+    project: one(projects, { fields: [scenes.projectId], references: [projects.id] }),
+    location: one(locations, { fields: [scenes.locationId], references: [locations.id] }),
+    charactersToScenes: many(charactersToScenes),
+}));
+
+export const charactersToScenesRelations = relations(charactersToScenes, ({ one }) => ({
+    character: one(characters, { fields: [charactersToScenes.characterId], references: [characters.id] }),
+    scene: one(scenes, { fields: [charactersToScenes.sceneId], references: [scenes.id] }),
+}));

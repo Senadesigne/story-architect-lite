@@ -1,4 +1,7 @@
-- Tech stack: React (vite), Tailwind, ShadCN, Firebase Auth, Supabase postgres, pnpm, Node.JS, Hono API
-- Use `pnpm add` when installing new packages.
-- Use `npx shadcn add` to add new shadcn components.
-- You are not able to see or modify .env files directly - so tell the user what they should add to the file if needed.
+ Glavni tehnološki okvir: React (Vite), TypeScript, Node.js (Hono API), PostgreSQL s Drizzle ORM, Tailwind CSS, ShadCN komponente i Zustand za globalno stanje.
+- Slijedi funkcionalni programski stil s jasnim, malim i reaktivnim komponentama.
+- Za dodavanje novih paketa, uvijek koristi naredbu `pnpm add`.
+- Za dodavanje novih ShadCN komponenti, koristi naredbu `npx shadcn-ui add`.
+- Sva interakcija s bazom podataka na backendu mora ići isključivo preko Drizzle ORM-a.
+- Uvijek se pridržavaj sheme baze podataka koja je definirana u datoteci `drizzle/schema.ts`.
+- Nisi u mogućnosti vidjeti ili mijenjati `.env` datoteke. Ako su potrebne promjene, jasno uputi korisnika što treba dodati ili izmijeniti.
