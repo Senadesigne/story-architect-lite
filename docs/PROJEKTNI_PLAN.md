@@ -61,8 +61,6 @@ Epic: MVP-3: Faza 4 - Razvoj Likova
 [ TRENUTNO RADIMO (In Progress) ]
 Epic: MVP-1: Dashboard i Upravljanje Projektima
 
-Zadatak 1.1 (Backend): Kreirati API rutu (GET /api/projects) koja dohvaća sve projekte za prijavljenog korisnika.
-
 Zadatak 1.2 (Backend): Kreirati API rutu (POST /api/projects) koja stvara novi, prazan projekt za prijavljenog korisnika.
 
 Zadatak 1.3 (Frontend): Dizajnirati i implementirati osnovni UI za Dashboard stranicu (/dashboard).
@@ -70,6 +68,11 @@ Zadatak 1.3 (Frontend): Dizajnirati i implementirati osnovni UI za Dashboard str
 Zadatak 1.4 (Frontend): Prikazati listu projekata dohvaćenih s backenda.
 
 Zadatak 1.5 (Frontend): Implementirati funkcionalnost gumba "+ Novi Projekt" koji poziva backend i osvježava listu.
+
+[ ZAVRŠENO (Done) ]
+Epic: MVP-1: Dashboard i Upravljanje Projektima
+
+✅ Zadatak 1.1 (Backend): Kreirati API rutu (GET /api/projects) koja dohvaća sve projekte za prijavljenog korisnika.
 
 [ ZAVRŠENO (Done) ]
 Epic: MVP-0: Postavljanje Projekta
@@ -81,6 +84,7 @@ Epic: MVP-0: Postavljanje Projekta
 ✅ Definiranje i primjena sheme baze podataka.
 
 ✅ Uspješno postavljanje na GitHub.
+
 
 3. Naš Tijek Rada (Workflow) - "The Perfect Workflow"
 Slijedimo precizan, iterativni proces inspiriran najboljim praksama za rad s AI alatima.
