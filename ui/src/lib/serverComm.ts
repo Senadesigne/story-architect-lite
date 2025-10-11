@@ -47,7 +47,12 @@ async function fetchWithAuth(
 
 // API endpoints
 export async function getCurrentUser() {
-  const response = await fetchWithAuth('/api/v1/protected/me');
+  const response = await fetchWithAuth('/api/user');
+  return response.json();
+}
+
+export async function getProjects() {
+  const response = await fetchWithAuth('/api/projects');
   return response.json();
 }
 
@@ -65,5 +70,6 @@ export async function getCurrentUser() {
 
 export const api = {
   getCurrentUser,
+  getProjects,
   // Add other API endpoints here
 }; 
