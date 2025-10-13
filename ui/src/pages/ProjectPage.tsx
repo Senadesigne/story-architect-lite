@@ -1,11 +1,19 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { api } from '@/lib/serverComm';
 import { Project, ProjectUpdateData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+
+// Constants for timing
+const AUTOSAVE_DELAY = 3000; // 3 seconds
+const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
+const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
+
+// Type definition for project fields
+type ProjectField = 'logline' | 'premise' | 'theme';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -17,14 +25,37 @@ export function ProjectPage() {
     premise: '',
     theme: ''
   });
-  const [saveStatus, setSaveStatus] = useState<{ [key: string]: 'saving' | 'saved' | null }>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
+  const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
+  const debounceTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
 
-  const handleSave = async (field: string, value: string) => {
-    if (!projectId || isSaving) return;
+  // Helper function for clearing save timeouts
+  const clearFieldTimeout = useCallback((field: ProjectField) => {
+    const timeout = saveTimeoutsRef.current[field];
+    if (timeout) {
+      clearTimeout(timeout);
+      delete saveTimeoutsRef.current[field];
+    }
+  }, []);
+
+  // Helper function for clearing debounce timeouts
+  const clearDebounceTimeout = useCallback((field: ProjectField) => {
+    const timeout = debounceTimeoutsRef.current[field];
+    if (timeout) {
+      clearTimeout(timeout);
+      delete debounceTimeoutsRef.current[field];
+    }
+  }, []);
+
+  const handleSave = useCallback(async (field: ProjectField, value: string) => {
+    if (!projectId) return;
     
-    setIsSaving(true);
+    // Check if this field is already being saved
+    if (saveStatus[field] === 'saving') return;
+    
+    // Clear existing timeout for this field before starting new save operation
+    clearFieldTimeout(field);
+    
     setSaveStatus(prev => ({ ...prev, [field]: 'saving' }));
     
     try {
@@ -33,31 +64,45 @@ export function ProjectPage() {
       setProject(updatedProject);
       setSaveStatus(prev => ({ ...prev, [field]: 'saved' }));
       
-      // Sakrij "saved" indikator nakon 3 sekunde
-      setTimeout(() => {
+      // Hide "saved" indicator after timeout
+      const timeout = setTimeout(() => {
         setSaveStatus(prev => ({ ...prev, [field]: null }));
-      }, 3000);
+        delete saveTimeoutsRef.current[field];
+      }, SAVE_INDICATOR_DISPLAY_TIME);
+      
+      saveTimeoutsRef.current[field] = timeout;
     } catch (error: any) {
       console.error('Error saving project:', error);
-      setSaveStatus(prev => ({ ...prev, [field]: null }));
-      // Možemo dodati toast notifikaciju za grešku
-    } finally {
-      setIsSaving(false);
+      setSaveStatus(prev => ({ ...prev, [field]: 'error' }));
+      
+      // Hide error indicator after timeout
+      const timeout = setTimeout(() => {
+        setSaveStatus(prev => ({ ...prev, [field]: null }));
+        delete saveTimeoutsRef.current[field];
+      }, ERROR_INDICATOR_DISPLAY_TIME);
+      
+      saveTimeoutsRef.current[field] = timeout;
     }
-  };
+  }, [projectId, saveStatus, clearFieldTimeout]);
 
-  const handleFieldChange = (field: keyof ProjectUpdateData, value: string) => {
+  const retryFieldSave = useCallback((field: ProjectField) => {
+    const currentValue = formData[field];
+    handleSave(field, currentValue);
+  }, [formData, handleSave]);
+
+  const handleFieldChange = useCallback((field: ProjectField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Debounce logika
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
+    // Debounce logic - field-specific
+    clearDebounceTimeout(field);
     
-    debounceRef.current = setTimeout(() => {
+    const timeout = setTimeout(() => {
       handleSave(field, value);
-    }, 1000);
-  };
+      delete debounceTimeoutsRef.current[field];
+    }, AUTOSAVE_DELAY);
+    
+    debounceTimeoutsRef.current[field] = timeout;
+  }, [clearDebounceTimeout, handleSave]);
 
   const fetchProject = async () => {
     if (!projectId) {
@@ -72,7 +117,7 @@ export function ProjectPage() {
     try {
       const data = await api.getProject(projectId);
       setProject(data);
-      // Inicijalizacija form podataka
+      // Initialize form data
       setFormData({
         logline: data.logline || '',
         premise: data.premise || '',
@@ -96,22 +141,36 @@ export function ProjectPage() {
     fetchProject();
   }, [projectId]);
 
-  // Cleanup debounce na unmount
+  // Cleanup all timeouts on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      // Clear all save timeouts
+      Object.values(saveTimeoutsRef.current).forEach(timeout => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      });
+      saveTimeoutsRef.current = {};
+      
+      // Clear all debounce timeouts
+      Object.values(debounceTimeoutsRef.current).forEach(timeout => {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      });
+      debounceTimeoutsRef.current = {};
     };
   }, []);
 
-  const renderSaveIndicator = (field: string) => {
+  const renderSaveIndicator = useMemo(() => (field: ProjectField) => {
     const status = saveStatus[field];
     if (!status) return null;
     
+    const baseClasses = "text-sm ml-2 inline-flex items-center";
+    
     if (status === 'saving') {
       return (
-        <span className="text-sm text-muted-foreground ml-2">
+        <span className={`${baseClasses} text-muted-foreground`}>
           Spremam...
         </span>
       );
@@ -119,14 +178,32 @@ export function ProjectPage() {
     
     if (status === 'saved') {
       return (
-        <span className="text-sm text-green-600 ml-2">
+        <span className={`${baseClasses} text-gray-500`}>
           Spremljeno ✓
         </span>
       );
     }
     
+    if (status === 'error') {
+      return (
+        <div className={`${baseClasses} text-red-600`}>
+          <span className="text-sm">
+            Greška pri spremanju ❌
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-2 h-6 px-2 text-xs"
+            onClick={() => retryFieldSave(field)}
+          >
+            Pokušaj ponovno
+          </Button>
+        </div>
+      );
+    }
+    
     return null;
-  };
+  }, [saveStatus, retryFieldSave]);
 
   if (isLoading) {
     return (
@@ -174,7 +251,7 @@ export function ProjectPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="space-y-6">
-        {/* Header sekcija */}
+        {/* Header section */}
         <div>
           <h1 className="text-3xl font-bold">{project.title}</h1>
           <p className="text-muted-foreground mt-2">
@@ -193,13 +270,15 @@ export function ProjectPage() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Label htmlFor="logline">Logline</Label>
-                {renderSaveIndicator('logline')}
+                <div className="min-h-[1.5rem] flex items-center">
+                  {renderSaveIndicator('logline')}
+                </div>
               </div>
               <Textarea
                 id="logline"
                 placeholder="Sažmite svoju priču u jednu uzbudljivu rečenicu..."
                 value={formData.logline}
-                onChange={(e) => handleFieldChange('logline', e.target.value)}
+                onChange={(e) => handleFieldChange('logline' as ProjectField, e.target.value)}
                 className="min-h-[80px]"
               />
             </div>
@@ -208,13 +287,15 @@ export function ProjectPage() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Label htmlFor="theme">Tema</Label>
-                {renderSaveIndicator('theme')}
+                <div className="min-h-[1.5rem] flex items-center">
+                  {renderSaveIndicator('theme')}
+                </div>
               </div>
               <Textarea
                 id="theme"
                 placeholder="Koja je glavna tema vaše priče?"
                 value={formData.theme}
-                onChange={(e) => handleFieldChange('theme', e.target.value)}
+                onChange={(e) => handleFieldChange('theme' as ProjectField, e.target.value)}
                 className="min-h-[80px]"
               />
             </div>
@@ -223,13 +304,15 @@ export function ProjectPage() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Label htmlFor="premise">Premisa</Label>
-                {renderSaveIndicator('premise')}
+                <div className="min-h-[1.5rem] flex items-center">
+                  {renderSaveIndicator('premise')}
+                </div>
               </div>
               <Textarea
                 id="premise"
                 placeholder="Opišite osnovnu premisu vaše priče..."
                 value={formData.premise}
-                onChange={(e) => handleFieldChange('premise', e.target.value)}
+                onChange={(e) => handleFieldChange('premise' as ProjectField, e.target.value)}
                 className="min-h-[120px]"
               />
             </div>
