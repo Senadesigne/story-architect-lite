@@ -1,14 +1,26 @@
+import 'dotenv/config';
 import type { Config } from 'drizzle-kit';
 import { getDatabaseUrl } from './src/lib/env';
 
-const databaseUrl = getDatabaseUrl();
+let databaseUrl = getDatabaseUrl();
+
+// Force IPv4 by replacing localhost with 127.0.0.1
+if (databaseUrl && databaseUrl.includes('localhost')) {
+  databaseUrl = databaseUrl.replace('localhost', '127.0.0.1');
+}
+
+// Debug logging
+console.log('🔍 Drizzle Config Debug:');
+console.log('   Original DATABASE_URL:', getDatabaseUrl());
+console.log('   Modified DATABASE_URL (IPv4):', databaseUrl);
+console.log('   Final connection string:', databaseUrl || 'postgresql://postgres:password@127.0.0.1:5502/postgres');
 
 export default {
   schema: './src/schema/*',
   out: './drizzle',
   driver: 'pg',
   dbCredentials: {
-    connectionString: databaseUrl || 'postgresql://postgres:password@localhost:5433/postgres',
+    connectionString: databaseUrl || 'postgresql://postgres:password@127.0.0.1:5502/postgres',
   },
   schemaFilter: ['app'],
 } satisfies Config; 

@@ -46,6 +46,13 @@ Faza 6: Završne Pripreme
 Ovo je naša Kanban ploča. Zadatke ćemo prebacivati iz jedne kolone u drugu.
 
 [ ZADACI ZA ODRADITI (To-Do) ]
+
+Epic: MVP-3: Faza 4 - Razvoj Likova
+
+(...ovdje ćemo definirati zadatke za likove...)
+
+[ TRENUTNO RADIMO (In Progress) ]
+
 Epic: MVP-2: Faza 1 - Ideja i Koncept
 
 Zadatak 2.1 (Backend): Kreirati API rutu (PUT /api/projects/:projectId) koja prima i sprema podatke za logline, premise, theme u bazu.
@@ -53,26 +60,6 @@ Zadatak 2.1 (Backend): Kreirati API rutu (PUT /api/projects/:projectId) koja pri
 Zadatak 2.2 (Frontend): Kreirati React komponentu (IdeationForm.tsx) koja prikazuje formu za Fazu 1.
 
 Zadatak 2.3 (Frontend): Povezati formu s backendom i implementirati automatsko spremanje.
-
-Epic: MVP-3: Faza 4 - Razvoj Likova
-
-(...ovdje ćemo definirati zadatke za likove...)
-
-[ TRENUTNO RADIMO (In Progress) ]
-Epic: MVP-1: Dashboard i Upravljanje Projektima
-
-Zadatak 1.2 (Backend): Kreirati API rutu (POST /api/projects) koja stvara novi, prazan projekt za prijavljenog korisnika.
-
-Zadatak 1.3 (Frontend): Dizajnirati i implementirati osnovni UI za Dashboard stranicu (/dashboard).
-
-Zadatak 1.4 (Frontend): Prikazati listu projekata dohvaćenih s backenda.
-
-Zadatak 1.5 (Frontend): Implementirati funkcionalnost gumba "+ Novi Projekt" koji poziva backend i osvježava listu.
-
-[ ZAVRŠENO (Done) ]
-Epic: MVP-1: Dashboard i Upravljanje Projektima
-
-✅ Zadatak 1.1 (Backend): Kreirati API rutu (GET /api/projects) koja dohvaća sve projekte za prijavljenog korisnika.
 
 [ ZAVRŠENO (Done) ]
 Epic: MVP-0: Postavljanje Projekta
@@ -85,6 +72,23 @@ Epic: MVP-0: Postavljanje Projekta
 
 ✅ Uspješno postavljanje na GitHub.
 
+[ ZAVRŠENO (Done) ]
+Epic: MVP-1: Dashboard i Upravljanje Projektima
+
+✅ Zadatak 1.1 (Backend): Kreirati API rutu (GET /api/projects) koja dohvaća sve projekte za prijavljenog korisnika.
+
+✅ Zadatak 1.2 (Backend): Kreirati API rutu (POST /api/projects) koja stvara novi, prazan projekt za prijavljenog korisnika.
+
+✅ Zadatak 1.3 (Frontend): Dizajnirati i implementirati osnovni UI za Dashboard stranicu (/dashboard).
+
+✅ Zadatak 1.4 (Frontend): Prikazati listu projekata dohvaćenih s backenda.
+
+✅ Zadatak 1.5 (Frontend): Implementirati funkcionalnost gumba "+ Novi Projekt" koji poziva backend i osvježava listu.
+
+[ ZAVRŠENO (Done) ]
+Epic: MVP-2: Faza 1 - Ideja i Koncept (Infrastruktura)
+
+✅ Zadatak 2.0 (Infrastruktura): Implementirati navigaciju i stranicu za prikaz pojedinačnog projekta.
 
 3. Naš Tijek Rada (Workflow) - "The Perfect Workflow"
 Slijedimo precizan, iterativni proces inspiriran najboljim praksama za rad s AI alatima.

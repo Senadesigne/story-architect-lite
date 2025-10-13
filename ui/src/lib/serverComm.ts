@@ -56,6 +56,32 @@ export async function getProjects() {
   return response.json();
 }
 
+export async function createProject() {
+  const response = await fetchWithAuth('/api/projects', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.json();
+}
+
+export async function getProject(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}`);
+  return response.json();
+}
+
+export async function updateProject(projectId: string, data: { logline?: string; premise?: string; theme?: string }) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
 // Example of how to add more API endpoints:
 // export async function createChat(data: CreateChatData) {
 //   const response = await fetchWithAuth('/api/v1/protected/chats', {
@@ -71,5 +97,8 @@ export async function getProjects() {
 export const api = {
   getCurrentUser,
   getProjects,
+  createProject,
+  getProject,
+  updateProject,
   // Add other API endpoints here
 }; 
