@@ -8,6 +8,20 @@
       "when": 1759670445288,
       "tag": "0000_short_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1760428092737,
+      "tag": "0001_low_magneto",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1760473597584,
+      "tag": "0002_amazing_triton",
+      "breakpoints": true
     }
   ]
 }

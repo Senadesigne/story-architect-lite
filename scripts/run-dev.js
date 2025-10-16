@@ -13,7 +13,9 @@ import {
   getDatabaseUrl,
   readServerEnv,
   updateWranglerConfigWithPort,
-  restoreWranglerConfig
+  restoreWranglerConfig,
+  createPortLockFile,
+  removePortLockFile
 } from './port-manager.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -74,10 +76,10 @@ function detectEnvironmentConfiguration() {
     const firebaseProjectId = firebaseProjectMatch?.[1]?.trim();
     const useLocalFirebase = !firebaseProjectId || firebaseProjectId === 'demo-project';
     
-    // Check if we have a remote database URL (not localhost)
+    // Check if we have a remote database URL (not localhost/127.0.0.1)
     const dbUrlMatch = envContent.match(/DATABASE_URL=(.+)/);
     const databaseUrl = dbUrlMatch?.[1]?.trim();
-    const useLocalDatabase = !databaseUrl || databaseUrl.includes('localhost');
+    const useLocalDatabase = !databaseUrl || databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1');
     
     const isProduction = !useLocalFirebase || !useLocalDatabase;
     
@@ -140,7 +142,7 @@ function showServiceInfo(availablePorts, useWrangler, config) {
     if (useWrangler) {
       console.log(`   Database:  ${getDatabaseUrl(availablePorts, useWrangler)}`);
     } else {
-      console.log(`   Database:  postgresql://postgres:***@localhost:${availablePorts.postgres}/postgres`);
+      console.log(`   Database:  postgresql://postgres:***@127.0.0.1:5432/postgres`);
     }
   } else {
     console.log(`   Database: Production database`);
@@ -203,8 +205,19 @@ async function startServices() {
     // Detect environment configuration
     const config = detectEnvironmentConfiguration();
     
+    // Debug output
+    console.log('🔍 Configuration detection:', {
+      useLocalFirebase: config.useLocalFirebase,
+      useLocalDatabase: config.useLocalDatabase,
+      isProduction: config.isProduction,
+      databaseUrl: config.databaseUrl
+    });
+    
     // Get available ports
     const availablePorts = await getAvailablePorts();
+    
+    // Create port lock file for other processes
+    createPortLockFile(availablePorts);
     
     // Check database configuration for Cloudflare Workers mode
     if (!checkDatabaseConfiguration(cliArgs.useWrangler)) {
@@ -231,7 +244,8 @@ async function startServices() {
     
     // Add database server if using local database (and not Wrangler mode)
     if (config.useLocalDatabase && !cliArgs.useWrangler) {
-      commands.push(`"cd database-server && pnpm run dev -- --port ${availablePorts.postgres}"`);
+      // Always use fixed port 5432 for PostgreSQL
+      commands.push(`"cd database-server && pnpm run dev -- --port 5432"`);
     }
     
     // Add Firebase emulator if using local Firebase
@@ -420,6 +434,7 @@ async function startServices() {
       if (firebaseConfigPath) {
         cleanupFirebaseConfig(firebaseConfigPath);
       }
+      removePortLockFile();
     };
 
     // Cleanup on exit

@@ -107,11 +107,15 @@ app.put('/api/projects/:projectId', async (c) => {
     
     // Parsiranje tijela zahtjeva
     const body = await c.req.json();
-    const { logline, premise, theme } = body;
+    const { logline, premise, theme, genre, audience, brainstorming, research } = body;
     
     // Validacija da je barem jedno polje poslano
-    if (logline === undefined && premise === undefined && theme === undefined) {
-      return c.json({ error: 'At least one field (logline, premise, theme) must be provided' }, 400);
+    if (logline === undefined && premise === undefined && theme === undefined && 
+        genre === undefined && audience === undefined && 
+        brainstorming === undefined && research === undefined) {
+      return c.json({ 
+        error: 'At least one field (logline, premise, theme, genre, audience, brainstorming, research) must be provided' 
+      }, 400);
     }
     
     // Provjera da projekt postoji i pripada korisniku
@@ -129,9 +133,16 @@ app.put('/api/projects/:projectId', async (c) => {
       updatedAt: new Date(),
     };
     
+    // Postojeća polja (Faza 1)
     if (logline !== undefined) updateData.logline = logline;
     if (premise !== undefined) updateData.premise = premise;
     if (theme !== undefined) updateData.theme = theme;
+    if (genre !== undefined) updateData.genre = genre;
+    if (audience !== undefined) updateData.audience = audience;
+    
+    // Nova polja (Faza 2)
+    if (brainstorming !== undefined) updateData.brainstorming = brainstorming;
+    if (research !== undefined) updateData.research = research;
     
     // Ažuriranje projekta
     const [updatedProject] = await db

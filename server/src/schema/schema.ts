@@ -14,9 +14,17 @@ export const projects = pgTable('projects', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Faza 1: Ideja i Koncept
   logline: text('logline'),
   premise: text('premise'),
   theme: text('theme'),
+  genre: text('genre'),
+  audience: text('audience'),
+  
+  // Faza 2: Planiranje i Istraživanje
+  brainstorming: text('brainstorming'),
+  research: text('research'),
 });
 
 // Likovi

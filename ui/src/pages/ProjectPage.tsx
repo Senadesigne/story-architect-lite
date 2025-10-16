@@ -13,7 +13,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme';
+type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -23,7 +23,9 @@ export function ProjectPage() {
   const [formData, setFormData] = useState<ProjectUpdateData>({
     logline: '',
     premise: '',
-    theme: ''
+    theme: '',
+    genre: '',
+    audience: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
   const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
@@ -121,7 +123,9 @@ export function ProjectPage() {
       setFormData({
         logline: data.logline || '',
         premise: data.premise || '',
-        theme: data.theme || ''
+        theme: data.theme || '',
+        genre: data.genre || '',
+        audience: data.audience || ''
       });
     } catch (error: any) {
       if (error.status === 404) {
@@ -314,6 +318,40 @@ export function ProjectPage() {
                 value={formData.premise}
                 onChange={(e) => handleFieldChange('premise' as ProjectField, e.target.value)}
                 className="min-h-[120px]"
+              />
+            </div>
+
+            {/* Žanr */}
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <Label htmlFor="genre">Žanr</Label>
+                <div className="min-h-[1.5rem] flex items-center">
+                  {renderSaveIndicator('genre')}
+                </div>
+              </div>
+              <Textarea
+                id="genre"
+                placeholder="Koji je žanr vaše priče? (npr. drama, komedija, triler...)"
+                value={formData.genre}
+                onChange={(e) => handleFieldChange('genre' as ProjectField, e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+
+            {/* Ciljana Publika */}
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <Label htmlFor="audience">Ciljana Publika</Label>
+                <div className="min-h-[1.5rem] flex items-center">
+                  {renderSaveIndicator('audience')}
+                </div>
+              </div>
+              <Textarea
+                id="audience"
+                placeholder="Tko je vaša ciljna publika? (npr. tinejdžeri, odrasli, obitelji...)"
+                value={formData.audience}
+                onChange={(e) => handleFieldChange('audience' as ProjectField, e.target.value)}
+                className="min-h-[80px]"
               />
             </div>
           </CardContent>

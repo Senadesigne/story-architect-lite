@@ -4,31 +4,38 @@ Ovaj dokument je naš centralni "mozak" projekta. Služi kao detaljna funkcional
 1. Detaljna Funkcionalna Specifikacija
 Ovdje ćemo detaljno razraditi svaku od 6 faza aplikacije. Cilj je da za svaki korak znamo točno kako treba izgledati i funkcionirati.
 
+1. Detaljna Funkcionalna Specifikacija
 Faza 1: Ideja i Koncept
 Korisničko iskustvo (Frontend):
 
-Prikazuje se jednostavna forma s velikim, jasnim naslovom "Faza 1: Ideja i Koncept".
+Prikazuje se forma unutar kartice s naslovom "Faza 1: Ideja i Koncept".
 
-Forma sadrži 4 polja za unos (text area): Premisa, Tema, Žanr, Logline.
+Forma sadrži polja za unos: Logline, Tema, Premisa, Žanr i Ciljana Publika.
 
-Svako polje ima jasan label iznad sebe i koristan placeholder tekst unutar polja koji vodi korisnika (npr. "Sažmite svoju priču u jednu uzbudljivu rečenicu.").
-
-Nema "Spremi" dugmeta. Sve promjene se automatski spremaju u pozadini. Suptilni indikator ("Spremljeno ✓") se pojavljuje nakon unosa.
+Sve promjene se automatski spremaju u pozadini.
 
 Logika i Podaci (Backend):
 
-Kada korisnik unese tekst, frontend šalje PUT zahtjev na API rutu (npr. /api/projects/:projectId).
-
-Backend prima podatke i ažurira odgovarajuća polja (logline, premise, theme) u projects tabeli u bazi podataka za taj projekt.
+Backend ažurira odgovarajuća polja (logline, theme, premise, genre, audience) u projects tabeli.
 
 Faza 2: Planiranje i Istraživanje
 Korisničko iskustvo (Frontend):
 
-(Ovdje ćemo detaljno opisati kako izgleda modul za brainstorming i istraživanje)
+Na stranici projekta, ispod kartice za Fazu 1, prikazuje se nova kartica s naslovom "Faza 2: Planiranje i Istraživanje".
+
+Unutar kartice se nalaze dva velika polja za unos (text area):
+
+"Brainstorming": Za slobodno pisanje, mape uma, ideje za likove i zaplete.
+
+"Istraživanje": Za bilješke o lokacijama, povijesnim događajima, i drugim istraživačkim materijalima.
+
+Sustav automatskog spremanja funkcionira identično kao i za Fazu 1.
 
 Logika i Podaci (Backend):
 
-(Ovdje ćemo opisati kako se spremaju bilješke)
+Tabela projects u bazi podataka će se proširiti s dva nova tekstualna polja: brainstorming i research.
+
+Postojeća backend API ruta PUT /api/projects/:projectId će se proširiti kako bi mogla primati i ažurirati ova dva nova polja.
 
 Faza 3: Izgradnja Svijeta
 (...detaljna razrada slijedi...)
@@ -53,13 +60,15 @@ Epic: MVP-3: Faza 4 - Razvoj Likova
 
 [ TRENUTNO RADIMO (In Progress) ]
 
-Epic: MVP-2: Faza 1 - Ideja i Koncept
+Epic: MVP-3: Faza 2 - Planiranje i Istraživanje
 
-Zadatak 2.1 (Backend): Kreirati API rutu (PUT /api/projects/:projectId) koja prima i sprema podatke za logline, premise, theme u bazu.
+Zadatak 3.1 (Backend): Ažurirati projects tabelu u schema.ts s novim tekstualnim poljima brainstorming i research. Primijeniti promjene na bazu.
 
-Zadatak 2.2 (Frontend): Kreirati React komponentu (IdeationForm.tsx) koja prikazuje formu za Fazu 1.
+Zadatak 3.2 (Backend): Proširiti PUT /api/projects/:projectId rutu kako bi prihvaćala i spremala podatke za brainstorming i research.
 
-Zadatak 2.3 (Frontend): Povezati formu s backendom i implementirati automatsko spremanje.
+Zadatak 3.3 (Frontend): Kreirati novu React komponentu, npr. Phase2Form.tsx, koja sadrži karticu i dva Textarea polja za Fazu 2.
+
+Zadatak 3.4 (Frontend): Integrirati Phase2Form.tsx na stranicu projekta (ProjectPage.tsx) i povezati je s postojećom logikom za automatsko spremanje.
 
 [ ZAVRŠENO (Done) ]
 Epic: MVP-0: Postavljanje Projekta
@@ -86,9 +95,17 @@ Epic: MVP-1: Dashboard i Upravljanje Projektima
 ✅ Zadatak 1.5 (Frontend): Implementirati funkcionalnost gumba "+ Novi Projekt" koji poziva backend i osvježava listu.
 
 [ ZAVRŠENO (Done) ]
-Epic: MVP-2: Faza 1 - Ideja i Koncept (Infrastruktura)
+Epic: MVP-2: Faza 1 - Ideja i Koncept
 
 ✅ Zadatak 2.0 (Infrastruktura): Implementirati navigaciju i stranicu za prikaz pojedinačnog projekta.
+✅ Zadatak 2.1 (Backend): Kreirati API rutu (PUT /api/projects/:projectId) koja prima i sprema podatke za logline, premise, theme u bazu.
+✅ Zadatak 2.2 (Frontend): Kreirati React komponentu (IdeationForm.tsx) koja prikazuje formu za Fazu 1.
+✅ Zadatak 2.3 (Frontend): Povezati formu s backendom i implementirati automatsko spremanje.
+
+[ ZAVRŠENO (Done) ]
+Epic: MVP-2.5: Poboljšanja Faze 1
+
+✅ Zadatak 2.5 (Backend/Frontend): Ažurirati Fazu 1 s poljima za "Žanr" i "Ciljana Publika". To uključuje ažuriranje baze (schema.ts), PUT rute i ProjectPage.tsx forme, osiguravajući da su i postojeća polja (Logline, Tema, Premisa) zadržana.
 
 3. Naš Tijek Rada (Workflow) - "The Perfect Workflow"
 Slijedimo precizan, iterativni proces inspiriran najboljim praksama za rad s AI alatima.

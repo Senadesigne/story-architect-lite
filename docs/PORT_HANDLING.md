@@ -164,3 +164,77 @@ FIREBASE_PROJECT_ID=demo-project
 ```
 
 **Note:** Port numbers in DATABASE_URL are handled automatically - the system will update the actual port used for embedded PostgreSQL.
+
+## 🔧 Database Commands with Dynamic Ports
+
+### Automatic Port Synchronization
+
+When running database commands like `db:push`, the system automatically detects and uses the ports from your running dev server:
+
+```bash
+# Terminal 1: Start dev server
+pnpm run dev
+
+# Terminal 2: Run database commands (automatically uses correct port)
+cd server
+pnpm run db:push     # Syncs schema to database
+pnpm run db:generate # Generates migrations
+pnpm run db:studio   # Opens Drizzle Studio
+```
+
+The wrapper script automatically:
+- ✅ Detects the active dev server's database port
+- ✅ Overrides DATABASE_URL for the command
+- ✅ Ensures commands connect to the right database instance
+
+### Port Lock File
+
+The system creates a `.volo-app-ports.json` file that tracks active ports:
+```json
+{
+  "backend": 5600,
+  "frontend": 5601,
+  "postgres": 5602,
+  "firebaseAuth": 5603,
+  "firebaseUI": 5604
+}
+```
+
+This file is:
+- Created when dev server starts
+- Used by database commands to find the correct port
+- Deleted when dev server stops
+- Ignored by git (added to .gitignore)
+
+## 🛡️ Windows Firewall Configuration
+
+### One-Time Setup
+
+On Windows, Node.js applications may be blocked by the firewall when using dynamic ports. Run this PowerShell script **once** as Administrator:
+
+```powershell
+# Run as Administrator
+powershell -ExecutionPolicy Bypass -File scripts\setup-firewall-windows.ps1
+```
+
+This creates firewall rules that:
+- ✅ Allow Node.js to use ports 5500-9999
+- ✅ Allow PostgreSQL connections on ports 5432-5999
+- ✅ Only apply to Private networks (not Public)
+- ✅ Work for all future volo-app instances
+
+### Manual Firewall Setup (Alternative)
+
+If you prefer manual setup:
+1. Open Windows Defender Firewall
+2. Click "Allow an app or feature..."
+3. Add Node.js (`C:\Program Files\nodejs\node.exe`)
+4. Check "Private" network only
+
+### Removing Firewall Rules
+
+To remove the volo-app firewall rules:
+```powershell
+# Run as Administrator
+Remove-NetFirewallRule -Name "volo-app*"
+```

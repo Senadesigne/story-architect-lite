@@ -1,13 +1,19 @@
 {
   "name": "server",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "deploy": "npm run deploy:cf",
     "deploy:cf": "node scripts/deploy-cloudflare.js",
     "test": "vitest",
-    "db:push": "drizzle-kit push:pg"
+    "db:push": "node scripts/drizzle-wrapper.js push:pg",
+    "db:generate": "node scripts/drizzle-wrapper.js generate:pg",
+    "db:migrate": "node scripts/drizzle-wrapper.js up:pg",
+    "db:migrate:run": "node scripts/run-migrations.js",
+    "db:studio": "node scripts/drizzle-wrapper.js studio",
+    "db:test": "node scripts/test-db-connection.js"
   },
   "dependencies": {
     "@hono/node-server": "^1.12.0",
@@ -25,6 +31,7 @@
     "@types/fs-extra": "^11.0.4",
     "dotenv-cli": "^7.3.0",
     "drizzle-kit": "^0.20.14",
+    "pg": "^8.16.3",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.2",

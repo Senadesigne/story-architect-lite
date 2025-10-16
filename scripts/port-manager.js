@@ -7,54 +7,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Finds a clean block of 5 consecutive available ports starting from base port 5500
+ * Returns ports configuration with fixed PostgreSQL port 5432
+ * Other services use dynamic ports for flexibility
  * @returns {Promise<Object>} Object with service names mapped to available ports
  */
 export async function getAvailablePorts() {
+  // Fixed PostgreSQL port
+  const FIXED_POSTGRES_PORT = 5432;
+  
+  // Default ports for other services
   const defaultPorts = {
     backend: 5500,
     frontend: 5501,
-    postgres: 5502,
     firebaseAuth: 5503,
     firebaseUI: 5504
   };
 
-  let basePort = 5500;
+  // PostgreSQL always uses the fixed port
+  const availablePorts = {
+    postgres: FIXED_POSTGRES_PORT
+  };
 
-  // Try to find a clean block of 5 consecutive ports
-  while (basePort < 10000) { // Reasonable upper limit
-    const ports = {
-      backend: basePort,
-      frontend: basePort + 1,
-      postgres: basePort + 2,
-      firebaseAuth: basePort + 3,
-      firebaseUI: basePort + 4
-    };
-
-    // Check if all ports in this block are available
-    let allAvailable = true;
-    for (const [service, port] of Object.entries(ports)) {
-      const testPort = await getPort({ port });
-      if (testPort !== port) {
-        allAvailable = false;
-        break;
-      }
-    }
-
-    if (allAvailable) {
-      // Found a clean block, use these ports
-      return ports;
-    }
-
-    // Jump to next 100-port block
-    basePort += 100;
-  }
-
-  // Fallback: if we can't find a clean block, use any available ports
-  const availablePorts = {};
+  // Find available ports for other services
   for (const [service, defaultPort] of Object.entries(defaultPorts)) {
-    availablePorts[service] = await getPort();
+    availablePorts[service] = await getPort({ port: defaultPort });
   }
+  
+  console.log('📍 Port configuration:', {
+    ...availablePorts,
+    postgres: `${FIXED_POSTGRES_PORT} (fixed)`
+  });
   
   return availablePorts;
 }
@@ -105,6 +87,33 @@ export function readServerEnv() {
 }
 
 /**
+ * Creates a port lock file for other processes to read
+ * @param {Object} availablePorts - Object with port assignments
+ */
+export function createPortLockFile(availablePorts) {
+  const lockFilePath = path.join(__dirname, '../.volo-app-ports.json');
+  try {
+    writeFileSync(lockFilePath, JSON.stringify(availablePorts, null, 2));
+  } catch (error) {
+    console.warn('⚠️ Could not create port lock file:', error.message);
+  }
+}
+
+/**
+ * Removes the port lock file
+ */
+export function removePortLockFile() {
+  const lockFilePath = path.join(__dirname, '../.volo-app-ports.json');
+  if (existsSync(lockFilePath)) {
+    try {
+      unlinkSync(lockFilePath);
+    } catch (error) {
+      // Silent cleanup
+    }
+  }
+}
+
+/**
  * Updates server .env file with dynamic port configuration
  * @param {Object} availablePorts - Object with port assignments
  * @param {boolean} useWrangler - Whether running in Wrangler mode
@@ -132,13 +141,15 @@ export function updateServerEnvWithPorts(availablePorts, useWrangler) {
     
     // Only update DATABASE_URL if it's currently pointing to localhost (embedded postgres)
     const currentDbUrl = envData.content.match(/DATABASE_URL=(.+)/)?.[1]?.trim();
-    if (currentDbUrl && currentDbUrl.includes('localhost')) {
+    if (currentDbUrl && (currentDbUrl.includes('localhost') || currentDbUrl.includes('127.0.0.1'))) {
       const originalDbLine = envData.content.match(/DATABASE_URL=.+/)?.[0];
-      const newDbLine = `DATABASE_URL=postgresql://postgres:password@localhost:${availablePorts.postgres}/postgres`;
+      // CRITICAL: Always use 127.0.0.1 instead of localhost to avoid Windows IPv6/IPv4 issues
+      // Always use fixed port 5432 for PostgreSQL
+      const newDbLine = `DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/postgres`;
       
       if (originalDbLine && originalDbLine !== newDbLine) {
         updatedContent = updatedContent.replace(
-          /DATABASE_URL=postgresql:\/\/postgres:password@localhost:\d+\/postgres/,
+          /DATABASE_URL=postgresql:\/\/postgres:password@(?:localhost|127\.0\.0\.1):\d+\/postgres/,
           newDbLine
         );
         hasChanges = true;
@@ -147,7 +158,7 @@ export function updateServerEnvWithPorts(availablePorts, useWrangler) {
           original: originalDbLine,
           modified: newDbLine
         });
-        console.log(`📝 Updated database server port to ${availablePorts.postgres}`);
+        console.log(`📝 Updated database server to use fixed port 5432`);
       }
     }
     
@@ -289,8 +300,8 @@ export function checkDatabaseConfiguration(useWrangler) {
     return false;
   }
 
-  // If using Wrangler and database is localhost, that's a problem
-  if (useWrangler && dbUrl.includes('localhost')) {
+  // If using Wrangler and database is localhost/127.0.0.1, that's a problem
+  if (useWrangler && (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1'))) {
     console.error('❌ Cloudflare Workers Configuration Issue:');
     console.error('   Embedded PostgreSQL cannot run in Cloudflare Workers environment.');
     console.error('   Please update DATABASE_URL in server/.dev.vars to point to a remote database.');
@@ -301,7 +312,7 @@ export function checkDatabaseConfiguration(useWrangler) {
   }
 
   // If not using Wrangler but we have a remote database, that's fine too
-  if (!useWrangler && !dbUrl.includes('localhost')) {
+  if (!useWrangler && !dbUrl.includes('localhost') && !dbUrl.includes('127.0.0.1')) {
     console.log('✅ Using remote database with Node.js server');
   }
 
@@ -315,7 +326,9 @@ export function checkDatabaseConfiguration(useWrangler) {
  * @returns {string} Database URL string
  */
 export function getDatabaseUrl(availablePorts, useWrangler) {
-  let databaseUrl = `postgresql://postgres:password@localhost:${availablePorts.postgres}/postgres`;
+  // CRITICAL: Always use 127.0.0.1 instead of localhost to avoid Windows IPv6/IPv4 issues
+  // Always use fixed port 5432 for PostgreSQL
+  let databaseUrl = `postgresql://postgres:password@127.0.0.1:5432/postgres`;
   
   if (useWrangler) {
     // For Cloudflare Workers, try to read the actual DATABASE_URL

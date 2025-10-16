@@ -18,13 +18,13 @@ const { port } = parseCliArgs();
 // Extract PostgreSQL port from DATABASE_URL if it's a local embedded postgres connection
 const getPostgresPortFromDatabaseUrl = (): number => {
   const dbUrl = getDatabaseUrl();
-  if (dbUrl && dbUrl.includes('localhost:')) {
-    const match = dbUrl.match(/localhost:(\d+)/);
+  if (dbUrl && (dbUrl.includes('localhost:') || dbUrl.includes('127.0.0.1:'))) {
+    const match = dbUrl.match(/(?:localhost|127\.0\.0\.1):(\d+)/);
     if (match) {
       return parseInt(match[1]);
     }
   }
-  return 5433; // fallback default
+  return 5432; // fallback default (now using fixed port 5432)
 };
 
 const startServer = async () => {

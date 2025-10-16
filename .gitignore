@@ -18,6 +18,7 @@ build
 
 # Generated configuration files (created by CLI setup)
 ui/src/lib/firebase-config.json
+.volo-app-ports.json
 server/.dev.vars
 
 # Editor directories and files
