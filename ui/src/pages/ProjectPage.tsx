@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Phase2Form } from '@/components/Phase2Form';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -13,7 +14,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience';
+type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -25,7 +26,9 @@ export function ProjectPage() {
     premise: '',
     theme: '',
     genre: '',
-    audience: ''
+    audience: '',
+    brainstorming: '',
+    research: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
   const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
@@ -125,7 +128,9 @@ export function ProjectPage() {
         premise: data.premise || '',
         theme: data.theme || '',
         genre: data.genre || '',
-        audience: data.audience || ''
+        audience: data.audience || '',
+        brainstorming: data.brainstorming || '',
+        research: data.research || ''
       });
     } catch (error: any) {
       if (error.status === 404) {
@@ -356,6 +361,17 @@ export function ProjectPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Faza 2: Planiranje i Istraživanje */}
+        <Phase2Form 
+          project={project} 
+          onFieldChange={handleFieldChange}
+          renderSaveIndicator={renderSaveIndicator}
+          formData={{
+            brainstorming: formData.brainstorming,
+            research: formData.research
+          }}
+        />
       </div>
     </div>
   );
