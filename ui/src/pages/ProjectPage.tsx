@@ -1,11 +1,9 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { api } from '@/lib/serverComm';
 import { Project, ProjectUpdateData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { IdeationForm } from '@/components/IdeationForm';
 import { Phase2Form } from '@/components/Phase2Form';
 
 // Constants for timing
@@ -269,109 +267,45 @@ export function ProjectPage() {
           </p>
         </div>
 
-        {/* Faza 1: Ideja i Koncept */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Faza 1: Ideja i Koncept</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Logline */}
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="logline">Logline</Label>
-                <div className="min-h-[1.5rem] flex items-center">
-                  {renderSaveIndicator('logline')}
-                </div>
-              </div>
-              <Textarea
-                id="logline"
-                placeholder="Sažmite svoju priču u jednu uzbudljivu rečenicu..."
-                value={formData.logline}
-                onChange={(e) => handleFieldChange('logline' as ProjectField, e.target.value)}
-                className="min-h-[80px]"
+        {/* Nested routes content */}
+        <Routes>
+          <Route index element={<Navigate to="ideation" replace />} />
+          <Route 
+            path="ideation" 
+            element={
+              <IdeationForm 
+                project={project} 
+                onFieldChange={handleFieldChange}
+                renderSaveIndicator={renderSaveIndicator}
+                formData={{
+                  logline: formData.logline,
+                  premise: formData.premise,
+                  theme: formData.theme,
+                  genre: formData.genre,
+                  audience: formData.audience
+                }}
               />
-            </div>
-
-            {/* Tema */}
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="theme">Tema</Label>
-                <div className="min-h-[1.5rem] flex items-center">
-                  {renderSaveIndicator('theme')}
-                </div>
-              </div>
-              <Textarea
-                id="theme"
-                placeholder="Koja je glavna tema vaše priče?"
-                value={formData.theme}
-                onChange={(e) => handleFieldChange('theme' as ProjectField, e.target.value)}
-                className="min-h-[80px]"
+            } 
+          />
+          <Route 
+            path="planning" 
+            element={
+              <Phase2Form 
+                project={project} 
+                onFieldChange={handleFieldChange}
+                renderSaveIndicator={renderSaveIndicator}
+                formData={{
+                  brainstorming: formData.brainstorming,
+                  research: formData.research
+                }}
               />
-            </div>
-
-            {/* Premisa */}
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="premise">Premisa</Label>
-                <div className="min-h-[1.5rem] flex items-center">
-                  {renderSaveIndicator('premise')}
-                </div>
-              </div>
-              <Textarea
-                id="premise"
-                placeholder="Opišite osnovnu premisu vaše priče..."
-                value={formData.premise}
-                onChange={(e) => handleFieldChange('premise' as ProjectField, e.target.value)}
-                className="min-h-[120px]"
-              />
-            </div>
-
-            {/* Žanr */}
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="genre">Žanr</Label>
-                <div className="min-h-[1.5rem] flex items-center">
-                  {renderSaveIndicator('genre')}
-                </div>
-              </div>
-              <Textarea
-                id="genre"
-                placeholder="Koji je žanr vaše priče? (npr. drama, komedija, triler...)"
-                value={formData.genre}
-                onChange={(e) => handleFieldChange('genre' as ProjectField, e.target.value)}
-                className="min-h-[80px]"
-              />
-            </div>
-
-            {/* Ciljana Publika */}
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="audience">Ciljana Publika</Label>
-                <div className="min-h-[1.5rem] flex items-center">
-                  {renderSaveIndicator('audience')}
-                </div>
-              </div>
-              <Textarea
-                id="audience"
-                placeholder="Tko je vaša ciljna publika? (npr. tinejdžeri, odrasli, obitelji...)"
-                value={formData.audience}
-                onChange={(e) => handleFieldChange('audience' as ProjectField, e.target.value)}
-                className="min-h-[80px]"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Faza 2: Planiranje i Istraživanje */}
-        <Phase2Form 
-          project={project} 
-          onFieldChange={handleFieldChange}
-          renderSaveIndicator={renderSaveIndicator}
-          formData={{
-            brainstorming: formData.brainstorming,
-            research: formData.research
-          }}
-        />
+            } 
+          />
+          <Route path="worldbuilding" element={<div className="p-6 text-center text-muted-foreground">Faza 3: Izgradnja Svijeta - Uskoro</div>} />
+          <Route path="characters" element={<div className="p-6 text-center text-muted-foreground">Faza 4: Razvoj Likova - Uskoro</div>} />
+          <Route path="structure" element={<div className="p-6 text-center text-muted-foreground">Faza 5: Strukturiranje Radnje - Uskoro</div>} />
+          <Route path="finalization" element={<div className="p-6 text-center text-muted-foreground">Faza 6: Završne Pripreme - Uskoro</div>} />
+        </Routes>
       </div>
     </div>
   );

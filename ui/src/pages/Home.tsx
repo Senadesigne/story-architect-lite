@@ -132,7 +132,7 @@ export function Home() {
               {projects.map((project) => (
                 <Link 
                   key={project.id} 
-                  to={`/project/${project.id}`}
+                  to={`/project/${project.id}/ideation`}
                   className="block hover:shadow-md transition-shadow"
                 >
                   <Card className="h-full">

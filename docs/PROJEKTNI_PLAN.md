@@ -46,24 +46,29 @@ Ovo je naša Kanban ploča. Zadatke ćemo prebacivati iz jedne kolone u drugu.
 
 ### [ TRENUTNO RADIMO (In Progress) ]
 
-**Epic: MVP-3: Faza 2 - Planiranje i Istraživanje (Frontend)**
+**Epic: MVP-3.5: Refaktoriranje Navigacije Projekta**
 
-* **Zadatak 3.3 (Frontend):** Kreirati novu React komponentu, npr. `Phase2Form.tsx`, koja sadrži karticu i dva Textarea polja za Fazu 2.
-* **Zadatak 3.4 (Frontend):** Integrirati `Phase2Form.tsx` na stranicu projekta (`ProjectPage.tsx`) i povezati je s postojećom logikom za automatsko spremanje.
+* **Zadatak 4.1 (Infrastruktura/Frontend):** Uvesti ugniježđene rute (nested routes) koristeći `react-router-dom` za stranicu pojedinog projekta.
+* **Zadatak 4.2 (Frontend):** Pretvoriti `ProjectPage.tsx` da služi kao "layout" komponenta. Ona će biti odgovorna za dohvaćanje podataka o projektu i sadržavat će `Sidebar` i `Outlet` za renderiranje aktivne faze.
+* **Zadatak 4.3 (Frontend):** Ažurirati lijevi `Sidebar` (vjerojatno `ui/src/components/layout/Sidebar.tsx`) da prikazuje stvarne linkove za navigaciju između faza (npr. "Faza 1: Ideja", "Faza 2: Planiranje").
+* **Zadatak 4.4 (Frontend):** Premjestiti `IdeationForm` i `Phase2Form` komponente tako da se renderiraju unutar `Outlet`-a na svojim specifičnim rutama (npr. `/projects/:projectId/ideation` i `/projects/:projectId/planning`).
+* **Zadatak 4.5 (Frontend):** Osigurati da postojeća logika za dohvaćanje podataka i automatsko spremanje (`useDebouncedSave`, `handleFieldChange` itd.) koja se nalazi u `ProjectPage.tsx` i dalje ispravno funkcionira i prosljeđuje podatke u pod-komponente.
 
 ### [ ZAVRŠENO (Done) ]
 
-**Epic: MVP-3: Faza 2 - Planiranje i Istraživanje (Backend)**
-✅ **Zadatak 3.1 (Backend):** Ažurirati `projects` tabelu u `schema.ts` s novim tekstualnim poljima `brainstorming` i `research`. Primijeniti promjene na bazu.
+**Epic: MVP-3: Faza 2 - Planiranje i Istraživanje**
+✅ **Zadatak 3.1 (Backend):** Ažurirati `projects` tabelu u `schema.ts` s novim tekstualnim poljima `brainstorming` i `research`.
 ✅ **Zadatak 3.2 (Backend):** Proširiti `PUT /api/projects/:projectId` rutu kako bi prihvaćala i spremala podatke za `brainstorming` i `research`.
+✅ **Zadatak 3.3 (Frontend):** Kreirati novu React komponentu, `Phase2Form.tsx`.
+✅ **Zadatak 3.4 (Frontend):** Integrirati `Phase2Form.tsx` na stranicu projekta (`ProjectPage.tsx`) i povezati je s logikom za automatsko spremanje.
 
 **Epic: MVP-2.5: Poboljšanja Faze 1**
-✅ **Zadatak 2.5 (Backend/Frontend):** Ažurirati Fazu 1 s poljima za "Žanr" i "Ciljana Publika". To uključuje ažuriranje baze (`schema.ts`), PUT rute i `ProjectPage.tsx` forme, osiguravajući da su i postojeća polja (Logline, Tema, Premisa) zadržana.
+✅ **Zadatak 2.5 (Backend/Frontend):** Ažurirati Fazu 1 s poljima za "Žanr" i "Ciljana Publika".
 
 **Epic: MVP-2: Faza 1 - Ideja i Koncept**
 ✅ **Zadatak 2.0 (Infrastruktura):** Implementirati navigaciju i stranicu za prikaz pojedinačnog projekta.
-✅ **Zadatak 2.1 (Backend):** Kreirati API rutu (`PUT /api/projects/:projectId`) koja prima i sprema podatke za `logline`, `premise`, `theme` u bazu.
-✅ **Zadatak 2.2 (Frontend):** Kreirati React komponentu (`IdeationForm.tsx`) koja prikazuje formu za Fazu 1.
+✅ **Zadatak 2.1 (Backend):** Kreirati API rutu (`PUT /api/projects/:projectId`).
+✅ **Zadatak 2.2 (Frontend):** Kreirati React komponentu (`IdeationForm.tsx`).
 ✅ **Zadatak 2.3 (Frontend):** Povezati formu s backendom i implementirati automatsko spremanje.
 
 **Epic: MVP-1: Dashboard i Upravljanje Projektima**
