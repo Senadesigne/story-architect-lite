@@ -21,6 +21,8 @@ export interface Project {
   // Faza 5: Strukturiranje Radnje
   synopsis?: string;
   outline_notes?: string;
+  // Faza 6: Završne Pripreme
+  point_of_view?: string;
 }
 
 export interface User {
@@ -44,6 +46,8 @@ export interface ProjectUpdateData {
   // Faza 5: Strukturiranje Radnje
   synopsis?: string;
   outline_notes?: string;
+  // Faza 6: Završne Pripreme
+  point_of_view?: string;
 }
 
 export interface Scene {

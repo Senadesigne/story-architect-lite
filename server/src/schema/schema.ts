@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, integer, primaryKey, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Korisnici - Povezujemo se s Firebase Auth putem ID-a
@@ -33,6 +33,9 @@ export const projects = pgTable('projects', {
   // Faza 5: Strukturiranje Radnje
   synopsis: text('synopsis'),
   outline_notes: text('outline_notes'),
+  
+  // Faza 6: Završne Pripreme
+  point_of_view: text('point_of_view'),
 });
 
 // Likovi

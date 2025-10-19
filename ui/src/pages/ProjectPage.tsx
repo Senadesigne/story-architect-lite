@@ -8,6 +8,7 @@ import { Phase2Form } from '@/components/Phase2Form';
 import { Phase3Form } from '@/components/Phase3Form';
 import { Phase4Form } from '@/components/Phase4Form';
 import { Phase5Form } from '@/components/Phase5Form';
+import { Phase6Form } from '@/components/Phase6Form';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -15,7 +16,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes';
+type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'point_of_view';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -33,7 +34,8 @@ export function ProjectPage() {
     rules_definition: '',
     culture_and_history: '',
     synopsis: '',
-    outline_notes: ''
+    outline_notes: '',
+    point_of_view: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
   const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
@@ -57,7 +59,7 @@ export function ProjectPage() {
     }
   }, []);
 
-  const handleSave = useCallback(async (field: ProjectField, value: string) => {
+  const handleSave = useCallback(async (field: ProjectField, value: string | boolean) => {
     if (!projectId) return;
     
     // Check if this field is already being saved
@@ -114,6 +116,7 @@ export function ProjectPage() {
     debounceTimeoutsRef.current[field] = timeout;
   }, [clearDebounceTimeout, handleSave]);
 
+
   const fetchProject = async () => {
     if (!projectId) {
       setError('Nevaljan ID projekta');
@@ -139,7 +142,8 @@ export function ProjectPage() {
         rules_definition: data.rules_definition || '',
         culture_and_history: data.culture_and_history || '',
         synopsis: data.synopsis || '',
-        outline_notes: data.outline_notes || ''
+        outline_notes: data.outline_notes || '',
+        point_of_view: data.point_of_view || ''
       });
     } catch (error: any) {
       if (error.status === 404) {
@@ -341,7 +345,19 @@ export function ProjectPage() {
               />
             } 
           />
-          <Route path="finalization" element={<div className="p-6 text-center text-muted-foreground">Faza 6: Završne Pripreme - Uskoro</div>} />
+          <Route 
+            path="finalization" 
+            element={
+              <Phase6Form 
+                project={project} 
+                onFieldChange={handleFieldChange}
+                renderSaveIndicator={renderSaveIndicator}
+                formData={{
+                  point_of_view: formData.point_of_view
+                }}
+              />
+            } 
+          />
         </Routes>
       </div>
     </div>

@@ -107,14 +107,15 @@ app.put('/api/projects/:projectId', async (c) => {
     
     // Parsiranje tijela zahtjeva
     const body = await c.req.json();
-    const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes } = body;
+    const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = body;
     
     // Validacija da je barem jedno polje poslano
     if (logline === undefined && premise === undefined && theme === undefined && 
         genre === undefined && audience === undefined && 
         brainstorming === undefined && research === undefined &&
         rules_definition === undefined && culture_and_history === undefined &&
-        synopsis === undefined && outline_notes === undefined) {
+        synopsis === undefined && outline_notes === undefined &&
+        point_of_view === undefined) {
       return c.json({ 
         error: 'At least one field must be provided' 
       }, 400);
@@ -153,6 +154,9 @@ app.put('/api/projects/:projectId', async (c) => {
     // Nova polja (Faza 5)
     if (synopsis !== undefined) updateData.synopsis = synopsis;
     if (outline_notes !== undefined) updateData.outline_notes = outline_notes;
+    
+    // Nova polja (Faza 6)
+    if (point_of_view !== undefined) updateData.point_of_view = point_of_view;
     
     // Ažuriranje projekta
     const [updatedProject] = await db
