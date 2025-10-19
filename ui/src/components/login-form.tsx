@@ -24,14 +24,16 @@ export function LoginForm() {
     setError("")
     try {
       await signInWithEmailAndPassword(auth, email, password)
-    } catch (err: any) {
+    } catch (err: unknown) {
       // If user doesn't exist, automatically register them
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+      const firebaseError = err as { code?: string; message?: string };
+      if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
         try {
           await createUserWithEmailAndPassword(auth, email, password)
           console.log('User automatically registered and signed in')
-        } catch (registerErr: any) {
-          setError(`Failed to register: ${registerErr.message}`)
+        } catch (registerErr: unknown) {
+          const registerError = registerErr as { message?: string };
+          setError(`Failed to register: ${registerError.message || 'Unknown error'}`)
           console.error('Registration error:', registerErr)
         }
       } else {

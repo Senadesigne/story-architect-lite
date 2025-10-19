@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,7 +31,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
   });
 
   // Dohvaćanje scena
-  const fetchScenes = async () => {
+  const fetchScenes = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await api.getScenes(project.id);
@@ -41,11 +41,11 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [project.id]);
 
   useEffect(() => {
     fetchScenes();
-  }, [project.id]);
+  }, [project.id, fetchScenes]);
 
   // Otvaranje dijaloga za dodavanje
   const handleAddScene = () => {

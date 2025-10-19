@@ -2,10 +2,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Project } from '@/lib/types';
 
 interface Phase6FormProps {
-  project: Project;
   onFieldChange: (field: 'point_of_view', value: string) => void;
   renderSaveIndicator: (field: string) => React.ReactNode;
   formData: {
@@ -13,7 +11,7 @@ interface Phase6FormProps {
   };
 }
 
-export function Phase6Form({ project, onFieldChange, renderSaveIndicator, formData }: Phase6FormProps) {
+export function Phase6Form({ onFieldChange, renderSaveIndicator, formData }: Phase6FormProps) {
   return (
     <div className="space-y-6">
       <Card>

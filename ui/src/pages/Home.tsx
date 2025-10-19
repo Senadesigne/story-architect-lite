@@ -1,6 +1,6 @@
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/serverComm';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Project } from '@/lib/types';
@@ -15,7 +15,7 @@ export function Home() {
   const [createProjectResult, setCreateProjectResult] = useState(null);
 
   // Funkcija za dohvaćanje projekata
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     if (!user) return;
     
     setIsLoadingProjects(true);
@@ -30,12 +30,12 @@ export function Home() {
     } finally {
       setIsLoadingProjects(false);
     }
-  };
+  }, [user]);
 
   // Učitavanje projekata kada se komponenta učita
   useEffect(() => {
     fetchProjects();
-  }, [user]);
+  }, [user, fetchProjects]);
 
   const handleCreateProject = async () => {
     if (!user) return;

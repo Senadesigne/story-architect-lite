@@ -1,4 +1,4 @@
-import { useParams, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { api } from '@/lib/serverComm';
 import { Project, ProjectUpdateData } from '@/lib/types';
@@ -59,7 +59,7 @@ export function ProjectPage() {
     }
   }, []);
 
-  const handleSave = useCallback(async (field: ProjectField, value: string | boolean) => {
+  const handleSave = useCallback(async (field: ProjectField, value: string) => {
     if (!projectId) return;
     
     // Check if this field is already being saved
@@ -83,7 +83,7 @@ export function ProjectPage() {
       }, SAVE_INDICATOR_DISPLAY_TIME);
       
       saveTimeoutsRef.current[field] = timeout;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving project:', error);
       setSaveStatus(prev => ({ ...prev, [field]: 'error' }));
       
@@ -117,7 +117,7 @@ export function ProjectPage() {
   }, [clearDebounceTimeout, handleSave]);
 
 
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     if (!projectId) {
       setError('Nevaljan ID projekta');
       setIsLoading(false);
@@ -145,11 +145,16 @@ export function ProjectPage() {
         outline_notes: data.outline_notes || '',
         point_of_view: data.point_of_view || ''
       });
-    } catch (error: any) {
-      if (error.status === 404) {
-        setError('Projekt nije pronađen');
-      } else if (error.status === 400) {
-        setError('Nevaljan ID projekta');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'status' in error) {
+        const apiError = error as { status: number };
+        if (apiError.status === 404) {
+          setError('Projekt nije pronađen');
+        } else if (apiError.status === 400) {
+          setError('Nevaljan ID projekta');
+        } else {
+          setError('Greška pri dohvaćanju projekta');
+        }
       } else {
         setError('Greška pri dohvaćanju projekta');
       }
@@ -157,11 +162,11 @@ export function ProjectPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     fetchProject();
-  }, [projectId]);
+  }, [projectId, fetchProject]);
 
   // Cleanup all timeouts on unmount
   useEffect(() => {
@@ -289,7 +294,6 @@ export function ProjectPage() {
             path="ideation" 
             element={
               <IdeationForm 
-                project={project} 
                 onFieldChange={handleFieldChange}
                 renderSaveIndicator={renderSaveIndicator}
                 formData={{
@@ -306,7 +310,6 @@ export function ProjectPage() {
             path="planning" 
             element={
               <Phase2Form 
-                project={project} 
                 onFieldChange={handleFieldChange}
                 renderSaveIndicator={renderSaveIndicator}
                 formData={{
@@ -349,7 +352,6 @@ export function ProjectPage() {
             path="finalization" 
             element={
               <Phase6Form 
-                project={project} 
                 onFieldChange={handleFieldChange}
                 renderSaveIndicator={renderSaveIndicator}
                 formData={{

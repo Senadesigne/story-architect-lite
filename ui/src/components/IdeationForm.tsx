@@ -2,13 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Project } from '@/lib/types';
 
 // Type definition for project fields that can be edited
 type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
 
 interface IdeationFormProps {
-  project: Project;
   onFieldChange: (field: ProjectField, value: string) => void;
   renderSaveIndicator: (field: ProjectField) => React.ReactNode;
   formData: {
@@ -20,7 +18,7 @@ interface IdeationFormProps {
   };
 }
 
-export function IdeationForm({ project, onFieldChange, renderSaveIndicator, formData }: IdeationFormProps) {
+export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: IdeationFormProps) {
   return (
     <Card>
       <CardHeader>

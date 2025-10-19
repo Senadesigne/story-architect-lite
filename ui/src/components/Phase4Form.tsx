@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '@/lib/serverComm';
 import { Character } from '@/lib/types';
@@ -43,7 +43,7 @@ export function Phase4Form() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Dohvaćanje likova
-  const fetchCharacters = async () => {
+  const fetchCharacters = useCallback(async () => {
     if (!projectId) return;
     
     setIsLoading(true);
@@ -52,17 +52,17 @@ export function Phase4Form() {
     try {
       const data = await api.getCharacters(projectId);
       setCharacters(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching characters:', error);
       setError('Greška pri dohvaćanju likova');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [projectId]);
 
   useEffect(() => {
     fetchCharacters();
-  }, [projectId]);
+  }, [projectId, fetchCharacters]);
 
   // Otvaranje modala za dodavanje novog lika
   const handleAddCharacter = () => {
@@ -104,7 +104,7 @@ export function Phase4Form() {
       
       setIsDialogOpen(false);
       await fetchCharacters(); // Osvježi listu
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving character:', error);
       setError('Greška pri spremanju lika');
     } finally {
@@ -121,7 +121,7 @@ export function Phase4Form() {
     try {
       await api.deleteCharacter(character.id);
       await fetchCharacters(); // Osvježi listu
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting character:', error);
       setError('Greška pri brisanju lika');
     }

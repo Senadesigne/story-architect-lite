@@ -71,13 +71,20 @@ export async function getProject(projectId: string) {
   return response.json();
 }
 
-export async function updateProject(projectId: string, data: any) {
+export async function updateProject(projectId: string, data: Record<string, string | undefined>) {
   const response = await fetchWithAuth(`/api/projects/${projectId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteProject(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}`, {
+    method: 'DELETE',
   });
   return response.json();
 }
@@ -207,6 +214,7 @@ export const api = {
   createProject,
   getProject,
   updateProject,
+  deleteProject,
   getLocations,
   createLocation,
   updateLocation,

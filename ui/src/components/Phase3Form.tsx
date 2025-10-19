@@ -9,7 +9,7 @@ import { api } from '@/lib/serverComm';
 import { Location } from '@/lib/types';
 
 interface Phase3FormProps {
-  project: any;
+  project: { id: string };
   onFieldChange: (field: string, value: string) => void;
   renderSaveIndicator: (field: string) => React.ReactNode;
   formData: {
@@ -22,7 +22,6 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationDescription, setNewLocationDescription] = useState('');
 

@@ -83,7 +83,7 @@ export async function verifyFirebaseToken(token: string, projectId: string): Pro
       id: payload.sub as string,
       email: payload.email as string | undefined,
     };
-  } catch (error) {
+  } catch {
     throw new Error('Invalid token');
   }
 } 

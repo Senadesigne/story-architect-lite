@@ -2,13 +2,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Project } from '@/lib/types';
 
 // Type definition for project fields that can be edited
 type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
 
 interface Phase2FormProps {
-  project: Project;
   onFieldChange: (field: ProjectField, value: string) => void;
   renderSaveIndicator: (field: ProjectField) => React.ReactNode;
   formData: {
@@ -17,7 +15,7 @@ interface Phase2FormProps {
   };
 }
 
-export function Phase2Form({ project, onFieldChange, renderSaveIndicator, formData }: Phase2FormProps) {
+export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Phase2FormProps) {
   return (
     <Card>
       <CardHeader>

@@ -132,7 +132,7 @@ app.put('/api/projects/:projectId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: any = {
+    const updateData: Record<string, string | Date> = {
       updatedAt: new Date(),
     };
     
@@ -169,6 +169,42 @@ app.put('/api/projects/:projectId', async (c) => {
   } catch (error) {
     console.error('Error updating project:', error);
     return c.json({ error: 'Failed to update project' }, 500);
+  }
+});
+
+// Projects endpoint - DELETE ruta za brisanje projekta
+app.delete('/api/projects/:projectId', async (c) => {
+  try {
+    const user = c.get('user');
+    const projectId = c.req.param('projectId');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Validacija UUID formata
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(projectId)) {
+      return c.json({ error: 'Invalid project ID format' }, 400);
+    }
+    
+    // Provjera da projekt postoji i pripada korisniku
+    const [existingProject] = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+    
+    if (!existingProject) {
+      return c.json({ error: 'Project not found' }, 404);
+    }
+    
+    // Brisanje projekta (cascade će obrisati sve povezane entitete)
+    await db
+      .delete(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+    
+    return c.json({ message: 'Project deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    return c.json({ error: 'Failed to delete project' }, 500);
   }
 });
 
@@ -296,7 +332,7 @@ app.put('/api/locations/:locationId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: any = {};
+    const updateData: Record<string, string | Date> = {};
     if (name !== undefined) updateData.name = name.trim();
     if (description !== undefined) updateData.description = description || null;
     
@@ -491,7 +527,7 @@ app.put('/api/characters/:characterId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: any = {};
+    const updateData: Record<string, string | Date> = {};
     if (name !== undefined) updateData.name = name.trim();
     if (role !== undefined) updateData.role = role || null;
     if (motivation !== undefined) updateData.motivation = motivation || null;
@@ -689,7 +725,7 @@ app.put('/api/scenes/:sceneId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: any = {};
+    const updateData: Record<string, string | Date> = {};
     if (title !== undefined) updateData.title = title.trim();
     if (summary !== undefined) updateData.summary = summary || null;
     if (order !== undefined) updateData.order = order;

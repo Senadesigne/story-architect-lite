@@ -7,7 +7,7 @@ type EnvLike = Record<string, string | undefined>;
 
 let contextEnv: EnvLike | null = null;
 
-export function setEnvContext(env: any) {
+export function setEnvContext(env: EnvLike) {
   contextEnv = env;
 }
 
@@ -81,7 +81,7 @@ export function getNodeEnv() {
 /**
  * Type guard to check if we're in a Cloudflare Workers environment
  */
-export function isCloudflareEnv(source: EnvLike): boolean {
+export function isCloudflareEnv(): boolean {
   // In Cloudflare Workers, process.env is not available or is empty
   return typeof process === 'undefined' || Object.keys(process.env).length === 0;
 } 
