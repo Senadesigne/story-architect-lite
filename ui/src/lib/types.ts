@@ -18,6 +18,9 @@ export interface Project {
   // Faza 3: Izgradnja Svijeta
   rules_definition?: string;
   culture_and_history?: string;
+  // Faza 5: Strukturiranje Radnje
+  synopsis?: string;
+  outline_notes?: string;
 }
 
 export interface User {
@@ -38,6 +41,18 @@ export interface ProjectUpdateData {
   // Faza 3: Izgradnja Svijeta
   rules_definition?: string;
   culture_and_history?: string;
+  // Faza 5: Strukturiranje Radnje
+  synopsis?: string;
+  outline_notes?: string;
+}
+
+export interface Scene {
+  id: string;
+  title: string;
+  summary?: string;
+  order: number;
+  projectId: string;
+  locationId?: string;
 }
 
 export interface Location {

@@ -29,6 +29,10 @@ export const projects = pgTable('projects', {
   // Faza 3: Izgradnja Svijeta
   rules_definition: text('rules_definition'),
   culture_and_history: text('culture_and_history'),
+  
+  // Faza 5: Strukturiranje Radnje
+  synopsis: text('synopsis'),
+  outline_notes: text('outline_notes'),
 });
 
 // Likovi

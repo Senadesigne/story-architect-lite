@@ -45,51 +45,57 @@ Ovdje ćemo detaljno razraditi svaku od 6 faza aplikacije. Cilj je da za svaki k
     * Prikazuje se nova kartica "Faza 5: Strukturiranje Radnje" na ruti `/projects/:projectId/structure`.
     * Kartica sadrži hibridni pristup:
         1.  **"Sinopsis":** Jedno veliko `textarea` polje za unos sinopsisa.
-        2.  **"Izrada Okvira Radnje (Bilješke)":** Jedno veliko `textarea` polje za slobodne bilješke o strukturi (npr. Struktura tri čina, Metoda pahuljice).
-        3.  **"Popis Scena":** UI komponenta za upravljanje (CRUD) scenama, koja implementira "Popis scena" metodu. Prikazuje listu postojećih scena (dohvaćenih s backenda) i gumb "+ Dodaj Scenu".
+        2.  **"Izrada Okvira Radnje (Bilješke)":** Jedno veliko `textarea` polje za slobodne bilješke o strukturi.
+        3.  **"Popis Scena":** UI komponenta za upravljanje (CRUD) scenama.
         4.  **"Vizualizacija Strukture Tri Čina":** Prikaz statične slike/dijagrama kao vizualne pomoći.
     * Polja "Sinopsis" i "Bilješke" koriste sustav automatskog spremanja (`useDebouncedSave` iz `ProjectPage.tsx`).
-    * Upravljanje scenama bit će putem eksplicitnih API poziva (CRUD operacije).
 * **Logika i Podaci (Backend):**
-    * **`projects` Tabela:** Proširit će se s dva nova tekstualna polja: `synopsis` i `outline_notes`.
-    * **Postojeći API (`PUT /api/projects/:projectId`):** Proširit će se kako bi mogao ažurirati `synopsis` i `outline_notes`.
-    * **Novi API (Scene):** Kreirat će se nove API rute za CRUD operacije nad `scenes` tabelom:
-        * `GET /api/projects/:projectId/scenes`
-        * `POST /api/projects/:projectId/scenes`
-        * `PUT /api/scenes/:sceneId`
-        * `DELETE /api/scenes/:sceneId`
+    * **`projects` Tabela:** Proširena s dva tekstualna polja: `synopsis` i `outline_notes`.
+    * **Postojeći API (`PUT /api/projects/:projectId`):** Proširen da ažurira `synopsis` i `outline_notes`.
+    * **Novi API (Scene):** Kreirane CRUD API rute za upravljanje `scenes` tabelom.
 
 #### Faza 6: Završne Pripreme
-(...detaljna razrada slijedi...)
+* **Korisničko iskustvo (Frontend):**
+    * Prikazuje se nova kartica "Faza 6: Završne Pripreme" na ruti `/projects/:projectId/finalization`.
+    * Kartica sadrži jedno veliko `textarea` polje za "Završne Bilješke" (npr. ideje za nastavak, podsjetnici za uređivanje, itd.).
+    * Može sadržavati i gumb "Izvezi Projekt" (funkcionalnost će biti dodana u budućnosti).
+    * Polje "Završne Bilješke" koristi sustav automatskog spremanja.
+* **Logika i Podaci (Backend):**
+    * **`projects` Tabela:** Proširit će se s jednim novim tekstualnim poljem: `final_notes`.
+    * **Postojeći API (`PUT /api/projects/:projectId`):** Proširit će se kako bi mogao ažurirati `final_notes`.
 
 ## 2. Plan Razvoja i Praćenje Zadataka
 Ovo je naša Kanban ploča. Zadatke ćemo prebacivati iz jedne kolone u drugu.
 
 ### [ ZADACI ZA ODRADITI (To-Do) ]
 
-**Epic: MVP-7: Faza 6 - Završne Pripreme**
-(...ovdje ćemo definirati zadatke...)
-
+**Epic: Post-MVP**
+(...ovdje ćemo definirati zadatke nakon završetka MVP-a, npr. Export, AI integracije...)
 
 ### [ TRENUTNO RADIMO (In Progress) ]
 
-**Epic: MVP-6: Faza 5 - Strukturiranje Radnje**
+**Epic: MVP-7: Faza 6 - Završne Pripreme**
 
-* **Zadatak 7.1 (Backend/Baza):** Ažurirati `server/src/schema/schema.ts`. Dodati dva nova tekstualna polja u `projects` tablicu: `synopsis` i `outline_notes`.
-* **Zadatak 7.2 (Backend/Baza):** Pokrenuti `pnpm run db:generate` i `pnpm run db:migrate` (u `server` folderu) da se primijene promjene na bazu.
-* **Zadatak 7.3 (Backend):** Proširiti `PUT /api/projects/:projectId` rutu (i `ProjectUpdateData` tip) kako bi prihvaćala i spremala podatke za `synopsis` i `outline_notes`.
-* **Zadatak 7.4 (Backend):** Kreirati nove CRUD API rute za Scene (koje koriste `scenes` tablicu):
-    * `GET /api/projects/:projectId/scenes`
-    * `POST /api/projects/:projectId/scenes`
-    * `PUT /api/scenes/:sceneId`
-    * `DELETE /api/scenes/:sceneId`
-* **Zadatak 7.5 (Frontend):** Kreirati novu React komponentu, `Phase5Form.tsx`.
-* **Zadatak 7.6 (Frontend):** U `Phase5Form.tsx` implementirati dva `textarea` polja (`synopsis`, `outline_notes`) i povezati ih s postojećom `handleFieldChange` logikom iz `ProjectPage.tsx`.
-* **Zadatak 7.7 (Frontend):** U `Phase5Form.tsx` implementirati UI za "Popis Scena" (prikaz liste, forma za dodavanje/uređivanje/brisanje) povezano s novim CRUD API-jem za scene.
-* **Zadatak 7.8 (Frontend):** U `Phase5Form.tsx` prikazati statičnu sliku "Vizualizacija Strukture Tri Čina".
-* **Zadatak 7.9 (Frontend/Routing):** Ažurirati `ProjectPage.tsx` (tip `ProjectField`, `formData` state) i renderirati novu `Phase5Form` komponentu na ruti `structure`.
+* **Zadatak 8.1 (Backend/Baza):** Ažurirati `server/src/schema/schema.ts`. Dodati jedno novo tekstualno polje u `projects` tablicu: `final_notes`.
+* **Zadatak 8.2 (Backend/Baza):** Pokrenuti `pnpm run db:generate` i `pnpm run db:migrate` (u `server` folderu).
+* **Zadatak 8.3 (Backend):** Proširiti `PUT /api/projects/:projectId` rutu (i `ProjectUpdateData` tip) kako bi prihvaćala i spremala podatke za `final_notes`.
+* **Zadatak 8.4 (Frontend):** Kreirati novu React komponentu, `Phase6Form.tsx`.
+* **Zadatak 8.5 (Frontend):** U `Phase6Form.tsx` implementirati `textarea` polje (`final_notes`) i povezati ga s postojećom `handleFieldChange` logikom iz `ProjectPage.tsx`.
+* **Zadatak 8.6 (Frontend/Routing):** Ažurirati `ProjectPage.tsx` (tip `ProjectField`, `formData` state) i renderirati novu `Phase6Form` komponentu na ruti `finalization`.
 
 ### [ ZAVRŠENO (Done) ]
+
+**Epic: MVP-6: Faza 5 - Strukturiranje Radnje**
+✅ **Zadatak 7.1 (Backend/Baza):** Ažurirana `projects` tablica s `synopsis` i `outline_notes`.
+✅ **Zadatak 7.2 (Backend/Baza):** Pokrenute `db:generate` i `db:migrate` migracije.
+✅ **Zadatak 7.3 (Backend):** Proširena `PUT /api/projects/:projectId` ruta za `synopsis` i `outline_notes`.
+✅ **Zadatak 7.4 (Backend):** Kreirane CRUD API rute za Scene (`scenes` tablica).
+✅ **Zadatak 7.5 (Frontend):** Kreirana `Phase5Form.tsx`.
+✅ **Zadatak 7.6 (Frontend):** Povezana `textarea` polja (`synopsis`, `outline_notes`) s `handleFieldChange`.
+✅ **Zadatak 7.7 (Frontend):** Implementiran UI za CRUD nad scenama.
+✅ **Zadatak 7.8 (Frontend):** Prikazana statična slika (placeholder).
+✅ **Zadatak 7.9 (Frontend/Routing):** Ažuriran `ProjectPage.tsx`.
+✅ **Zadatak 7.10 (Bug Fix):** Riješen problem (`column "synopsis" does not exist`) ponovnim pokretanjem servera i primjenom migracije.
 
 **Epic: MVP-5: Faza 4 - Razvoj Likova**
 ✅ **Zadatak 6.1 (Backend/Baza):** Ažurirana `characters` tabela u `schema.ts` s poljima `goal`, `fear`, `backstory`.

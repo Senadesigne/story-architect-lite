@@ -170,6 +170,37 @@ export async function deleteCharacter(characterId: string) {
   return response.json();
 }
 
+// Scenes API
+export async function getScenes(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/scenes`);
+  return response.json();
+}
+
+export async function createScene(projectId: string, sceneData: { title: string; summary?: string; order?: number; locationId?: string }) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/scenes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sceneData),
+  });
+  return response.json();
+}
+
+export async function updateScene(sceneId: string, sceneData: { title?: string; summary?: string; order?: number; locationId?: string }) {
+  const response = await fetchWithAuth(`/api/scenes/${sceneId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sceneData),
+  });
+  return response.json();
+}
+
+export async function deleteScene(sceneId: string) {
+  const response = await fetchWithAuth(`/api/scenes/${sceneId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
 export const api = {
   getCurrentUser,
   getProjects,
@@ -184,4 +215,8 @@ export const api = {
   createCharacter,
   updateCharacter,
   deleteCharacter,
+  getScenes,
+  createScene,
+  updateScene,
+  deleteScene,
 }; 

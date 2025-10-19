@@ -7,6 +7,7 @@ import { IdeationForm } from '@/components/IdeationForm';
 import { Phase2Form } from '@/components/Phase2Form';
 import { Phase3Form } from '@/components/Phase3Form';
 import { Phase4Form } from '@/components/Phase4Form';
+import { Phase5Form } from '@/components/Phase5Form';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -14,7 +15,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history';
+type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -30,7 +31,9 @@ export function ProjectPage() {
     brainstorming: '',
     research: '',
     rules_definition: '',
-    culture_and_history: ''
+    culture_and_history: '',
+    synopsis: '',
+    outline_notes: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
   const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
@@ -134,7 +137,9 @@ export function ProjectPage() {
         brainstorming: data.brainstorming || '',
         research: data.research || '',
         rules_definition: data.rules_definition || '',
-        culture_and_history: data.culture_and_history || ''
+        culture_and_history: data.culture_and_history || '',
+        synopsis: data.synopsis || '',
+        outline_notes: data.outline_notes || ''
       });
     } catch (error: any) {
       if (error.status === 404) {
@@ -322,7 +327,20 @@ export function ProjectPage() {
             } 
           />
           <Route path="characters" element={<Phase4Form />} />
-          <Route path="structure" element={<div className="p-6 text-center text-muted-foreground">Faza 5: Strukturiranje Radnje - Uskoro</div>} />
+          <Route 
+            path="structure" 
+            element={
+              <Phase5Form 
+                project={project} 
+                onFieldChange={handleFieldChange}
+                renderSaveIndicator={renderSaveIndicator}
+                formData={{
+                  synopsis: formData.synopsis,
+                  outline_notes: formData.outline_notes
+                }}
+              />
+            } 
+          />
           <Route path="finalization" element={<div className="p-6 text-center text-muted-foreground">Faza 6: Završne Pripreme - Uskoro</div>} />
         </Routes>
       </div>
