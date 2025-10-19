@@ -25,6 +25,10 @@ export const projects = pgTable('projects', {
   // Faza 2: Planiranje i Istraživanje
   brainstorming: text('brainstorming'),
   research: text('research'),
+  
+  // Faza 3: Izgradnja Svijeta
+  rules_definition: text('rules_definition'),
+  culture_and_history: text('culture_and_history'),
 });
 
 // Likovi
