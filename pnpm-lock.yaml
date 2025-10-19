@@ -7526,7 +7526,7 @@ snapshots:
   '@types/pg@8.15.2':
     dependencies:
       '@types/node': 22.15.21
-      pg-protocol: 1.10.0
+      pg-protocol: 1.10.3
       pg-types: 4.0.2
     optional: true
 

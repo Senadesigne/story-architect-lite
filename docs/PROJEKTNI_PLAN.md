@@ -14,23 +14,50 @@ Ovdje ćemo detaljno razraditi svaku od 6 faza aplikacije. Cilj je da za svaki k
 
 #### Faza 2: Planiranje i Istraživanje
 * **Korisničko iskustvo (Frontend):**
-    * Na stranici projekta, ispod kartice za Fazu 1, prikazuje se nova kartica s naslovom "Faza 2: Planiranje i Istraživanje".
-    * Unutar kartice se nalaze dva velika polja za unos (text area):
-        * "Brainstorming": Za slobodno pisanje, mape uma, ideje za likove i zaplete.
-        * "Istraživanje": Za bilješke o lokacijama, povijesnim događajima, i drugim istraživačkim materijalima.
+    * Prikazuje se nova kartica s naslovom "Faza 2: Planiranje i Istraživanje".
+    * Unutar kartice se nalaze dva velika polja za unos (text area): "Brainstorming" i "Istraživanje".
     * Sustav automatskog spremanja funkcionira identično kao i za Fazu 1.
 * **Logika i Podaci (Backend):**
     * Tabela `projects` u bazi podataka će se proširiti s dva nova tekstualna polja: `brainstorming` i `research`.
     * Postojeća backend API ruta `PUT /api/projects/:projectId` će se proširiti kako bi mogla primati i ažurirati ova dva nova polja.
 
 #### Faza 3: Izgradnja Svijeta
-(...detaljna razrada slijedi...)
+* **Korisničko iskustvo (Frontend):**
+    * Prikazuje se nova kartica "Faza 3: Izgradnja Svijeta" na ruti `/projects/:projectId/worldbuilding`.
+    * Sadrži dva `textarea` polja ("Definiranje Pravila", "Kultura, Društvo i Povijest") i CRUD sučelje za "Geografija i Lokacije".
+    * `textarea` polja koriste sustav automatskog spremanja iz `ProjectPage.tsx`.
+* **Logika i Podaci (Backend):**
+    * **`projects` Tabela:** Proširena s `rules_definition` i `culture_and_history`.
+    * **Postojeći API (`PUT /api/projects/:projectId`):** Proširen da ažurira ova dva polja.
+    * **Novi API (Lokacije):** Kreirane CRUD API rute za upravljanje `locations` tabelom.
 
 #### Faza 4: Razvoj Likova
-(...detaljna razrada slijedi...)
+* **Korisničko iskustvo (Frontend):**
+    * Prikazuje se nova kartica "Faza 4: Razvoj Likova" na ruti `/projects/:projectId/characters`.
+    * Sučelje je u potpunosti posvećeno CRUD (Create, Read, Update, Delete) upravljanju likovima.
+    * Gumb "+ Dodaj Lika" otvara modalnu formu za unos/uređivanje detalja o liku.
+* **Logika i Podaci (Backend):**
+    * **`characters` Tabela:** Proširena s poljima `goal`, `fear`, i `backstory`.
+    * **Novi API (Likovi):** Kreirane CRUD API rute za upravljanje `characters` tabelom.
 
 #### Faza 5: Strukturiranje Radnje
-(...detaljna razrada slijedi...)
+* **Korisničko iskustvo (Frontend):**
+    * Prikazuje se nova kartica "Faza 5: Strukturiranje Radnje" na ruti `/projects/:projectId/structure`.
+    * Kartica sadrži hibridni pristup:
+        1.  **"Sinopsis":** Jedno veliko `textarea` polje za unos sinopsisa.
+        2.  **"Izrada Okvira Radnje (Bilješke)":** Jedno veliko `textarea` polje za slobodne bilješke o strukturi (npr. Struktura tri čina, Metoda pahuljice).
+        3.  **"Popis Scena":** UI komponenta za upravljanje (CRUD) scenama, koja implementira "Popis scena" metodu. Prikazuje listu postojećih scena (dohvaćenih s backenda) i gumb "+ Dodaj Scenu".
+        4.  **"Vizualizacija Strukture Tri Čina":** Prikaz statične slike/dijagrama kao vizualne pomoći.
+    * Polja "Sinopsis" i "Bilješke" koriste sustav automatskog spremanja (`useDebouncedSave` iz `ProjectPage.tsx`).
+    * Upravljanje scenama bit će putem eksplicitnih API poziva (CRUD operacije).
+* **Logika i Podaci (Backend):**
+    * **`projects` Tabela:** Proširit će se s dva nova tekstualna polja: `synopsis` i `outline_notes`.
+    * **Postojeći API (`PUT /api/projects/:projectId`):** Proširit će se kako bi mogao ažurirati `synopsis` i `outline_notes`.
+    * **Novi API (Scene):** Kreirat će se nove API rute za CRUD operacije nad `scenes` tabelom:
+        * `GET /api/projects/:projectId/scenes`
+        * `POST /api/projects/:projectId/scenes`
+        * `PUT /api/scenes/:sceneId`
+        * `DELETE /api/scenes/:sceneId`
 
 #### Faza 6: Završne Pripreme
 (...detaljna razrada slijedi...)
@@ -40,49 +67,73 @@ Ovo je naša Kanban ploča. Zadatke ćemo prebacivati iz jedne kolone u drugu.
 
 ### [ ZADACI ZA ODRADITI (To-Do) ]
 
-**Epic: MVP-4: Faza 3 - Izgradnja Svijeta**
-(...ovdje ćemo definirati zadatke za izgradnju svijeta...)
+**Epic: MVP-7: Faza 6 - Završne Pripreme**
+(...ovdje ćemo definirati zadatke...)
 
 
 ### [ TRENUTNO RADIMO (In Progress) ]
 
-**Epic: MVP-3.5: Refaktoriranje Navigacije Projekta**
+**Epic: MVP-6: Faza 5 - Strukturiranje Radnje**
 
-* **Zadatak 4.1 (Infrastruktura/Frontend):** Uvesti ugniježđene rute (nested routes) koristeći `react-router-dom` za stranicu pojedinog projekta.
-* **Zadatak 4.2 (Frontend):** Pretvoriti `ProjectPage.tsx` da služi kao "layout" komponenta. Ona će biti odgovorna za dohvaćanje podataka o projektu i sadržavat će `Sidebar` i `Outlet` za renderiranje aktivne faze.
-* **Zadatak 4.3 (Frontend):** Ažurirati lijevi `Sidebar` (vjerojatno `ui/src/components/layout/Sidebar.tsx`) da prikazuje stvarne linkove za navigaciju između faza (npr. "Faza 1: Ideja", "Faza 2: Planiranje").
-* **Zadatak 4.4 (Frontend):** Premjestiti `IdeationForm` i `Phase2Form` komponente tako da se renderiraju unutar `Outlet`-a na svojim specifičnim rutama (npr. `/projects/:projectId/ideation` i `/projects/:projectId/planning`).
-* **Zadatak 4.5 (Frontend):** Osigurati da postojeća logika za dohvaćanje podataka i automatsko spremanje (`useDebouncedSave`, `handleFieldChange` itd.) koja se nalazi u `ProjectPage.tsx` i dalje ispravno funkcionira i prosljeđuje podatke u pod-komponente.
+* **Zadatak 7.1 (Backend/Baza):** Ažurirati `server/src/schema/schema.ts`. Dodati dva nova tekstualna polja u `projects` tablicu: `synopsis` i `outline_notes`.
+* **Zadatak 7.2 (Backend/Baza):** Pokrenuti `pnpm run db:generate` i `pnpm run db:migrate` (u `server` folderu) da se primijene promjene na bazu.
+* **Zadatak 7.3 (Backend):** Proširiti `PUT /api/projects/:projectId` rutu (i `ProjectUpdateData` tip) kako bi prihvaćala i spremala podatke za `synopsis` i `outline_notes`.
+* **Zadatak 7.4 (Backend):** Kreirati nove CRUD API rute za Scene (koje koriste `scenes` tablicu):
+    * `GET /api/projects/:projectId/scenes`
+    * `POST /api/projects/:projectId/scenes`
+    * `PUT /api/scenes/:sceneId`
+    * `DELETE /api/scenes/:sceneId`
+* **Zadatak 7.5 (Frontend):** Kreirati novu React komponentu, `Phase5Form.tsx`.
+* **Zadatak 7.6 (Frontend):** U `Phase5Form.tsx` implementirati dva `textarea` polja (`synopsis`, `outline_notes`) i povezati ih s postojećom `handleFieldChange` logikom iz `ProjectPage.tsx`.
+* **Zadatak 7.7 (Frontend):** U `Phase5Form.tsx` implementirati UI za "Popis Scena" (prikaz liste, forma za dodavanje/uređivanje/brisanje) povezano s novim CRUD API-jem za scene.
+* **Zadatak 7.8 (Frontend):** U `Phase5Form.tsx` prikazati statičnu sliku "Vizualizacija Strukture Tri Čina".
+* **Zadatak 7.9 (Frontend/Routing):** Ažurirati `ProjectPage.tsx` (tip `ProjectField`, `formData` state) i renderirati novu `Phase5Form` komponentu na ruti `structure`.
 
 ### [ ZAVRŠENO (Done) ]
 
+**Epic: MVP-5: Faza 4 - Razvoj Likova**
+✅ **Zadatak 6.1 (Backend/Baza):** Ažurirana `characters` tabela u `schema.ts` s poljima `goal`, `fear`, `backstory`.
+✅ **Zadatak 6.2 (Backend/Baza):** Pokrenute `db:generate` i `db:migrate` migracije.
+✅ **Zadatak 6.3 (Backend):** Kreirane nove CRUD API rute za Likove (GET, POST, PUT, DELETE) koristeći `characters` tablicu.
+✅ **Zadatak 6.4 (Frontend):** Kreirana nova komponenta, `Phase4Form.tsx`.
+✅ **Zadatak 6.5 (Frontend):** Implementiran UI za CRUD operacije nad likovima (modalna forma).
+✅ **Zadatak 6.6 (Frontend/Routing):** Ažuriran `ProjectPage.tsx` da renderira `Phase4Form` na `characters` ruti.
+✅ **Zadatak 6.7 (Bug Fix):** Instalirana nedostajuća `shadcn/ui dialog` komponenta kako bi se riješilo rušenje aplikacije.
+
+**Epic: MVP-4: Faza 3 - Izgradnja Svijeta**
+✅ **Zadatak 5.1 (Backend/Baza):** Ažurirana `projects` tabela s `rules_definition` i `culture_and_history`.
+✅ **Zadatak 5.2 (Backend/Baza):** Pokrenute migracije.
+✅ **Zadatak 5.3 (Backend):** Proširena `PUT /api/projects/:projectId` ruta.
+✅ **Zadatak 5.4 (Backend):** Kreirane CRUD API rute za Lokacije (`locations` tabela).
+✅ **Zadatak 5.5 (Frontend):** Kreirana `Phase3Form.tsx`.
+✅ **Zadatak 5.6 (Frontend):** Povezana `textarea` polja s `handleFieldChange`.
+✅ **Zadatak 5.7 (Frontend):** Implementiran UI za CRUD nad lokacijama.
+✅ **Zadatak 5.8 (Frontend/Routing):** Ažuriran `ProjectPage.tsx`.
+
+**Epic: MVP-3.5: Refaktoriranje Navigacije Projekta**
+✅ **Zadatak 4.1 (Infrastruktura/Frontend):** Uvedene ugniježđene rute.
+✅ **Zadatak 4.2 (Frontend):** `ProjectPage.tsx` pretvoren u "layout" komponentu.
+✅ **Zadatak 4.3 (Frontend):** Ažuriran lijevi `Sidebar`.
+✅ **Zadatak 4.4 (Frontend):** `IdeationForm` i `Phase2Form` prebačeni u `Outlet`.
+✅ **Zadatak 4.5 (Frontend):** Osigurana logika automatskog spremanja.
+
 **Epic: MVP-3: Faza 2 - Planiranje i Istraživanje**
-✅ **Zadatak 3.1 (Backend):** Ažurirati `projects` tabelu u `schema.ts` s novim tekstualnim poljima `brainstorming` i `research`.
-✅ **Zadatak 3.2 (Backend):** Proširiti `PUT /api/projects/:projectId` rutu kako bi prihvaćala i spremala podatke za `brainstorming` i `research`.
-✅ **Zadatak 3.3 (Frontend):** Kreirati novu React komponentu, `Phase2Form.tsx`.
-✅ **Zadatak 3.4 (Frontend):** Integrirati `Phase2Form.tsx` na stranicu projekta (`ProjectPage.tsx`) i povezati je s logikom za automatsko spremanje.
+✅ **Zadatak 3.1 (Backend):** Ažurirana `projects` tabela.
+✅ **Zadatak 3.2 (Backend):** Proširena `PUT /api/projects/:projectId` ruta.
+✅ **Zadatak 3.3 (Frontend):** Kreirana `Phase2Form.tsx`.
+✅ **Zadatak 3.4 (Frontend):** Integrirana `Phase2Form.tsx`.
 
 **Epic: MVP-2.5: Poboljšanja Faze 1**
-✅ **Zadatak 2.5 (Backend/Frontend):** Ažurirati Fazu 1 s poljima za "Žanr" i "Ciljana Publika".
+✅ **Zadatak 2.5 (Backend/Frontend):** Ažurirana Faza 1.
 
 **Epic: MVP-2: Faza 1 - Ideja i Koncept**
-✅ **Zadatak 2.0 (Infrastruktura):** Implementirati navigaciju i stranicu za prikaz pojedinačnog projekta.
-✅ **Zadatak 2.1 (Backend):** Kreirati API rutu (`PUT /api/projects/:projectId`).
-✅ **Zadatak 2.2 (Frontend):** Kreirati React komponentu (`IdeationForm.tsx`).
-✅ **Zadatak 2.3 (Frontend):** Povezati formu s backendom i implementirati automatsko spremanje.
+✅ Implementirana Faza 1 (Backend i Frontend).
 
 **Epic: MVP-1: Dashboard i Upravljanje Projektima**
-✅ **Zadatak 1.1 (Backend):** Kreirati API rutu (`GET /api/projects`) koja dohvaća sve projekte za prijavljenog korisnika.
-✅ **Zadatak 1.2 (Backend):** Kreirati API rutu (`POST /api/projects`) koja stvara novi, prazan projekt za prijavljenog korisnika.
-✅ **Zadatak 1.3 (Frontend):** Dizajnirati i implementirati osnovni UI za Dashboard stranicu (`/dashboard`).
-✅ **Zadatak 1.4 (Frontend):** Prikazati listu projekata dohvaćenih s backenda.
-✅ **Zadatak 1.5 (Frontend):** Implementirati funkcionalnost gumba "+ Novi Projekt" koji poziva backend i osvježava listu.
+✅ Implementiran Dashboard i osnovni CRUD za projekte.
 
 **Epic: MVP-0: Postavljanje Projekta**
-✅ Inicijalizacija projekta s `create-volo-app`.
-✅ Konfiguracija `product-brief.md` i `.cursor-rules`.
-✅ Definiranje i primjena sheme baze podataka.
-✅ Uspješno postavljanje na GitHub.
+✅ Inicijalizacija projekta i baze podataka.
 
 ## 3. Naš Tijek Rada (Workflow) - "The Perfect Workflow"
 Slijedimo precizan, iterativni proces inspiriran najboljim praksama za rad s AI alatima.

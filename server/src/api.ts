@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
-import { projects, locations } from './schema/schema';
+import { projects, locations, characters } from './schema/schema';
 import { eq, and } from 'drizzle-orm';
 
 const app = new Hono();
@@ -347,6 +347,207 @@ app.delete('/api/locations/:locationId', async (c) => {
   } catch (error) {
     console.error('Error deleting location:', error);
     return c.json({ error: 'Failed to delete location' }, 500);
+  }
+});
+
+// ========== CHARACTERS API ==========
+
+// GET /api/projects/:projectId/characters
+app.get('/api/projects/:projectId/characters', async (c) => {
+  try {
+    const user = c.get('user');
+    const projectId = c.req.param('projectId');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Validacija UUID formata
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(projectId)) {
+      return c.json({ error: 'Invalid project ID format' }, 400);
+    }
+    
+    // Provjeri da projekt pripada korisniku
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+    
+    if (!project) {
+      return c.json({ error: 'Project not found' }, 404);
+    }
+    
+    // Dohvati likove
+    const projectCharacters = await db
+      .select()
+      .from(characters)
+      .where(eq(characters.projectId, projectId));
+    
+    return c.json(projectCharacters);
+  } catch (error) {
+    console.error('Error fetching characters:', error);
+    return c.json({ error: 'Failed to fetch characters' }, 500);
+  }
+});
+
+// POST /api/projects/:projectId/characters
+app.post('/api/projects/:projectId/characters', async (c) => {
+  try {
+    const user = c.get('user');
+    const projectId = c.req.param('projectId');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Validacija UUID formata
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(projectId)) {
+      return c.json({ error: 'Invalid project ID format' }, 400);
+    }
+    
+    // Parsiranje tijela zahtjeva
+    const body = await c.req.json();
+    const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
+    
+    if (!name || name.trim() === '') {
+      return c.json({ error: 'Name is required' }, 400);
+    }
+    
+    // Provjeri da projekt pripada korisniku
+    const [project] = await db
+      .select()
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+    
+    if (!project) {
+      return c.json({ error: 'Project not found' }, 404);
+    }
+    
+    // Stvori novog lika
+    const [newCharacter] = await db
+      .insert(characters)
+      .values({
+        name: name.trim(),
+        role: role || null,
+        motivation: motivation || null,
+        goal: goal || null,
+        fear: fear || null,
+        backstory: backstory || null,
+        arcStart: arcStart || null,
+        arcEnd: arcEnd || null,
+        projectId: projectId,
+      })
+      .returning();
+    
+    return c.json(newCharacter, 201);
+  } catch (error) {
+    console.error('Error creating character:', error);
+    return c.json({ error: 'Failed to create character' }, 500);
+  }
+});
+
+// PUT /api/characters/:characterId
+app.put('/api/characters/:characterId', async (c) => {
+  try {
+    const user = c.get('user');
+    const characterId = c.req.param('characterId');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Validacija UUID formata
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(characterId)) {
+      return c.json({ error: 'Invalid character ID format' }, 400);
+    }
+    
+    // Parsiranje tijela zahtjeva
+    const body = await c.req.json();
+    const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
+    
+    if (name !== undefined && (!name || name.trim() === '')) {
+      return c.json({ error: 'Name cannot be empty' }, 400);
+    }
+    
+    // Provjeri da lik postoji i pripada korisniku
+    const [existingCharacter] = await db
+      .select({
+        id: characters.id,
+        projectId: characters.projectId,
+        userId: projects.userId
+      })
+      .from(characters)
+      .innerJoin(projects, eq(characters.projectId, projects.id))
+      .where(and(eq(characters.id, characterId), eq(projects.userId, user.id)));
+    
+    if (!existingCharacter) {
+      return c.json({ error: 'Character not found' }, 404);
+    }
+    
+    // Priprema podataka za ažuriranje
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (role !== undefined) updateData.role = role || null;
+    if (motivation !== undefined) updateData.motivation = motivation || null;
+    if (goal !== undefined) updateData.goal = goal || null;
+    if (fear !== undefined) updateData.fear = fear || null;
+    if (backstory !== undefined) updateData.backstory = backstory || null;
+    if (arcStart !== undefined) updateData.arcStart = arcStart || null;
+    if (arcEnd !== undefined) updateData.arcEnd = arcEnd || null;
+    
+    if (Object.keys(updateData).length === 0) {
+      return c.json({ error: 'At least one field must be provided' }, 400);
+    }
+    
+    // Ažuriraj lika
+    const [updatedCharacter] = await db
+      .update(characters)
+      .set(updateData)
+      .where(eq(characters.id, characterId))
+      .returning();
+    
+    return c.json(updatedCharacter);
+  } catch (error) {
+    console.error('Error updating character:', error);
+    return c.json({ error: 'Failed to update character' }, 500);
+  }
+});
+
+// DELETE /api/characters/:characterId
+app.delete('/api/characters/:characterId', async (c) => {
+  try {
+    const user = c.get('user');
+    const characterId = c.req.param('characterId');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Validacija UUID formata
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(characterId)) {
+      return c.json({ error: 'Invalid character ID format' }, 400);
+    }
+    
+    // Provjeri da lik postoji i pripada korisniku
+    const [existingCharacter] = await db
+      .select({
+        id: characters.id,
+        projectId: characters.projectId,
+        userId: projects.userId
+      })
+      .from(characters)
+      .innerJoin(projects, eq(characters.projectId, projects.id))
+      .where(and(eq(characters.id, characterId), eq(projects.userId, user.id)));
+    
+    if (!existingCharacter) {
+      return c.json({ error: 'Character not found' }, 404);
+    }
+    
+    // Obriši lika
+    await db
+      .delete(characters)
+      .where(eq(characters.id, characterId));
+    
+    return c.json({ message: 'Character deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting character:', error);
+    return c.json({ error: 'Failed to delete character' }, 500);
   }
 });
 

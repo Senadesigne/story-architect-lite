@@ -71,7 +71,7 @@ export async function getProject(projectId: string) {
   return response.json();
 }
 
-export async function updateProject(projectId: string, data: { logline?: string; premise?: string; theme?: string }) {
+export async function updateProject(projectId: string, data: any) {
   const response = await fetchWithAuth(`/api/projects/${projectId}`, {
     method: 'PUT',
     headers: {
@@ -82,17 +82,93 @@ export async function updateProject(projectId: string, data: { logline?: string;
   return response.json();
 }
 
-// Example of how to add more API endpoints:
-// export async function createChat(data: CreateChatData) {
-//   const response = await fetchWithAuth('/api/v1/protected/chats', {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify(data),
-//   });
-//   return response.json();
-// }
+// Locations API
+export async function getLocations(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/locations`);
+  return response.json();
+}
+
+export async function createLocation(projectId: string, data: { name: string; description?: string }) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/locations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function updateLocation(locationId: string, data: { name?: string; description?: string }) {
+  const response = await fetchWithAuth(`/api/locations/${locationId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteLocation(locationId: string) {
+  const response = await fetchWithAuth(`/api/locations/${locationId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
+// Characters API
+export async function getCharacters(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/characters`);
+  return response.json();
+}
+
+export async function createCharacter(projectId: string, data: { 
+  name: string; 
+  role?: string; 
+  motivation?: string; 
+  goal?: string; 
+  fear?: string; 
+  backstory?: string; 
+  arcStart?: string; 
+  arcEnd?: string; 
+}) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/characters`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function updateCharacter(characterId: string, data: { 
+  name?: string; 
+  role?: string; 
+  motivation?: string; 
+  goal?: string; 
+  fear?: string; 
+  backstory?: string; 
+  arcStart?: string; 
+  arcEnd?: string; 
+}) {
+  const response = await fetchWithAuth(`/api/characters/${characterId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteCharacter(characterId: string) {
+  const response = await fetchWithAuth(`/api/characters/${characterId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
 
 export const api = {
   getCurrentUser,
@@ -100,5 +176,12 @@ export const api = {
   createProject,
   getProject,
   updateProject,
-  // Add other API endpoints here
+  getLocations,
+  createLocation,
+  updateLocation,
+  deleteLocation,
+  getCharacters,
+  createCharacter,
+  updateCharacter,
+  deleteCharacter,
 }; 

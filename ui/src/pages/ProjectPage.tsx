@@ -5,6 +5,8 @@ import { Project, ProjectUpdateData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { IdeationForm } from '@/components/IdeationForm';
 import { Phase2Form } from '@/components/Phase2Form';
+import { Phase3Form } from '@/components/Phase3Form';
+import { Phase4Form } from '@/components/Phase4Form';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -12,7 +14,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
+type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -26,7 +28,9 @@ export function ProjectPage() {
     genre: '',
     audience: '',
     brainstorming: '',
-    research: ''
+    research: '',
+    rules_definition: '',
+    culture_and_history: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
   const saveTimeoutsRef = useRef<{ [key in ProjectField]?: NodeJS.Timeout }>({});
@@ -128,7 +132,9 @@ export function ProjectPage() {
         genre: data.genre || '',
         audience: data.audience || '',
         brainstorming: data.brainstorming || '',
-        research: data.research || ''
+        research: data.research || '',
+        rules_definition: data.rules_definition || '',
+        culture_and_history: data.culture_and_history || ''
       });
     } catch (error: any) {
       if (error.status === 404) {
@@ -301,8 +307,21 @@ export function ProjectPage() {
               />
             } 
           />
-          <Route path="worldbuilding" element={<div className="p-6 text-center text-muted-foreground">Faza 3: Izgradnja Svijeta - Uskoro</div>} />
-          <Route path="characters" element={<div className="p-6 text-center text-muted-foreground">Faza 4: Razvoj Likova - Uskoro</div>} />
+          <Route 
+            path="worldbuilding" 
+            element={
+              <Phase3Form 
+                project={project} 
+                onFieldChange={handleFieldChange}
+                renderSaveIndicator={renderSaveIndicator}
+                formData={{
+                  rules_definition: formData.rules_definition,
+                  culture_and_history: formData.culture_and_history
+                }}
+              />
+            } 
+          />
+          <Route path="characters" element={<Phase4Form />} />
           <Route path="structure" element={<div className="p-6 text-center text-muted-foreground">Faza 5: Strukturiranje Radnje - Uskoro</div>} />
           <Route path="finalization" element={<div className="p-6 text-center text-muted-foreground">Faza 6: Završne Pripreme - Uskoro</div>} />
         </Routes>

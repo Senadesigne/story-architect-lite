@@ -15,6 +15,9 @@ export interface Project {
   // Faza 2: Planiranje i Istraživanje
   brainstorming?: string;
   research?: string;
+  // Faza 3: Izgradnja Svijeta
+  rules_definition?: string;
+  culture_and_history?: string;
 }
 
 export interface User {
@@ -32,4 +35,27 @@ export interface ProjectUpdateData {
   // Faza 2: Planiranje i Istraživanje
   brainstorming?: string;
   research?: string;
+  // Faza 3: Izgradnja Svijeta
+  rules_definition?: string;
+  culture_and_history?: string;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  description?: string;
+  projectId: string;
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  role?: string;
+  motivation?: string;
+  goal?: string;
+  fear?: string;
+  backstory?: string;
+  arcStart?: string;
+  arcEnd?: string;
+  projectId: string;
 }
