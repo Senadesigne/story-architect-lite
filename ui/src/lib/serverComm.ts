@@ -10,13 +10,36 @@ class APIError extends Error {
   }
 }
 
+// Token cache for performance
+let tokenCache: { token: string; expiry: number } | null = null;
+
 async function getAuthToken(): Promise<string | null> {
+  // Provjeri cache
+  if (tokenCache && Date.now() < tokenCache.expiry) {
+    return tokenCache.token;
+  }
+  
   const auth = getAuth(app);
   const user = auth.currentUser;
   if (!user) {
+    tokenCache = null;
     return null;
   }
-  return user.getIdToken();
+  
+  const token = await user.getIdToken();
+  
+  // Cachirati token na 5 minuta
+  tokenCache = {
+    token,
+    expiry: Date.now() + 5 * 60 * 1000,
+  };
+  
+  return token;
+}
+
+// Funkcija za brisanje cache-a
+export function clearTokenCache() {
+  tokenCache = null;
 }
 
 async function fetchWithAuth(
@@ -208,8 +231,29 @@ export async function deleteScene(sceneId: string) {
   return response.json();
 }
 
+// User API
+export async function updateUser(data: { displayName?: string; avatarUrl?: string }) {
+  const response = await fetchWithAuth('/api/user', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteUser() {
+  const response = await fetchWithAuth('/api/user', {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
 export const api = {
   getCurrentUser,
+  updateUser,
+  deleteUser,
   getProjects,
   createProject,
   getProject,

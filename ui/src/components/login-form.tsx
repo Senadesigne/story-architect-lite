@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "./ui/input"
 import { Button } from "./ui/button"
 import { auth, googleProvider } from "@/lib/firebase"
-import { signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword } from "firebase/auth"
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
+import { RegisterForm } from "./RegisterForm"
 
 const GoogleIcon = () => (
   <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
@@ -18,6 +19,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [showRegister, setShowRegister] = useState(false)
+
+  if (showRegister) {
+    return <RegisterForm onSwitchToLogin={() => setShowRegister(false)} />
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,19 +31,11 @@ export function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, email, password)
     } catch (err: unknown) {
-      // If user doesn't exist, automatically register them
       const firebaseError = err as { code?: string; message?: string };
       if (firebaseError.code === 'auth/user-not-found' || firebaseError.code === 'auth/invalid-credential') {
-        try {
-          await createUserWithEmailAndPassword(auth, email, password)
-          console.log('User automatically registered and signed in')
-        } catch (registerErr: unknown) {
-          const registerError = registerErr as { message?: string };
-          setError(`Failed to register: ${registerError.message || 'Unknown error'}`)
-          console.error('Registration error:', registerErr)
-        }
+        setError("Korisnik nije pronađen. Molimo registrirajte se.")
       } else {
-        setError("Failed to sign in. Please check your credentials.")
+        setError("Greška pri prijavi. Provjerite podatke.")
         console.error(err)
       }
     }
@@ -85,13 +83,13 @@ export function LoginForm() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          <Button type="submit" className="w-full">Sign in / Register</Button>
+          <Button type="submit" className="w-full">Prijavi se</Button>
           <div className="relative w-full">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">Ili nastavi s</span>
             </div>
           </div>
           <Button 
@@ -101,8 +99,20 @@ export function LoginForm() {
             onClick={handleGoogleSignIn}
           >
             <GoogleIcon />
-            Sign in with Google
+            Prijavi se s Google
           </Button>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Nemate račun?{' '}
+              <Button 
+                variant="link" 
+                className="p-0 h-auto font-normal"
+                onClick={() => setShowRegister(true)}
+              >
+                Registrirajte se
+              </Button>
+            </p>
+          </div>
         </CardFooter>
       </form>
     </Card>

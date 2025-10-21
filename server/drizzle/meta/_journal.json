@@ -57,6 +57,20 @@
       "when": 1760903919411,
       "tag": "0007_big_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1760942759115,
+      "tag": "0008_happy_thunderbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1760991299222,
+      "tag": "0009_cool_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }

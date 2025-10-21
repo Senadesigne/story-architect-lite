@@ -1,15 +1,30 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth';
+import { errorHandler, requireValidUUID, NotFoundError, ValidationError } from './middleware/errorHandler';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
-import { projects, locations, characters, scenes } from './schema/schema';
+import { users, projects, locations, characters, scenes } from './schema/schema';
 import { eq, and } from 'drizzle-orm';
+import type {
+  UpdateUserBody,
+  UpdateProjectBody,
+  CreateLocationBody,
+  UpdateLocationBody,
+  CreateCharacterBody,
+  UpdateCharacterBody,
+  CreateSceneBody,
+  UpdateSceneBody,
+  DatabaseUpdateData
+} from './types/api';
 
 const app = new Hono();
 
 // CORS middleware
 app.use('*', cors());
+
+// Register error handler
+app.onError(errorHandler);
 
 // Health check endpoint
 app.get('/', (c) => {
@@ -23,6 +38,50 @@ app.use('/api/*', authMiddleware);
 app.get('/api/user', (c) => {
   const user = c.get('user');
   return c.json(user);
+});
+
+// Update user profile
+app.put('/api/user', async (c) => {
+  try {
+    const user = c.get('user');
+    const body: UpdateUserBody = await c.req.json();
+    const { displayName, avatarUrl } = body;
+    
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        displayName: displayName || null,
+        avatarUrl: avatarUrl || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+    
+    return c.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    return c.json({ error: 'Failed to update user' }, 500);
+  }
+});
+
+// Delete user account
+app.delete('/api/user', async (c) => {
+  try {
+    const user = c.get('user');
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    // Brisanje korisnika (cascade će obrisati sve projekte)
+    await db.delete(users).where(eq(users.id, user.id));
+    
+    return c.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return c.json({ error: 'Failed to delete user' }, 500);
+  }
 });
 
 // Projects endpoint - Nova ruta za dohvaćanje korisnikovih projekata
@@ -63,32 +122,25 @@ app.post('/api/projects', async (c) => {
 
 // Projects endpoint - Nova ruta za dohvaćanje pojedinog projekta
 app.get('/api/projects/:projectId', async (c) => {
-  try {
-    const user = c.get('user');
-    const projectId = c.req.param('projectId');
-    const databaseUrl = getDatabaseUrl();
-    const db = await getDatabase(databaseUrl);
-    
-    // Validacija UUID formata
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(projectId)) {
-      return c.json({ error: 'Invalid project ID format' }, 400);
-    }
-    
-    const [project] = await db
-      .select()
-      .from(projects)
-      .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
-    
-    if (!project) {
-      return c.json({ error: 'Project not found' }, 404);
-    }
-    
-    return c.json(project);
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    return c.json({ error: 'Failed to fetch project' }, 500);
+  const user = c.get('user');
+  const projectId = c.req.param('projectId');
+  
+  // Validacija UUID formata
+  requireValidUUID(projectId, 'project ID');
+  
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+  
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.userId, user.id)));
+  
+  if (!project) {
+    throw new NotFoundError('Project not found');
   }
+  
+  return c.json(project);
 });
 
 // Projects endpoint - Nova ruta za ažuriranje projekta (PUT)
@@ -106,7 +158,7 @@ app.put('/api/projects/:projectId', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: UpdateProjectBody = await c.req.json();
     const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = body;
     
     // Validacija da je barem jedno polje poslano
@@ -132,7 +184,7 @@ app.put('/api/projects/:projectId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: Record<string, string | Date> = {
+    const updateData: DatabaseUpdateData = {
       updatedAt: new Date(),
     };
     
@@ -260,7 +312,7 @@ app.post('/api/projects/:projectId/locations', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: CreateLocationBody = await c.req.json();
     const { name, description } = body;
     
     if (!name || name.trim() === '') {
@@ -309,7 +361,7 @@ app.put('/api/locations/:locationId', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: UpdateLocationBody = await c.req.json();
     const { name, description } = body;
     
     if (name !== undefined && (!name || name.trim() === '')) {
@@ -332,7 +384,7 @@ app.put('/api/locations/:locationId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: Record<string, string | Date> = {};
+    const updateData: DatabaseUpdateData = {};
     if (name !== undefined) updateData.name = name.trim();
     if (description !== undefined) updateData.description = description || null;
     
@@ -449,7 +501,7 @@ app.post('/api/projects/:projectId/characters', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: CreateCharacterBody = await c.req.json();
     const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
     
     if (!name || name.trim() === '') {
@@ -504,7 +556,7 @@ app.put('/api/characters/:characterId', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: UpdateCharacterBody = await c.req.json();
     const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
     
     if (name !== undefined && (!name || name.trim() === '')) {
@@ -527,7 +579,7 @@ app.put('/api/characters/:characterId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: Record<string, string | Date> = {};
+    const updateData: DatabaseUpdateData = {};
     if (name !== undefined) updateData.name = name.trim();
     if (role !== undefined) updateData.role = role || null;
     if (motivation !== undefined) updateData.motivation = motivation || null;
@@ -651,7 +703,7 @@ app.post('/api/projects/:projectId/scenes', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: CreateSceneBody = await c.req.json();
     const { title, summary, order, locationId } = body;
     
     if (!title || title.trim() === '') {
@@ -702,7 +754,7 @@ app.put('/api/scenes/:sceneId', async (c) => {
     }
     
     // Parsiranje tijela zahtjeva
-    const body = await c.req.json();
+    const body: UpdateSceneBody = await c.req.json();
     const { title, summary, order, locationId } = body;
     
     if (title !== undefined && (!title || title.trim() === '')) {
@@ -725,7 +777,7 @@ app.put('/api/scenes/:sceneId', async (c) => {
     }
     
     // Priprema podataka za ažuriranje
-    const updateData: Record<string, string | Date> = {};
+    const updateData: DatabaseUpdateData = {};
     if (title !== undefined) updateData.title = title.trim();
     if (summary !== undefined) updateData.summary = summary || null;
     if (order !== undefined) updateData.order = order;

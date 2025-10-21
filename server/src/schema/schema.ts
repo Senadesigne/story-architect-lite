@@ -5,6 +5,10 @@ import { relations } from 'drizzle-orm';
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Firebase UID je string
   email: text('email').notNull().unique(),
+  displayName: text('display_name'),
+  avatarUrl: text('avatar_url'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Projekti - Glavni kontejner za priču
@@ -70,13 +74,6 @@ export const scenes = pgTable('scenes', {
     locationId: uuid('location_id').references(() => locations.id),
 });
 
-// VEZNA TABLICA: Many-to-Many veza između Likova i Scena
-export const charactersToScenes = pgTable('characters_to_scenes', {
-    characterId: uuid('character_id').notNull().references(() => characters.id, { onDelete: 'cascade' }),
-    sceneId: uuid('scene_id').notNull().references(() => scenes.id, { onDelete: 'cascade' }),
-}, (t) => ({
-    pk: primaryKey({ columns: [t.characterId, t.sceneId] }),
-}));
 
 
 // DEFINIRANJE RELACIJA (kako Drizzle razumije veze)
@@ -92,9 +89,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
     scenes: many(scenes),
 }));
 
-export const charactersRelations = relations(characters, ({ one, many }) => ({
+export const charactersRelations = relations(characters, ({ one }) => ({
     project: one(projects, { fields: [characters.projectId], references: [projects.id] }),
-    charactersToScenes: many(charactersToScenes),
 }));
 
 export const locationsRelations = relations(locations, ({ one, many }) => ({
@@ -102,13 +98,8 @@ export const locationsRelations = relations(locations, ({ one, many }) => ({
     scenes: many(scenes),
 }));
 
-export const scenesRelations = relations(scenes, ({ one, many }) => ({
+export const scenesRelations = relations(scenes, ({ one }) => ({
     project: one(projects, { fields: [scenes.projectId], references: [projects.id] }),
     location: one(locations, { fields: [scenes.locationId], references: [locations.id] }),
-    charactersToScenes: many(charactersToScenes),
 }));
 
-export const charactersToScenesRelations = relations(charactersToScenes, ({ one }) => ({
-    character: one(characters, { fields: [charactersToScenes.characterId], references: [characters.id] }),
-    scene: one(scenes, { fields: [charactersToScenes.sceneId], references: [scenes.id] }),
-}));

@@ -10,9 +10,13 @@ import { Page1 } from '@/pages/Page1';
 import { Page2 } from '@/pages/Page2';
 import { ProjectPage } from '@/pages/ProjectPage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 function AppContent() {
   const { user, loading } = useAuth();
+  
+  // Aktiviraj session timeout za prijavljene korisnike
+  useSessionTimeout();
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen"></div>;
