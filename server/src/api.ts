@@ -9,21 +9,24 @@ import {
   requireResourceOwnership,
   handleDatabaseOperation 
 } from './middleware/errorHandler';
+import { validateBody, getValidatedBody } from './middleware/validation';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
 import { users, projects, locations, characters, scenes } from './schema/schema';
 import { eq } from 'drizzle-orm';
 import type {
-  UpdateUserBody,
-  UpdateProjectBody,
-  CreateLocationBody,
-  UpdateLocationBody,
-  CreateCharacterBody,
-  UpdateCharacterBody,
-  CreateSceneBody,
-  UpdateSceneBody,
   DatabaseUpdateData
 } from './types/api';
+import {
+  UpdateUserBodySchema,
+  UpdateProjectBodySchema,
+  CreateLocationBodySchema,
+  UpdateLocationBodySchema,
+  CreateCharacterBodySchema,
+  UpdateCharacterBodySchema,
+  CreateSceneBodySchema,
+  UpdateSceneBodySchema
+} from './schemas/validation';
 
 const app = new Hono();
 
@@ -48,10 +51,9 @@ app.get('/api/user', (c) => {
 });
 
 // Update user profile
-app.put('/api/user', async (c) => {
+app.put('/api/user', validateBody(UpdateUserBodySchema), async (c) => {
   const user = c.get('user');
-  const body: UpdateUserBody = await c.req.json();
-  const { displayName, avatarUrl } = body;
+  const { displayName, avatarUrl } = getValidatedBody(c);
   
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
@@ -149,7 +151,7 @@ app.get('/api/projects/:projectId', async (c) => {
 });
 
 // Projects endpoint - Nova ruta za ažuriranje projekta (PUT)
-app.put('/api/projects/:projectId', async (c) => {
+app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
   
@@ -158,19 +160,8 @@ app.put('/api/projects/:projectId', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: UpdateProjectBody = await c.req.json();
-  const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = body;
-  
-  // Validacija da je barem jedno polje poslano
-  if (logline === undefined && premise === undefined && theme === undefined && 
-      genre === undefined && audience === undefined && 
-      brainstorming === undefined && research === undefined &&
-      rules_definition === undefined && culture_and_history === undefined &&
-      synopsis === undefined && outline_notes === undefined &&
-      point_of_view === undefined) {
-    throw new ValidationError('At least one field must be provided');
-  }
+  // Dohvaćanje validirane podatke
+  const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -260,7 +251,7 @@ app.get('/api/projects/:projectId/locations', async (c) => {
 });
 
 // POST /api/projects/:projectId/locations
-app.post('/api/projects/:projectId/locations', async (c) => {
+app.post('/api/projects/:projectId/locations', validateBody(CreateLocationBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
   
@@ -269,13 +260,8 @@ app.post('/api/projects/:projectId/locations', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: CreateLocationBody = await c.req.json();
-  const { name, description } = body;
-  
-  if (!name || name.trim() === '') {
-    throw new ValidationError('Name is required');
-  }
+  // Dohvaćanje validirane podatke
+  const { name, description } = getValidatedBody(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -283,7 +269,7 @@ app.post('/api/projects/:projectId/locations', async (c) => {
     const [result] = await db
       .insert(locations)
       .values({
-        name: name.trim(),
+        name: name,
         description: description || null,
         projectId: projectId,
       })
@@ -296,7 +282,7 @@ app.post('/api/projects/:projectId/locations', async (c) => {
 });
 
 // PUT /api/locations/:locationId
-app.put('/api/locations/:locationId', async (c) => {
+app.put('/api/locations/:locationId', validateBody(UpdateLocationBodySchema), async (c) => {
   const user = c.get('user');
   const locationId = c.req.param('locationId');
   
@@ -305,24 +291,15 @@ app.put('/api/locations/:locationId', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: UpdateLocationBody = await c.req.json();
-  const { name, description } = body;
-  
-  if (name !== undefined && (!name || name.trim() === '')) {
-    throw new ValidationError('Name cannot be empty');
-  }
+  // Dohvaćanje validirane podatke
+  const { name, description } = getValidatedBody(c);
   
   await requireResourceOwnership(db, locations, locationId, user.id);
   
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
-  if (name !== undefined) updateData.name = name.trim();
+  if (name !== undefined) updateData.name = name;
   if (description !== undefined) updateData.description = description || null;
-  
-  if (Object.keys(updateData).length === 0) {
-    throw new ValidationError('At least one field (name, description) must be provided');
-  }
   
   const updatedLocation = await handleDatabaseOperation(async () => {
     const [result] = await db
@@ -383,7 +360,7 @@ app.get('/api/projects/:projectId/characters', async (c) => {
 });
 
 // POST /api/projects/:projectId/characters
-app.post('/api/projects/:projectId/characters', async (c) => {
+app.post('/api/projects/:projectId/characters', validateBody(CreateCharacterBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
   
@@ -392,13 +369,8 @@ app.post('/api/projects/:projectId/characters', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: CreateCharacterBody = await c.req.json();
-  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
-  
-  if (!name || name.trim() === '') {
-    throw new ValidationError('Name is required');
-  }
+  // Dohvaćanje validirane podatke
+  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -406,7 +378,7 @@ app.post('/api/projects/:projectId/characters', async (c) => {
     const [result] = await db
       .insert(characters)
       .values({
-        name: name.trim(),
+        name: name,
         role: role || null,
         motivation: motivation || null,
         goal: goal || null,
@@ -425,7 +397,7 @@ app.post('/api/projects/:projectId/characters', async (c) => {
 });
 
 // PUT /api/characters/:characterId
-app.put('/api/characters/:characterId', async (c) => {
+app.put('/api/characters/:characterId', validateBody(UpdateCharacterBodySchema), async (c) => {
   const user = c.get('user');
   const characterId = c.req.param('characterId');
   
@@ -434,19 +406,14 @@ app.put('/api/characters/:characterId', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: UpdateCharacterBody = await c.req.json();
-  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = body;
-  
-  if (name !== undefined && (!name || name.trim() === '')) {
-    throw new ValidationError('Name cannot be empty');
-  }
+  // Dohvaćanje validirane podatke
+  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody(c);
   
   await requireResourceOwnership(db, characters, characterId, user.id);
   
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
-  if (name !== undefined) updateData.name = name.trim();
+  if (name !== undefined) updateData.name = name;
   if (role !== undefined) updateData.role = role || null;
   if (motivation !== undefined) updateData.motivation = motivation || null;
   if (goal !== undefined) updateData.goal = goal || null;
@@ -454,10 +421,6 @@ app.put('/api/characters/:characterId', async (c) => {
   if (backstory !== undefined) updateData.backstory = backstory || null;
   if (arcStart !== undefined) updateData.arcStart = arcStart || null;
   if (arcEnd !== undefined) updateData.arcEnd = arcEnd || null;
-  
-  if (Object.keys(updateData).length === 0) {
-    throw new ValidationError('At least one field must be provided');
-  }
   
   const updatedCharacter = await handleDatabaseOperation(async () => {
     const [result] = await db
@@ -519,7 +482,7 @@ app.get('/api/projects/:projectId/scenes', async (c) => {
 });
 
 // POST /api/projects/:projectId/scenes
-app.post('/api/projects/:projectId/scenes', async (c) => {
+app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
   
@@ -528,13 +491,8 @@ app.post('/api/projects/:projectId/scenes', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: CreateSceneBody = await c.req.json();
-  const { title, summary, order, locationId } = body;
-  
-  if (!title || title.trim() === '') {
-    throw new ValidationError('Title is required');
-  }
+  // Dohvaćanje validirane podatke
+  const { title, summary, order, locationId } = getValidatedBody(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -542,7 +500,7 @@ app.post('/api/projects/:projectId/scenes', async (c) => {
     const [result] = await db
       .insert(scenes)
       .values({
-        title: title.trim(),
+        title: title,
         summary: summary || null,
         order: order || 0,
         locationId: locationId || null,
@@ -557,7 +515,7 @@ app.post('/api/projects/:projectId/scenes', async (c) => {
 });
 
 // PUT /api/scenes/:sceneId
-app.put('/api/scenes/:sceneId', async (c) => {
+app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) => {
   const user = c.get('user');
   const sceneId = c.req.param('sceneId');
   
@@ -566,26 +524,17 @@ app.put('/api/scenes/:sceneId', async (c) => {
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
-  // Parsiranje tijela zahtjeva
-  const body: UpdateSceneBody = await c.req.json();
-  const { title, summary, order, locationId } = body;
-  
-  if (title !== undefined && (!title || title.trim() === '')) {
-    throw new ValidationError('Title cannot be empty');
-  }
+  // Dohvaćanje validirane podatke
+  const { title, summary, order, locationId } = getValidatedBody(c);
   
   await requireResourceOwnership(db, scenes, sceneId, user.id);
   
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
-  if (title !== undefined) updateData.title = title.trim();
+  if (title !== undefined) updateData.title = title;
   if (summary !== undefined) updateData.summary = summary || null;
   if (order !== undefined) updateData.order = order;
   if (locationId !== undefined) updateData.locationId = locationId || null;
-  
-  if (Object.keys(updateData).length === 0) {
-    throw new ValidationError('At least one field must be provided');
-  }
   
   const updatedScene = await handleDatabaseOperation(async () => {
     const [result] = await db

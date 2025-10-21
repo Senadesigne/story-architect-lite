@@ -1,11 +1,25 @@
-// API Request Body Types
+// API Request Body Types - Now using Zod inferred types
+// Import Zod inferred types from validation schemas
+export type {
+  UpdateUserBody,
+  UpdateProjectBody,
+  CreateLocationBody,
+  UpdateLocationBody,
+  CreateCharacterBody,
+  UpdateCharacterBody,
+  CreateSceneBody,
+  UpdateSceneBody
+} from '../schemas/validation';
 
-export interface UpdateUserBody {
+// Legacy interfaces kept for backward compatibility (deprecated)
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyUpdateUserBody {
   displayName?: string;
   avatarUrl?: string;
 }
 
-export interface UpdateProjectBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyUpdateProjectBody {
   logline?: string;
   premise?: string;
   theme?: string;
@@ -20,17 +34,20 @@ export interface UpdateProjectBody {
   point_of_view?: string;
 }
 
-export interface CreateLocationBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyCreateLocationBody {
   name: string;
   description?: string;
 }
 
-export interface UpdateLocationBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyUpdateLocationBody {
   name?: string;
   description?: string;
 }
 
-export interface CreateCharacterBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyCreateCharacterBody {
   name: string;
   role?: string;
   motivation?: string;
@@ -41,7 +58,8 @@ export interface CreateCharacterBody {
   arcEnd?: string;
 }
 
-export interface UpdateCharacterBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyUpdateCharacterBody {
   name?: string;
   role?: string;
   motivation?: string;
@@ -52,14 +70,16 @@ export interface UpdateCharacterBody {
   arcEnd?: string;
 }
 
-export interface CreateSceneBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyCreateSceneBody {
   title: string;
   summary?: string;
   order?: number;
   locationId?: string;
 }
 
-export interface UpdateSceneBody {
+// @deprecated Use Zod inferred types from validation schemas instead
+export interface LegacyUpdateSceneBody {
   title?: string;
   summary?: string;
   order?: number;

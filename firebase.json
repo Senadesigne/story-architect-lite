@@ -1,11 +1,24 @@
 {
   "emulators": {
     "auth": {
-      "port": 5503
+      "host": "localhost",
+      "port": 9099
     },
     "ui": {
       "enabled": true,
-      "port": 5504
+      "host": "localhost", 
+      "port": 4000
+    },
+    "hub": {
+      "host": "localhost",
+      "port": 4401
+    },
+    "logging": {
+      "host": "localhost",
+      "port": 4501
     }
+  },
+  "projects": {
+    "default": "demo-project"
   }
 }
