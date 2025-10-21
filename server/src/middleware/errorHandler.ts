@@ -84,3 +84,49 @@ export const requireValidUUID = (id: string, fieldName: string = 'ID'): void => 
     throw new ValidationError(`Invalid ${fieldName} format`);
   }
 };
+
+// Helper function to check project ownership
+export const requireProjectOwnership = async (db: unknown, projectId: string, userId: string): Promise<void> => {
+  const { projects } = await import('../schema/schema');
+  const { eq, and } = await import('drizzle-orm');
+  
+  const [project] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
+  
+  if (!project) {
+    throw new NotFoundError('Project not found');
+  }
+};
+
+// Helper function to check resource ownership through project
+export const requireResourceOwnership = async (
+  db: unknown, 
+  resourceTable: unknown, 
+  resourceId: string, 
+  userId: string
+): Promise<void> => {
+  const { projects } = await import('../schema/schema');
+  const { eq, and } = await import('drizzle-orm');
+  
+  const [resource] = await db
+    .select({ id: resourceTable.id })
+    .from(resourceTable)
+    .innerJoin(projects, eq(resourceTable.projectId, projects.id))
+    .where(and(eq(resourceTable.id, resourceId), eq(projects.userId, userId)));
+  
+  if (!resource) {
+    throw new NotFoundError('Resource not found');
+  }
+};
+
+// Helper function to wrap database operations with error handling
+export const handleDatabaseOperation = async <T>(operation: () => Promise<T>): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    console.error('Database operation failed:', error);
+    throw new DatabaseError('Database operation failed');
+  }
+};

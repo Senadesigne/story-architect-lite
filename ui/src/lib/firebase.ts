@@ -7,8 +7,12 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Connect to Firebase Auth emulator only when explicitly enabled
-if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
+// Connect to Firebase Auth emulator in development mode or when explicitly enabled
+const isDevelopment = import.meta.env.DEV;
+const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' || 
+                   (isDevelopment && firebaseConfig.projectId === 'demo-project');
+
+if (useEmulator) {
   try {
     const firebaseAuthPort = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT || '9099';
     const emulatorUrl = `http://localhost:${firebaseAuthPort}`;
