@@ -15,7 +15,7 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
   try {
     const authHeader = c.req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return c.json({ error: 'Unauthorized' }, 401);
+      return c.json({ error: 'Unauthorized', message: 'Authorization header is required' }, 401);
     }
 
     const token = authHeader.split('Bearer ')[1];
@@ -59,7 +59,8 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     await next();
   } catch (error) {
     console.error('Auth error:', error);
-    return c.json({ error: 'Unauthorized' }, 401);
+    const message = error instanceof Error ? error.message : 'Authentication failed';
+    return c.json({ error: 'Unauthorized', message }, 401);
   }
 };
 

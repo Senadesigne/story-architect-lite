@@ -145,3 +145,23 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 6. **Commit** s jasnom porukom
 7. **Prebaci** zadatak u Done
 8. **Ponovi** proces
+
+---
+
+## NOVI ZADACI (Tehnički Dug - Otkriveno u Fazi Refaktoringa 2)
+
+### Zadatak TBD: Popraviti logiku i validaciju za `POST /api/projects`
+
+**Status:** 🟥 Na čekanju
+**Prioritet:** 🟠 Srednji
+**Opis:**
+Tijekom implementacije integration testova (Zadatak 1.8.6) otkriveno je da API ruta `POST /api/projects` trenutno **ne koristi Zod validaciju** i **potpuno ignorira request body**.
+
+Umjesto da koristi podatke iz `body`-ja (npr. `name`), ruta hardkodira naziv "Novi Projekt" prilikom kreiranja.
+
+**Akcijski koraci za rješavanje:**
+1. Ažurirati `server/src/schemas/validation.ts` i kreirati `CreateProjectBodySchema` (vjerojatno `z.object({ name: z.string().min(1) })`).
+2. Ažurirati rutu `POST /api/projects` u `server/src/api.ts`.
+3. Dodati `validateBody(CreateProjectBodySchema)` middleware na tu rutu.
+4. Modificirati logiku rute da koristi `c.var.validatedBody.name` prilikom kreiranja novog projekta u bazi.
+5. Ažurirati `api.integration.test.ts` da reflektira ovu promjenu (testirati da slanje `name` radi i da slanje praznog bodyja vraća 400).
