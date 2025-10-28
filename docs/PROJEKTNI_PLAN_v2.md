@@ -29,11 +29,6 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 3.8:** Kreirati OrchestratorService klasu
 * **Zadatak 3.9:** Implementirati `POST /api/projects/:projectId/ai/orchestrate`
 
-### Epic: Refaktoring i Tehnički Dug - Faza 2 🟡
-* **Zadatak 1.6:** Refaktorirati sve API endpoint-e da koriste novi error handling
-* **Zadatak 1.7:** Implementirati Zod validaciju za request body tipove
-* **Zadatak 1.8:** Dodati unit testove za error handling middleware
-* **Zadatak 1.9:** Optimizirati database query performanse (dodati indekse)
 
 ## [ TRENUTNO RADIMO (In Progress) ]
 
@@ -79,6 +74,12 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 1.5:** Zamijeniti `any` tipove s jakim TypeScript tipovima u `api.ts` ✅
 * **Zadatak 1.0:** Kreirati `database-server/docker-compose.yml` za PostgreSQL setup ✅
 
+### Epic: Refaktoring i Tehnički Dug - Faza 2 ✅
+* **Zadatak 1.6:** Refaktorirati sve API endpoint-e da koriste novi error handling ✅ Dovršeno
+* **Zadatak 1.7:** Implementirati Zod validaciju za request body tipove ✅ Dovršeno
+* **Zadatak 1.8:** Dodati unit testove za error handling middleware ✅ Dovršeno
+* **Zadatak 1.9:** Optimizirati database query performanse (dodati indekse) ✅ Dovršeno
+
 ## Prioriteti Implementacije
 
 ### Faza 1: Dokumentacija (0.5 dana)
@@ -89,8 +90,8 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 - Zadaci 1.0 - 1.5 ✅
 - Poboljšava kvalitetu koda prije dodavanja novih značajki
 
-### Faza 2b: Tehnički Dug - Faza 2 (1-2 dana)
-- Zadaci 1.6 - 1.9
+### Faza 2b: Tehnički Dug - Faza 2 (1-2 dana) ✅
+- Zadaci 1.6 - 1.9 ✅
 - Dodatno poboljšanje kvalitete i performansi
 
 ### Faza 3: AI Proof of Concept (2-3 dana)
@@ -124,11 +125,11 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 - **Schema Cleanup:** Uklonjena neiskorištena `charactersToScenes` tablica
 - **Code Quality:** ESLint konfiguracija provjerena i aktivna
 
-### 🔄 Sljedeći Koraci (Faza 2):
-- **Error Handling:** Refaktorirati preostale API endpoint-e da koriste novi error handling pattern
-- **Validacija:** Dodati Zod validaciju za sve request body tipove (opcionalno poboljšanje)
-- **Testiranje:** Kreirati unit testove za error handling middleware
-- **Performanse:** Optimizirati database query-je dodavanjem indeksa
+### ✅ Završeno u Refaktoring Fazi 2:
+- **Error Handling:** Refaktorirani svi API endpoint-i da koriste novi error handling pattern ✅
+- **Validacija:** Dodana Zod validacija za sve request body tipove ✅
+- **Testiranje:** Kreirani unit testovi za error handling middleware ✅
+- **Performanse:** Optimizirani database query-ji dodavanjem indeksa ✅
 
 ### 🚀 Baza Podataka:
 - PostgreSQL pokrenut preko Docker Compose u `database-server/` direktoriju
