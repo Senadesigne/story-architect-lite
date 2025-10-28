@@ -11,21 +11,78 @@ const mockVerifyFirebaseToken = verifyFirebaseToken as vi.Mock;
 describe('API Integration Tests', () => {
   let globalMockDb: any;
   let currentTable: any;
+  let mockUser: any;
   
   beforeEach(() => {
     // Reset svih mockova prije svakog testa
     vi.clearAllMocks();
     
     // Postavi osnovni "uspješan" auth state
-    const mockUser = createMockUser({ id: 'user-123' });
+    mockUser = createMockUser({ id: 'user-123' });
     mockVerifyFirebaseToken.mockResolvedValue(mockUser);
     
     // Kreiraj pametan mock database koji razlikuje pozive
     currentTable = null;
+    
+    // Stvori thenable objekt koji implementira promise interface
+    const createThenable = (result: any) => ({
+      then: (resolve: any, reject: any) => Promise.resolve(result).then(resolve, reject),
+      catch: (reject: any) => Promise.resolve(result).catch(reject),
+      finally: (fn: any) => Promise.resolve(result).finally(fn)
+    });
+    
+    // Mock rezultati prema tablici i kontekstu
+    let selectFields: any = null;
+    let whereConditions: any = null;
+    
     globalMockDb = {
-      select: vi.fn().mockReturnThis(),
+      select: vi.fn().mockImplementation((fields) => {
+        selectFields = fields;
+        const chainableObj = {
+          from: vi.fn().mockImplementation((table) => {
+            currentTable = table;
+            const whereObj = {
+              where: vi.fn().mockImplementation((conditions) => {
+                whereConditions = conditions;
+                const limitObj = {
+                  limit: vi.fn().mockImplementation(() => {
+                    // Auth middleware traži korisnika po emailu
+                    if (currentTable?.name === 'users') {
+                      return createThenable([mockUser]);
+                    }
+                    // requireProjectOwnership traži projekt po ID i userId
+                    if (currentTable?.name === 'projects' && selectFields?.id) {
+                      // Vraćaj projekt samo ako postoji i pripada korisniku
+                      // Ovo će se prilagoditi u pojedinim testovima
+                      return createThenable([{ id: 'default-project-id' }]);
+                    }
+                    // GET /api/projects/:id traži cijeli projekt
+                    if (currentTable?.name === 'projects') {
+                      return createThenable([]);
+                    }
+                    return createThenable([]);
+                  }),
+                  // Direktan pristup bez limit
+                  ...createThenable(currentTable?.name === 'users' ? [mockUser] : [])
+                };
+                return limitObj;
+              }),
+              limit: vi.fn().mockImplementation(() => {
+                // Direktan from().limit() bez where
+                if (currentTable?.name === 'projects') {
+                  return createThenable([]);
+                }
+                return createThenable([]);
+              }),
+              // Direktan pristup bez where
+              ...createThenable(currentTable?.name === 'users' ? [mockUser] : [])
+            };
+            return whereObj;
+          })
+        };
+        return chainableObj;
+      }),
       from: vi.fn().mockImplementation((table) => {
-        // Zapamti koju tablicu koristimo
         currentTable = table;
         return globalMockDb;
       }),
@@ -47,35 +104,26 @@ describe('API Integration Tests', () => {
       prepare: vi.fn().mockReturnThis(),
       all: vi.fn().mockResolvedValue([]),
       get: vi.fn().mockResolvedValue(undefined),
-      then: vi.fn((resolve) => {
-        // Vrati različite podatke ovisno o tablici
-        if (currentTable?.name === 'users') {
-          resolve([mockUser]);
-        } else if (currentTable?.name === 'projects') {
-          resolve([]);
-        } else {
-          resolve([]);
-        }
-      }),
     };
     
     // Ensure all chainable methods return the same mockDb instance
     Object.keys(globalMockDb).forEach(key => {
-      if (typeof globalMockDb[key] === 'function' && key !== 'returning' && key !== 'execute' && key !== 'all' && key !== 'get' && key !== 'then') {
+      if (typeof globalMockDb[key] === 'function' && 
+          key !== 'select' && // ne mijenjaj select - ima posebnu implementaciju
+          key !== 'returning' && 
+          key !== 'execute' && 
+          key !== 'all' && 
+          key !== 'get') {
         globalMockDb[key].mockReturnValue(globalMockDb);
       }
     });
     
     // Postavi default response za auth middleware - korisnik već postoji
     globalMockDb.returning.mockResolvedValue([mockUser]);
-    globalMockDb.then.mockImplementation((resolve) => resolve([mockUser])); // Dodajem natrag
     
     // Eksplicitno postavi mock implementaciju
     mockGetDatabase.mockImplementation(async (url) => {
-      // Ukloni then metodu da se izbjegne thenable problem
-      const dbCopy = { ...globalMockDb };
-      delete dbCopy.then;
-      return dbCopy;
+      return globalMockDb;
     });
   });
 
@@ -249,15 +297,55 @@ describe('API Integration Tests', () => {
         userId: 'user-123' 
       });
       
-      // Mock database da vrati projekt koji pripada korisniku
-      globalMockDb.then.mockImplementation((resolve) => {
-        if (currentTable?.name === 'users') {
-          resolve([mockUser]);
-        } else if (currentTable?.name === 'projects') {
-          resolve([mockProject]);
-        } else {
-          resolve([]);
-        }
+      // Override select mock za ovaj test
+      let callCount = 0;
+      globalMockDb.select.mockImplementation((fields = undefined) => {
+        callCount++;
+        
+        // Svaki poziv select() dobiva svoj kontekst
+        const callContext = {
+          callNumber: callCount,
+          fields: fields,
+          table: null as any
+        };
+        
+        const chainableObj = {
+          from: vi.fn().mockImplementation((table) => {
+            callContext.table = table;
+            // Tablica može biti Drizzle table objekt ili undefined
+            const tableName = table?.[Symbol.for('drizzle:Name')] || table?.name || 'unknown';
+            
+            const whereObj = {
+              where: vi.fn().mockImplementation((conditions) => {
+                const limitObj = {
+                  limit: vi.fn().mockImplementation((num) => {
+                    const actualTableName = callContext.table?.[Symbol.for('drizzle:Name')] || callContext.table?.name;
+                    
+                    // Auth middleware traži korisnika po email-u
+                    if (actualTableName === 'users') {
+                      return Promise.resolve([mockUser]);
+                    }
+                    
+                    // requireProjectOwnership traži projekt sa select({ id: ... })
+                    if (actualTableName === 'projects' && callContext.fields !== undefined) {
+                      return Promise.resolve([{ id: validUUID }]);
+                    }
+                    
+                    // GET /api/projects/:id traži cijeli projekt - select() bez argumenata
+                    if (actualTableName === 'projects' && callContext.fields === undefined) {
+                      return Promise.resolve([mockProject]);
+                    }
+                    
+                    return Promise.resolve([]);
+                  })
+                };
+                return limitObj;
+              })
+            };
+            return whereObj;
+          })
+        };
+        return chainableObj;
       });
 
       const response = await app.request(`/api/projects/${validUUID}`, {
@@ -277,15 +365,32 @@ describe('API Integration Tests', () => {
       // Koristi valjan UUID ali projekt ne postoji
       const validUUID = '123e4567-e89b-12d3-a456-426614174001';
       
-      // Mock database da vrati prazan niz (projekt ne postoji)
-      globalMockDb.then.mockImplementation((resolve) => {
-        if (currentTable?.name === 'users') {
-          resolve([mockUser]);
-        } else if (currentTable?.name === 'projects') {
-          resolve([]); // Projekt ne postoji
-        } else {
-          resolve([]);
-        }
+      // Override select mock za ovaj test - projekt ne postoji
+      globalMockDb.select.mockImplementation((fields) => {
+        const chainableObj = {
+          from: vi.fn().mockImplementation((table) => {
+            const whereObj = {
+              where: vi.fn().mockImplementation(() => {
+                const limitObj = {
+                  limit: vi.fn().mockImplementation(() => {
+                    // Auth middleware traži korisnika
+                    if (table?.name === 'users') {
+                      return Promise.resolve([mockUser]);
+                    }
+                    // requireProjectOwnership ne pronalazi projekt
+                    if (table?.name === 'projects') {
+                      return Promise.resolve([]); // Prazan niz - projekt ne postoji
+                    }
+                    return Promise.resolve([]);
+                  })
+                };
+                return limitObj;
+              })
+            };
+            return whereObj;
+          })
+        };
+        return chainableObj;
       });
 
       const response = await app.request(`/api/projects/${validUUID}`, {
