@@ -25,16 +25,11 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
     
-    console.log('🔍 DEBUG: firebaseUser.id:', firebaseUser.id);
-    console.log('🔍 DEBUG: firebaseUser.email:', firebaseUser.email);
-    
     // Prvo pokušaj pronaći korisnika po email-u
     let [user] = await db.select()
       .from(users)
       .where(eq(users.email, firebaseUser.email!))
       .limit(1);
-      
-    console.log('🔍 DEBUG: Existing user by email:', user);
     
     // Ako korisnik ne postoji, stvori ga
     if (!user) {
@@ -45,11 +40,8 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
         })
         .returning();
         
-      console.log('🔍 DEBUG: Insert result:', insertResult);
       user = insertResult[0];
     }
-
-    console.log('🔍 DEBUG: Final user:', user);
 
     if (!user) {
       throw new Error('Failed to create or retrieve user');

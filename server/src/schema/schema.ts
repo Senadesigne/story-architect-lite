@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, integer, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Korisnici - Povezujemo se s Firebase Auth putem ID-a
@@ -9,7 +9,10 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  // Indeks za brže pretraživanje po email adresi
+  emailIdx: index('idx_users_email').on(table.email),
+}));
 
 // Projekti - Glavni kontejner za priču
 export const projects = pgTable('projects', {
@@ -40,7 +43,10 @@ export const projects = pgTable('projects', {
   
   // Faza 6: Završne Pripreme
   point_of_view: text('point_of_view'),
-});
+}, (table) => ({
+  // Indeks za brže dohvaćanje projekata po korisniku
+  userIdIdx: index('idx_projects_user_id').on(table.userId),
+}));
 
 // Likovi
 export const characters = pgTable('characters', {
@@ -54,7 +60,10 @@ export const characters = pgTable('characters', {
     arcStart: text('arc_start'),
     arcEnd: text('arc_end'),
     projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-});
+}, (table) => ({
+  // Indeks za brže dohvaćanje likova po projektu
+  projectIdIdx: index('idx_characters_project_id').on(table.projectId),
+}));
 
 // Lokacije
 export const locations = pgTable('locations', {
@@ -62,7 +71,10 @@ export const locations = pgTable('locations', {
     name: varchar('name', { length: 256 }).notNull(),
     description: text('description'),
     projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
-});
+}, (table) => ({
+  // Indeks za brže dohvaćanje lokacija po projektu
+  projectIdIdx: index('idx_locations_project_id').on(table.projectId),
+}));
 
 // Scene
 export const scenes = pgTable('scenes', {
@@ -72,7 +84,14 @@ export const scenes = pgTable('scenes', {
     order: integer('order').notNull().default(0),
     projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
     locationId: uuid('location_id').references(() => locations.id),
-});
+}, (table) => ({
+  // Indeks za brže dohvaćanje scena po projektu
+  projectIdIdx: index('idx_scenes_project_id').on(table.projectId),
+  // Kompozitni indeks za sortiranje scena po redoslijed unutar projekta
+  orderIdx: index('idx_scenes_order').on(table.projectId, table.order),
+  // Indeks za brže dohvaćanje scena po lokaciji
+  locationIdIdx: index('idx_scenes_location_id').on(table.locationId),
+}));
 
 
 

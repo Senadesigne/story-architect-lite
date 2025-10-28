@@ -139,16 +139,18 @@ describe('validation middleware', () => {
       mockDb = {
         select: vi.fn().mockReturnThis(),
         from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([])
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn((resolve) => resolve([]))
       };
-      (getDatabase as vi.Mock).mockReturnValue(mockDb);
+      (getDatabase as vi.Mock).mockResolvedValue(mockDb);
     });
 
     it('should not throw error when user owns the project', async () => {
       const mockUser = createMockUser({ id: 'user-123' });
       const mockProject = createMockProject({ id: 'project-abc', userId: 'user-123' });
       
-      mockDb.where.mockResolvedValueOnce([{ id: 'project-abc' }]);
+      mockDb.then.mockImplementationOnce((resolve) => resolve([{ id: 'project-abc' }]));
 
       await expect(
         requireProjectOwnership(mockDb, 'project-abc', 'user-123')
@@ -156,7 +158,7 @@ describe('validation middleware', () => {
     });
 
     it('should throw NotFoundError when user does not own the project', async () => {
-      mockDb.where.mockResolvedValueOnce([]); // Empty result = project not found
+      mockDb.then.mockImplementationOnce((resolve) => resolve([])); // Empty result = project not found
 
       await expect(
         requireProjectOwnership(mockDb, 'project-abc', 'user-123')
@@ -168,7 +170,7 @@ describe('validation middleware', () => {
     });
 
     it('should throw NotFoundError when project does not exist', async () => {
-      mockDb.where.mockResolvedValueOnce([]); // Empty result
+      mockDb.then.mockImplementationOnce((resolve) => resolve([])); // Empty result
 
       await expect(
         requireProjectOwnership(mockDb, 'non-existent-project', 'user-123')
@@ -185,7 +187,9 @@ describe('validation middleware', () => {
         select: vi.fn().mockReturnThis(),
         from: vi.fn().mockReturnThis(),
         innerJoin: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue([])
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        then: vi.fn((resolve) => resolve([]))
       };
       
       mockResourceTable = {
@@ -193,11 +197,11 @@ describe('validation middleware', () => {
         projectId: 'project_id_column'
       };
       
-      (getDatabase as vi.Mock).mockReturnValue(mockDb);
+      (getDatabase as vi.Mock).mockResolvedValue(mockDb);
     });
 
     it('should not throw error when user owns the resource through project', async () => {
-      mockDb.where.mockResolvedValueOnce([{ id: 'resource-123' }]);
+      mockDb.then.mockImplementationOnce((resolve) => resolve([{ id: 'resource-123' }]));
 
       await expect(
         requireResourceOwnership(mockDb, mockResourceTable, 'resource-123', 'user-123')
@@ -205,7 +209,7 @@ describe('validation middleware', () => {
     });
 
     it('should throw NotFoundError when user does not own the resource', async () => {
-      mockDb.where.mockResolvedValueOnce([]); // Empty result
+      mockDb.then.mockImplementationOnce((resolve) => resolve([])); // Empty result
 
       await expect(
         requireResourceOwnership(mockDb, mockResourceTable, 'resource-123', 'user-123')
@@ -217,7 +221,7 @@ describe('validation middleware', () => {
     });
 
     it('should throw NotFoundError when resource does not exist', async () => {
-      mockDb.where.mockResolvedValueOnce([]); // Empty result
+      mockDb.then.mockImplementationOnce((resolve) => resolve([])); // Empty result
 
       await expect(
         requireResourceOwnership(mockDb, mockResourceTable, 'non-existent-resource', 'user-123')

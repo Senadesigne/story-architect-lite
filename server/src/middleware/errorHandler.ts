@@ -93,7 +93,8 @@ export const requireProjectOwnership = async (db: unknown, projectId: string, us
   const [project] = await db
     .select({ id: projects.id })
     .from(projects)
-    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)));
+    .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
+    .limit(1);
   
   if (!project) {
     throw new NotFoundError('Project not found');
@@ -114,7 +115,8 @@ export const requireResourceOwnership = async (
     .select({ id: resourceTable.id })
     .from(resourceTable)
     .innerJoin(projects, eq(resourceTable.projectId, projects.id))
-    .where(and(eq(resourceTable.id, resourceId), eq(projects.userId, userId)));
+    .where(and(eq(resourceTable.id, resourceId), eq(projects.userId, userId)))
+    .limit(1);
   
   if (!resource) {
     throw new NotFoundError('Resource not found');

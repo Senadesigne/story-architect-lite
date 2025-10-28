@@ -71,6 +71,13 @@
       "when": 1760991299222,
       "tag": "0009_cool_pete_wisdom",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1761601192478,
+      "tag": "0010_ambitious_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

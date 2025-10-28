@@ -22,30 +22,44 @@ export interface TestMocks {
 
 /**
  * Creates a mock database with chainable Drizzle ORM methods
+ * The returned object is "thenable" to support await operations
  */
-export const createMockDatabase = () => ({
-  select: vi.fn().mockReturnThis(),
-  from: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  insert: vi.fn().mockReturnThis(),
-  update: vi.fn().mockReturnThis(),
-  delete: vi.fn().mockReturnThis(),
-  values: vi.fn().mockReturnThis(),
-  set: vi.fn().mockReturnThis(),
-  returning: vi.fn(),
-  innerJoin: vi.fn().mockReturnThis(),
-  leftJoin: vi.fn().mockReturnThis(),
-  orderBy: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  offset: vi.fn().mockReturnThis(),
-  groupBy: vi.fn().mockReturnThis(),
-  having: vi.fn().mockReturnThis(),
-  // Additional Drizzle methods that might be used
-  execute: vi.fn(),
-  prepare: vi.fn().mockReturnThis(),
-  all: vi.fn(),
-  get: vi.fn(),
-});
+export const createMockDatabase = () => {
+  const mockDb = {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    returning: vi.fn().mockResolvedValue([]),
+    innerJoin: vi.fn().mockReturnThis(),
+    leftJoin: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    offset: vi.fn().mockReturnThis(),
+    groupBy: vi.fn().mockReturnThis(),
+    having: vi.fn().mockReturnThis(),
+    // Additional Drizzle methods that might be used
+    execute: vi.fn().mockResolvedValue([]),
+    prepare: vi.fn().mockReturnThis(),
+    all: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue(undefined),
+    // Make the object thenable for await operations
+    then: vi.fn((resolve) => resolve([])),
+  };
+  
+  // Ensure all chainable methods return the same mockDb instance
+  Object.keys(mockDb).forEach(key => {
+    if (typeof mockDb[key] === 'function' && key !== 'returning' && key !== 'execute' && key !== 'all' && key !== 'get' && key !== 'then') {
+      mockDb[key].mockReturnValue(mockDb);
+    }
+  });
+  
+  return mockDb;
+};
 
 /**
  * Creates a mock Firebase Auth user

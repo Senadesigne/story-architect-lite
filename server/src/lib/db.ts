@@ -1,13 +1,14 @@
 import { drizzle } from 'drizzle-orm/neon-http';
-import { drizzle as createDrizzlePostgres } from 'drizzle-orm/postgres-js';
+import { drizzle as createDrizzlePostgres } from 'drizzle-orm/node-postgres';
 import { neon } from '@neondatabase/serverless';
-import postgres from 'postgres';
+import { Pool } from 'pg';
 import * as schema from '../schema/schema';
 
 type DatabaseConnection = ReturnType<typeof drizzle> | ReturnType<typeof createDrizzlePostgres>;
 
 let cachedConnection: DatabaseConnection | null = null;
 let cachedConnectionString: string | null = null;
+let globalPool: Pool | null = null;
 
 const isNeonDatabase = (connectionString: string): boolean => {
   return connectionString.includes('neon.tech') || connectionString.includes('neon.database');
@@ -19,14 +20,24 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
     return drizzle(sql, { schema });
   }
 
-  const client = postgres(connectionString, {
-    prepare: false,
-    max: 1,
-    idle_timeout: 20,
-    max_lifetime: 60 * 30,
-  });
+  // Kreiraj ili koristi postojeći Pool za connection pooling
+  if (!globalPool || globalPool.options.connectionString !== connectionString) {
+    // Zatvori postojeći pool ako postoji
+    if (globalPool) {
+      await globalPool.end();
+    }
+    
+    // Kreiraj novi Pool s optimiziranim postavkama
+    globalPool = new Pool({
+      connectionString,
+      max: 20, // Maksimalno 20 konekcija u pool-u
+      idleTimeoutMillis: 30000, // 30 sekundi timeout za idle konekcije
+      connectionTimeoutMillis: 2000, // 2 sekunde timeout za nove konekcije
+      maxUses: 7500, // Maksimalno korištenje po konekciji prije zatvaranja
+    });
+  }
 
-  return createDrizzlePostgres(client, { schema });
+  return createDrizzlePostgres(globalPool, { schema });
 };
 
 export const getDatabase = async (connectionString?: string): Promise<DatabaseConnection> => {
@@ -62,4 +73,15 @@ export const testDatabaseConnection = async (): Promise<boolean> => {
 export const clearConnectionCache = (): void => {
   cachedConnection = null;
   cachedConnectionString = null;
+};
+
+/**
+ * Gracefully zatvara database connection pool
+ * Korisno za shutdown proceduru
+ */
+export const closeConnectionPool = async (): Promise<void> => {
+  if (globalPool) {
+    await globalPool.end();
+    globalPool = null;
+  }
 };

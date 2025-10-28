@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 import { createMockDatabase, createMockFirebaseAuth } from '@test/helpers';
 
-// Mock database module
+// Mock database module  
 vi.mock('@/lib/db', () => ({
-  getDatabase: vi.fn(() => Promise.resolve(createMockDatabase())),
+  getDatabase: vi.fn(),
   testDatabaseConnection: vi.fn(() => Promise.resolve(true)),
   clearConnectionCache: vi.fn(),
 }));

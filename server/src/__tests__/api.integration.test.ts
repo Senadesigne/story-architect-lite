@@ -9,6 +9,9 @@ const mockGetDatabase = getDatabase as vi.Mock;
 const mockVerifyFirebaseToken = verifyFirebaseToken as vi.Mock;
 
 describe('API Integration Tests', () => {
+  let globalMockDb: any;
+  let currentTable: any;
+  
   beforeEach(() => {
     // Reset svih mockova prije svakog testa
     vi.clearAllMocks();
@@ -17,36 +20,63 @@ describe('API Integration Tests', () => {
     const mockUser = createMockUser({ id: 'user-123' });
     mockVerifyFirebaseToken.mockResolvedValue(mockUser);
     
-    // Kreiraj mock database koji može vratiti različite rezultate
-    const createMockDbChain = () => ({
+    // Kreiraj pametan mock database koji razlikuje pozive
+    currentTable = null;
+    globalMockDb = {
       select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
+      from: vi.fn().mockImplementation((table) => {
+        // Zapamti koju tablicu koristimo
+        currentTable = table;
+        return globalMockDb;
+      }),
       where: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
-      returning: vi.fn(),
+      returning: vi.fn().mockResolvedValue([]),
+      innerJoin: vi.fn().mockReturnThis(),
+      leftJoin: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
-      limit: vi.fn(),
-    });
+      limit: vi.fn().mockReturnThis(),
+      offset: vi.fn().mockReturnThis(),
+      groupBy: vi.fn().mockReturnThis(),
+      having: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([]),
+      prepare: vi.fn().mockReturnThis(),
+      all: vi.fn().mockResolvedValue([]),
+      get: vi.fn().mockResolvedValue(undefined),
+      then: vi.fn((resolve) => {
+        // Vrati različite podatke ovisno o tablici
+        if (currentTable?.name === 'users') {
+          resolve([mockUser]);
+        } else if (currentTable?.name === 'projects') {
+          resolve([]);
+        } else {
+          resolve([]);
+        }
+      }),
+    };
     
-    const mockDb = createMockDbChain();
-    
-    // Postavi da where() vrati novi chain objekt koji može biti awaited ili imati .limit()
-    mockDb.where.mockImplementation(() => {
-      const chainWithLimit = createMockDbChain();
-      chainWithLimit.limit.mockResolvedValue([mockUser]); // Za auth middleware
-      
-      // Također omogući da se where() direktno await-a (za GET /api/projects)
-      return Object.assign(Promise.resolve([]), chainWithLimit);
+    // Ensure all chainable methods return the same mockDb instance
+    Object.keys(globalMockDb).forEach(key => {
+      if (typeof globalMockDb[key] === 'function' && key !== 'returning' && key !== 'execute' && key !== 'all' && key !== 'get' && key !== 'then') {
+        globalMockDb[key].mockReturnValue(globalMockDb);
+      }
     });
     
     // Postavi default response za auth middleware - korisnik već postoji
-    mockDb.returning.mockResolvedValue([mockUser]);
+    globalMockDb.returning.mockResolvedValue([mockUser]);
+    globalMockDb.then.mockImplementation((resolve) => resolve([mockUser])); // Dodajem natrag
     
-    mockGetDatabase.mockResolvedValue(mockDb);
+    // Eksplicitno postavi mock implementaciju
+    mockGetDatabase.mockImplementation(async (url) => {
+      // Ukloni then metodu da se izbjegne thenable problem
+      const dbCopy = { ...globalMockDb };
+      delete dbCopy.then;
+      return dbCopy;
+    });
   });
 
   describe('Scenarij 1: Authentication Flow', () => {
@@ -86,9 +116,7 @@ describe('API Integration Tests', () => {
       const mockUser = createMockUser({ id: 'user-123' });
       mockVerifyFirebaseToken.mockResolvedValue(mockUser);
       
-      // Mock database response za projekte
-      const mockDb = await mockGetDatabase();
-      mockDb.returning.mockResolvedValue([]);
+      // Mock će automatski vratiti [] za projects tablicu
 
       const response = await app.request('/api/projects', {
         method: 'GET',
@@ -119,8 +147,7 @@ describe('API Integration Tests', () => {
       });
       
       // Mock database insert operaciju
-      const mockDb = await mockGetDatabase();
-      mockDb.returning.mockResolvedValue([mockProject]);
+      globalMockDb.returning.mockResolvedValue([mockProject]);
 
       const response = await app.request('/api/projects', {
         method: 'POST',
@@ -146,8 +173,7 @@ describe('API Integration Tests', () => {
       });
       
       // Mock database insert operaciju
-      const mockDb = await mockGetDatabase();
-      mockDb.returning.mockResolvedValue([mockProject]);
+      globalMockDb.returning.mockResolvedValue([mockProject]);
 
       const response = await app.request('/api/projects', {
         method: 'POST',
@@ -172,8 +198,7 @@ describe('API Integration Tests', () => {
       });
       
       // Mock database insert operaciju
-      const mockDb = await mockGetDatabase();
-      mockDb.returning.mockResolvedValue([mockProject]);
+      globalMockDb.returning.mockResolvedValue([mockProject]);
 
       const response = await app.request('/api/projects', {
         method: 'POST',
@@ -188,9 +213,9 @@ describe('API Integration Tests', () => {
       const body = await response.json();
       expect(body.title).toBe('Novi Projekt');
       expect(body.userId).toBe('user-123');
-      expect(mockDb.insert).toHaveBeenCalled();
-      expect(mockDb.values).toHaveBeenCalled();
-      expect(mockDb.returning).toHaveBeenCalled();
+      expect(globalMockDb.insert).toHaveBeenCalled();
+      expect(globalMockDb.values).toHaveBeenCalled();
+      expect(globalMockDb.returning).toHaveBeenCalled();
     });
   });
 
@@ -225,23 +250,15 @@ describe('API Integration Tests', () => {
       });
       
       // Mock database da vrati projekt koji pripada korisniku
-      const mockDb = await mockGetDatabase();
-      const testMockUser = createMockUser({ id: 'user-123' });
-      
-      // Postavi da where() vrati projekt za ownership check
-      mockDb.where.mockImplementation(() => {
-        const chainWithLimit = {
-          select: vi.fn().mockReturnThis(),
-          from: vi.fn().mockReturnThis(),
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([testMockUser]), // Za auth middleware
-        };
-        
-        // Za ownership check, vrati projekt
-        return Object.assign(Promise.resolve([mockProject]), chainWithLimit);
+      globalMockDb.then.mockImplementation((resolve) => {
+        if (currentTable?.name === 'users') {
+          resolve([mockUser]);
+        } else if (currentTable?.name === 'projects') {
+          resolve([mockProject]);
+        } else {
+          resolve([]);
+        }
       });
-      // Drugi poziv za dohvaćanje projekta
-      mockDb.returning.mockResolvedValueOnce([mockProject]);
 
       const response = await app.request(`/api/projects/${validUUID}`, {
         method: 'GET',
@@ -261,8 +278,15 @@ describe('API Integration Tests', () => {
       const validUUID = '123e4567-e89b-12d3-a456-426614174001';
       
       // Mock database da vrati prazan niz (projekt ne postoji)
-      const mockDb = await mockGetDatabase();
-      mockDb.returning.mockResolvedValue([]);
+      globalMockDb.then.mockImplementation((resolve) => {
+        if (currentTable?.name === 'users') {
+          resolve([mockUser]);
+        } else if (currentTable?.name === 'projects') {
+          resolve([]); // Projekt ne postoji
+        } else {
+          resolve([]);
+        }
+      });
 
       const response = await app.request(`/api/projects/${validUUID}`, {
         method: 'GET',

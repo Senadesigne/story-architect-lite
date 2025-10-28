@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth';
+import { performanceMonitor } from './middleware/performance';
 import { 
   errorHandler, 
   requireValidUUID, 
-  ValidationError,
   requireProjectOwnership,
   requireResourceOwnership,
   handleDatabaseOperation 
@@ -29,6 +29,9 @@ import {
 } from './schemas/validation';
 
 const app = new Hono();
+
+// Performance monitoring middleware (registriran globalno)
+app.use('*', performanceMonitor());
 
 // CORS middleware
 app.use('*', cors());
@@ -142,7 +145,8 @@ app.get('/api/projects/:projectId', async (c) => {
     const [result] = await db
       .select()
       .from(projects)
-      .where(eq(projects.id, projectId));
+      .where(eq(projects.id, projectId))
+      .limit(1);
     
     return result;
   });
