@@ -10,10 +10,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 ## [ ZADACI ZA ODRADITI (To-Do) ]
 
 ### Epic: AI Integracija - Faza A (Direktni API) 🔴
-* **Zadatak 3.1:** Instalirati AI biblioteke (`openai`, `@anthropic-ai/sdk`, `axios`)
-* **Zadatak 3.2:** Kreirati AI service sloj (`server/src/services/ai.service.ts`)
 * **Zadatak 3.3:** Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis`
-* **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept)
 * **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx)
 
 ### Epic: UI/UX Poboljšanja 🟢
@@ -32,7 +29,8 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 
 ## [ TRENUTNO RADIMO (In Progress) ]
 
-*(Prebaciti zadatke ovdje kada počnete raditi na njima)*
+### Epic: AI Integracija - Faza A (Direktni API) 🔴
+* **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept)
 
 ## [ ZAVRŠENO (Done) ]
 
@@ -40,7 +38,11 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 0.1:** Ažurirati `product-brief.md` - dodati "AI Co-Writer" u dugoročnu viziju
 * **Zadatak 0.2:** Ažurirati `.cursorrules` - dodati pravila za AI integraciju
 * **Zadatak 0.3:** Ažurirati `COMMAND_PROMPTS.md` - dodati prompt za "Planiranje AI Značajke"
-* **Zadatak 0.4:** Preimenovati postojeći PROJEKTNI_PLAN_v2.md u TEHNIČKA_SPECIFIKACIJA_v2.md
+* **Zadatak 0.4:** Preimenovati postojeći PROJEKTNI_PLAN_v2.md u TEHNIČKA_SPECIFIKACIJA_v2.md ⚪ Odbačeno (Odluka: Zadržati oba filea)
+
+### Epic: AI Integracija - Faza A (Direktni API) 🔴
+* **Zadatak 3.1:** Instalirati AI biblioteke (`openai`, `@anthropic-ai/sdk`, `axios`) ✅
+* **Zadatak 3.2:** Kreirati AI service sloj (`server/src/services/ai.service.ts`) - Tehnički plan kreiran u `TEHNICKI_PLAN_AI_FAZA_A.md` ✅
 
 ### Epic: MVP Implementacija ✅
 * Sve faze (1-6) implementirane i testirane

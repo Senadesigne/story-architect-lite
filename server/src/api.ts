@@ -27,6 +27,8 @@ import {
   CreateSceneBodySchema,
   UpdateSceneBodySchema
 } from './schemas/validation';
+import { getAIConfig } from './lib/config';
+import { AnthropicProvider } from './services/ai.service';
 
 const app = new Hono();
 
@@ -43,6 +45,44 @@ app.onError(errorHandler);
 app.get('/', (c) => {
   return c.json({ message: 'API is running' });
 });
+
+// --- AI Test Route (Zadatak 3.4.3 i 3.4.4) ---
+// Ova ruta je ZASAD izvan /projects i ne zahtijeva auth
+// Služi samo za brzi "Proof of Concept" da AI servis radi.
+app.post('/api/ai/test', async (c) => {
+  try {
+    // 1. Dohvati konfiguraciju
+    const { anthropicApiKey } = getAIConfig();
+    
+    // 2. Inicijaliziraj providera
+    const aiProvider = new AnthropicProvider(anthropicApiKey);
+    
+    // 3. Opcionalno: Provjeri validnost ključa (dobra praksa)
+    const isValid = await aiProvider.validateConnection();
+    if (!isValid) {
+      return c.json({ error: 'AI provider connection failed. Check API key.' }, 500);
+    }
+
+    // 4. Dohvati prompt iz body-ja (ili koristi default)
+    const body = await c.req.json().catch(() => ({}));
+    const prompt = body.prompt || 'Hello, Claude!';
+
+    // 5. Generiraj tekst
+    const aiResponse = await aiProvider.generateText(prompt, { maxTokens: 100 });
+
+    return c.json({
+      status: 'success',
+      prompt: prompt,
+      response: aiResponse,
+    });
+
+  } catch (error) {
+    console.error('AI /test endpoint error:', error);
+    // Ovdje još ne koristimo globalni error handler, ali bismo trebali
+    return c.json({ error: error.message || 'Internal server error' }, 500);
+  }
+});
+// ---------------------------------------------
 
 // Protected routes
 app.use('/api/*', authMiddleware);
