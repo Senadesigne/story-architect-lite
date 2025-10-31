@@ -25,10 +25,13 @@ import {
   CreateCharacterBodySchema,
   UpdateCharacterBodySchema,
   CreateSceneBodySchema,
-  UpdateSceneBodySchema
+  UpdateSceneBodySchema,
+  GenerateSceneSynopsisBodySchema
 } from './schemas/validation';
 import { getAIConfig } from './lib/config';
 import { AnthropicProvider } from './services/ai.service';
+import { ContextBuilder } from './services/context.builder';
+import { PromptService } from './services/prompt.service';
 
 const app = new Hono();
 
@@ -613,6 +616,56 @@ app.delete('/api/scenes/:sceneId', async (c) => {
   
   return c.json({ message: 'Scene deleted successfully' });
 });
+
+// ========== AI ENDPOINTS ==========
+
+// --- AI: Generate Scene Synopsis (Zadatak 3.3) ---
+app.post(
+  '/api/projects/:projectId/ai/generate-scene-synopsis',
+  validateBody(GenerateSceneSynopsisBodySchema), // (Zadatak 3.3.7)
+  async (c) => {
+    const user = c.get('user');
+    const { projectId } = c.req.param();
+    const { sceneId } = c.var.validatedBody;
+    
+    requireValidUUID(projectId, 'project ID');
+    requireValidUUID(sceneId, 'scene ID');
+    
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+
+    // Provjeri vlasništvo projekta
+    await requireProjectOwnership(db, projectId, user.id);
+
+    // 1. Dohvati AI Konfiguraciju (Sigurno)
+    const { anthropicApiKey } = getAIConfig();
+    
+    // 2. Kreiraj AI Providera
+    const aiProvider = new AnthropicProvider(anthropicApiKey);
+
+    // 3. Sastavi Kontekst (Zadatak 3.3.8)
+    const context = await ContextBuilder.buildSceneContext(
+      sceneId,
+      db,
+      projectId,
+    );
+
+    // 4. Generiraj Prompt (Zadatak 3.3.8)
+    const prompt = PromptService.buildSceneSynopsisPrompt(context);
+
+    // 5. Pozovi AI (Zadatak 3.3.9)
+    const synopsis = await aiProvider.generateText(prompt, {
+      maxTokens: 500, // Malo više za sinopsis
+    });
+
+    // 6. Vrati odgovor (Zadatak 3.3.10)
+    return c.json({
+      status: 'success',
+      synopsis: synopsis,
+    });
+  },
+);
+// --------------------------------------------------
 
 export default app;
 

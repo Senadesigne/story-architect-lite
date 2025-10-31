@@ -13,9 +13,9 @@ const parseCliArgs = () => {
   
   return {
     port: portIndex !== -1 ? parseInt(args[portIndex + 1]) : 5173,
-    apiUrl: apiUrlIndex !== -1 ? args[apiUrlIndex + 1] : 'http://localhost:8787',
-    firebaseAuthPort: firebaseAuthPortIndex !== -1 ? args[firebaseAuthPortIndex + 1] : '9099',
-    useFirebaseEmulator: useFirebaseEmulatorIndex !== -1 ? args[useFirebaseEmulatorIndex + 1] : 'true'
+    apiUrl: apiUrlIndex !== -1 ? args[apiUrlIndex + 1] : undefined,
+    firebaseAuthPort: firebaseAuthPortIndex !== -1 ? args[firebaseAuthPortIndex + 1] : undefined,
+    useFirebaseEmulator: useFirebaseEmulatorIndex !== -1 ? args[useFirebaseEmulatorIndex + 1] : undefined
   };
 };
 
@@ -28,9 +28,10 @@ export default defineConfig({
     port: port
   },
   define: {
-    'import.meta.env.VITE_API_URL': `"${apiUrl}"`,
-    'import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT': `"${firebaseAuthPort}"`,
-    'import.meta.env.VITE_USE_FIREBASE_EMULATOR': `"${useFirebaseEmulator}"`
+    // Only override env vars if explicitly provided via CLI
+    ...(apiUrl && { 'import.meta.env.VITE_API_URL': `"${apiUrl}"` }),
+    ...(firebaseAuthPort && { 'import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT': `"${firebaseAuthPort}"` }),
+    ...(useFirebaseEmulator && { 'import.meta.env.VITE_USE_FIREBASE_EMULATOR': `"${useFirebaseEmulator}"` })
   },
   resolve: {
     alias: {

@@ -271,10 +271,25 @@ Ovdje pratimo pod-zadatke razbijene iz gornjeg tehničkog plana.
 * [x] **3.2.6:** Kreiraj datoteku `server/src/lib/config.ts` (ako već ne postoji) i dodaj funkciju `getAIConfig()` koja čita `ANTHROPIC_API_KEY` iz `process.env`. Funkcija mora baciti grešku ako varijabla nije postavljena.
 * [x] **3.2.7:** Uputi korisnika (mene) da doda `ANTHROPIC_API_KEY=...` u svoju `.env` datoteku (prema i iz `.cursorrules`).
 
-### ✅ Zadatak 3.4: Implementirati `POST /api/ai/test` (Proof of Concept) - DOVRŠENO
+### ✅ Zadatak 3.4: Implementirati `POST /api/ai/test` (Proof of Concept) - DOVRŠENO ✅
 * [x] **3.4.1:** Implementirati pravu logiku u `generateText` metodi (unutar `AnthropicProvider`) da poziva `this.client.messages.create()`.
 * [x] **3.4.2:** Implementirati pravu logiku u `validateConnection` metodi da radi stvarni (ali jeftin) testni poziv prema Anthropic API-ju.
 * [x] **3.4.3:** Dodati novu API rutu `POST /api/ai/test` u `server/src/api.ts`.
 * [x] **3.4.4:** Unutar nove rute, importati i koristiti `getAIConfig` i `AnthropicProvider` za testiranje AI odgovora.
+
+### ✅ Zadatak 3.3: Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis`
+
+Ovo je prva *prava* AI integracija koja koristi kontekst projekta.
+
+* [x] **3.3.1:** Kreiraj novu datoteku `server/src/services/context.builder.ts`.
+* [x] **3.3.2:** Unutar `context.builder.ts`, implementiraj `ContextBuilder` klasu sa statičkom metodom `buildSceneContext(sceneId: string, db: DrizzleDB, projectId: string)`. Metoda treba dohvatiti scenu, njene likove i lokaciju (prema `schema.ts`) i provjeriti pripada li projektu.
+* [x] **3.3.3:** Kreiraj novu datoteku `server/src/services/prompt.service.ts`.
+* [x] **3.3.4:** Unutar `prompt.service.ts`, implementiraj `PromptService` klasu sa statičkom metodom `buildSceneSynopsisPrompt(context: any)` koja prima podatke iz ContextBuilder-a i vraća string (prompt).
+* [x] **3.3.5:** U `server/src/api.ts`, unutar `projectRoutes`, dodaj novu rutu `POST /:projectId/ai/generate-scene-synopsis`.
+* [x] **3.3.6:** Ruta (3.3.5) mora biti zaštićena (već jest, jer je u `projectRoutes`).
+* [x] **3.3.7:** Unutar rute, validiraj `body` (treba primiti `sceneId: string`).
+* [x] **3.3.8:** Unutar rute, pozovi `ContextBuilder` i `PromptService` da pripremiš podatke.
+* [x] **3.3.9:** Unutar rute, pozovi `AnthropicProvider.generateText` s generiranim promptom.
+* [x] **3.3.10:** Vrati AI odgovor kao JSON.
 
 ---

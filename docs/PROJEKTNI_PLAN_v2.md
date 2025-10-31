@@ -10,7 +10,6 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 ## [ ZADACI ZA ODRADITI (To-Do) ]
 
 ### Epic: AI Integracija - Faza A (Direktni API) 🔴
-* **Zadatak 3.3:** Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis`
 * **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx)
 
 ### Epic: UI/UX Poboljšanja 🟢
@@ -29,8 +28,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 
 ## [ TRENUTNO RADIMO (In Progress) ]
 
-### Epic: AI Integracija - Faza A (Direktni API) 🔴
-* **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept)
+_Trenutno nema zadataka u tijeku._
 
 ## [ ZAVRŠENO (Done) ]
 
@@ -43,6 +41,8 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 ### Epic: AI Integracija - Faza A (Direktni API) 🔴
 * **Zadatak 3.1:** Instalirati AI biblioteke (`openai`, `@anthropic-ai/sdk`, `axios`) ✅
 * **Zadatak 3.2:** Kreirati AI service sloj (`server/src/services/ai.service.ts`) - Tehnički plan kreiran u `TEHNICKI_PLAN_AI_FAZA_A.md` ✅
+* **Zadatak 3.3:** Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis` ✅
+* **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept) ✅
 
 ### Epic: MVP Implementacija ✅
 * Sve faze (1-6) implementirane i testirane

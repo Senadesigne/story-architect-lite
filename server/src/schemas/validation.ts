@@ -88,6 +88,12 @@ export const UpdateSceneBodySchema = z.object({
   { message: 'At least one field must be provided' }
 );
 
+// ========== AI VALIDATION SCHEMAS ==========
+
+export const GenerateSceneSynopsisBodySchema = z.object({
+  sceneId: z.string().uuid('Invalid Scene ID'),
+});
+
 // ========== INFERRED TYPES ==========
 
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
@@ -98,4 +104,5 @@ export type CreateCharacterBody = z.infer<typeof CreateCharacterBodySchema>;
 export type UpdateCharacterBody = z.infer<typeof UpdateCharacterBodySchema>;
 export type CreateSceneBody = z.infer<typeof CreateSceneBodySchema>;
 export type UpdateSceneBody = z.infer<typeof UpdateSceneBodySchema>;
+export type GenerateSceneSynopsisBody = z.infer<typeof GenerateSceneSynopsisBodySchema>;
 
