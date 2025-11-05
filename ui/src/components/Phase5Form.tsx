@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Sparkles } from 'lucide-react';
 import { api } from '@/lib/serverComm';
 import { Project, Scene } from '@/lib/types';
 
@@ -29,6 +29,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     summary: '',
     order: 0
   });
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Dohvaćanje scena
   const fetchScenes = useCallback(async () => {
@@ -98,6 +99,26 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
       setScenes(prev => prev.filter(scene => scene.id !== sceneId));
     } catch (error) {
       console.error('Error deleting scene:', error);
+    }
+  };
+
+  // Generiranje sažetka scene pomoću AI-ja
+  const handleGenerateSynopsis = async () => {
+    if (!editingScene) return;
+    
+    setIsGenerating(true);
+    try {
+      const response = await api.generateSceneSynopsis(project.id, editingScene.id);
+      if (response.status === 'success' && response.synopsis) {
+        setSceneForm(prev => ({ ...prev, summary: response.synopsis }));
+      } else {
+        throw new Error('Neočekivani odgovor od AI servisa');
+      }
+    } catch (error) {
+      console.error('Error generating synopsis:', error);
+      alert('Greška pri generiranju sažetka. Molimo pokušajte ponovno.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -241,6 +262,16 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                 placeholder="Kratki sažetak scene..."
                 className="min-h-[80px]"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isGenerating || !editingScene}
+                onClick={handleGenerateSynopsis}
+                className="w-fit"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Generiram...' : '✨ Generiraj sažetak'}
+              </Button>
             </div>
             <div className="space-y-2">
               <Label htmlFor="scene-order">Redoslijed</Label>

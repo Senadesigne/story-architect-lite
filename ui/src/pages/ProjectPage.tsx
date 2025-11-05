@@ -71,7 +71,7 @@ export function ProjectPage() {
     setSaveStatus(prev => ({ ...prev, [field]: 'saving' }));
     
     try {
-      const updateData: ProjectUpdateData = { [field]: value };
+      const updateData = { [field]: value } as Record<string, string>;
       const updatedProject = await api.updateProject(projectId, updateData);
       setProject(updatedProject);
       setSaveStatus(prev => ({ ...prev, [field]: 'saved' }));
@@ -98,7 +98,7 @@ export function ProjectPage() {
   }, [projectId, saveStatus, clearFieldTimeout]);
 
   const retryFieldSave = useCallback((field: ProjectField) => {
-    const currentValue = formData[field];
+    const currentValue = formData[field] ?? '';
     handleSave(field, currentValue);
   }, [formData, handleSave]);
 
@@ -294,14 +294,14 @@ export function ProjectPage() {
             path="ideation" 
             element={
               <IdeationForm 
-                onFieldChange={handleFieldChange}
-                renderSaveIndicator={renderSaveIndicator}
+                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                 formData={{
-                  logline: formData.logline,
-                  premise: formData.premise,
-                  theme: formData.theme,
-                  genre: formData.genre,
-                  audience: formData.audience
+                  logline: formData.logline ?? '',
+                  premise: formData.premise ?? '',
+                  theme: formData.theme ?? '',
+                  genre: formData.genre ?? '',
+                  audience: formData.audience ?? ''
                 }}
               />
             } 
@@ -310,11 +310,11 @@ export function ProjectPage() {
             path="planning" 
             element={
               <Phase2Form 
-                onFieldChange={handleFieldChange}
-                renderSaveIndicator={renderSaveIndicator}
+                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                 formData={{
-                  brainstorming: formData.brainstorming,
-                  research: formData.research
+                  brainstorming: formData.brainstorming ?? '',
+                  research: formData.research ?? ''
                 }}
               />
             } 
@@ -324,11 +324,11 @@ export function ProjectPage() {
             element={
               <Phase3Form 
                 project={project} 
-                onFieldChange={handleFieldChange}
-                renderSaveIndicator={renderSaveIndicator}
+                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                 formData={{
-                  rules_definition: formData.rules_definition,
-                  culture_and_history: formData.culture_and_history
+                  rules_definition: formData.rules_definition ?? '',
+                  culture_and_history: formData.culture_and_history ?? ''
                 }}
               />
             } 
@@ -339,11 +339,11 @@ export function ProjectPage() {
             element={
               <Phase5Form 
                 project={project} 
-                onFieldChange={handleFieldChange}
-                renderSaveIndicator={renderSaveIndicator}
+                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                 formData={{
-                  synopsis: formData.synopsis,
-                  outline_notes: formData.outline_notes
+                  synopsis: formData.synopsis ?? '',
+                  outline_notes: formData.outline_notes ?? ''
                 }}
               />
             } 
@@ -352,10 +352,10 @@ export function ProjectPage() {
             path="finalization" 
             element={
               <Phase6Form 
-                onFieldChange={handleFieldChange}
-                renderSaveIndicator={renderSaveIndicator}
+                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                 formData={{
-                  point_of_view: formData.point_of_view
+                  point_of_view: formData.point_of_view ?? ''
                 }}
               />
             } 

@@ -231,6 +231,18 @@ export async function deleteScene(sceneId: string) {
   return response.json();
 }
 
+// AI API
+export async function generateSceneSynopsis(projectId: string, sceneId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/ai/generate-scene-synopsis`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sceneId }),
+  });
+  return response.json();
+}
+
 // User API
 export async function updateUser(data: { displayName?: string; avatarUrl?: string }) {
   const response = await fetchWithAuth('/api/user', {
@@ -271,4 +283,5 @@ export const api = {
   createScene,
   updateScene,
   deleteScene,
+  generateSceneSynopsis,
 }; 
