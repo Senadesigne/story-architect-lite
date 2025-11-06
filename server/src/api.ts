@@ -628,7 +628,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { sceneId } = c.var.validatedBody;
+    const { sceneId } = getValidatedBody(c);
     
     requireValidUUID(projectId, 'project ID');
     requireValidUUID(sceneId, 'scene ID');
