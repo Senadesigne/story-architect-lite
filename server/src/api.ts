@@ -32,6 +32,7 @@ import { getAIConfig } from './lib/config';
 import { AnthropicProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
 import { PromptService } from './services/prompt.service';
+import { aiRateLimiter } from './middleware/rateLimiter';
 
 const app = new Hono();
 
@@ -52,7 +53,7 @@ app.get('/', (c) => {
 // --- AI Test Route (Zadatak 3.4.3 i 3.4.4) ---
 // Ova ruta je ZASAD izvan /projects i ne zahtijeva auth
 // Služi samo za brzi "Proof of Concept" da AI servis radi.
-app.post('/api/ai/test', async (c) => {
+app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
   try {
     // 1. Dohvati konfiguraciju
     const { anthropicApiKey } = getAIConfig();
@@ -622,6 +623,7 @@ app.delete('/api/scenes/:sceneId', async (c) => {
 // --- AI: Generate Scene Synopsis (Zadatak 3.3) ---
 app.post(
   '/api/projects/:projectId/ai/generate-scene-synopsis',
+  aiRateLimiter.middleware(),
   validateBody(GenerateSceneSynopsisBodySchema), // (Zadatak 3.3.7)
   async (c) => {
     const user = c.get('user');
