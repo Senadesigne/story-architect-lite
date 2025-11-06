@@ -28,8 +28,7 @@ import {
   UpdateSceneBodySchema,
   GenerateSceneSynopsisBodySchema
 } from './schemas/validation';
-import { getAIConfig } from './lib/config';
-import { AnthropicProvider } from './services/ai.service';
+import { createDefaultAIProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
 import { PromptService } from './services/prompt.service';
 import { aiRateLimiter } from './middleware/rateLimiter';
@@ -55,23 +54,20 @@ app.get('/', (c) => {
 // Služi samo za brzi "Proof of Concept" da AI servis radi.
 app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
   try {
-    // 1. Dohvati konfiguraciju
-    const { anthropicApiKey } = getAIConfig();
+    // 1. Kreiraj AI providera pomoću factory funkcije
+    const aiProvider = await createDefaultAIProvider();
     
-    // 2. Inicijaliziraj providera
-    const aiProvider = new AnthropicProvider(anthropicApiKey);
-    
-    // 3. Opcionalno: Provjeri validnost ključa (dobra praksa)
+    // 2. Opcionalno: Provjeri validnost ključa (dobra praksa)
     const isValid = await aiProvider.validateConnection();
     if (!isValid) {
       return c.json({ error: 'AI provider connection failed. Check API key.' }, 500);
     }
 
-    // 4. Dohvati prompt iz body-ja (ili koristi default)
+    // 3. Dohvati prompt iz body-ja (ili koristi default)
     const body = await c.req.json().catch(() => ({}));
     const prompt = body.prompt || 'Hello, Claude!';
 
-    // 5. Generiraj tekst
+    // 4. Generiraj tekst
     const aiResponse = await aiProvider.generateText(prompt, { maxTokens: 100 });
 
     return c.json({
@@ -639,11 +635,8 @@ app.post(
     // Provjeri vlasništvo projekta
     await requireProjectOwnership(db, projectId, user.id);
 
-    // 1. Dohvati AI Konfiguraciju (Sigurno)
-    const { anthropicApiKey } = getAIConfig();
-    
-    // 2. Kreiraj AI Providera
-    const aiProvider = new AnthropicProvider(anthropicApiKey);
+    // 1. Kreiraj AI Providera pomoću factory funkcije
+    const aiProvider = await createDefaultAIProvider();
 
     // 3. Sastavi Kontekst (Zadatak 3.3.8)
     const context = await ContextBuilder.buildSceneContext(
