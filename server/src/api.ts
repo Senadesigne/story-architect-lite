@@ -19,6 +19,7 @@ import type {
 } from './types/api';
 import {
   UpdateUserBodySchema,
+  CreateProjectBodySchema,
   UpdateProjectBodySchema,
   CreateLocationBodySchema,
   UpdateLocationBodySchema,
@@ -149,8 +150,9 @@ app.get('/api/projects', async (c) => {
 });
 
 // Projects endpoint - Nova ruta za kreiranje novog projekta
-app.post('/api/projects', async (c) => {
+app.post('/api/projects', validateBody(CreateProjectBodySchema), async (c) => {
   const user = c.get('user');
+  const { name } = getValidatedBody(c);
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
@@ -158,7 +160,7 @@ app.post('/api/projects', async (c) => {
     const [result] = await db
       .insert(projects)
       .values({
-        title: 'Novi Projekt',
+        title: name,
         userId: user.id,
       })
       .returning();

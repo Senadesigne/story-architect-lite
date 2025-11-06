@@ -23,10 +23,10 @@ export function validateBody<T>(schema: ZodSchema<T>) {
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Formatiranje Zod grešaka u čitljivu poruku
-        const errorMessages = error.errors.map(err => {
+        const errorMessages = error.issues?.map(err => {
           const path = err.path.length > 0 ? `${err.path.join('.')}: ` : '';
           return `${path}${err.message}`;
-        });
+        }) || ['Unknown validation error'];
         
         throw new ValidationError(`Validation failed: ${errorMessages.join(', ')}`);
       }

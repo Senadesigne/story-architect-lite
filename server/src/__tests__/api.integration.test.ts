@@ -187,10 +187,10 @@ describe('API Integration Tests', () => {
       mockVerifyFirebaseToken.mockResolvedValue(mockUser);
     });
 
-    it('trebao bi vratiti 201 za POST /api/projects (ne koristi validation)', async () => {
+    it('trebao bi vratiti 201 za POST /api/projects s važećim body-jem', async () => {
       const mockProject = createMockProject({ 
         id: 'new-project-id',
-        title: 'Novi Projekt',
+        title: 'Novi Testni Projekt',
         userId: 'user-123' 
       });
       
@@ -203,67 +203,62 @@ describe('API Integration Tests', () => {
           'Authorization': 'Bearer valid-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({}) // Body se ignorira
+        body: JSON.stringify({ name: 'Novi Testni Projekt' })
       });
 
       expect(response.status).toBe(201);
       const body = await response.json();
       // Ignoriraj Date objekte u poređenju
-      expect(body.title).toBe('Novi Projekt');
+      expect(body.title).toBe('Novi Testni Projekt');
       expect(body.userId).toBe('user-123');
     });
 
-    it('trebao bi vratiti 201 za POST /api/projects s bilo kojim body-jem (ignorira se)', async () => {
-      const mockProject = createMockProject({ 
-        id: 'new-project-id',
-        title: 'Novi Projekt',
-        userId: 'user-123' 
-      });
-      
-      // Mock database insert operaciju
-      globalMockDb.returning.mockResolvedValue([mockProject]);
-
+    it('trebao bi vratiti 400 za POST /api/projects s nevaljanim body-jem', async () => {
       const response = await app.request('/api/projects', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer valid-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name: 123 }) // Body se ignorira
+        body: JSON.stringify({ name: 123 }) // Nevaljan tip
       });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(400);
       const body = await response.json();
-      expect(body.title).toBe('Novi Projekt');
-      expect(body.userId).toBe('user-123');
+      expect(body.error).toContain('Validation failed');
+      expect(body.error).toContain('expected string, received number');
     });
 
-    it('trebao bi vratiti 201 za POST /api/projects s važećim body-jem (ali se ignorira)', async () => {
-      const mockProject = createMockProject({ 
-        id: 'new-project-id',
-        title: 'Novi Projekt',
-        userId: 'user-123' 
-      });
-      
-      // Mock database insert operaciju
-      globalMockDb.returning.mockResolvedValue([mockProject]);
-
+    it('trebao bi vratiti 400 za POST /api/projects s praznim imenom', async () => {
       const response = await app.request('/api/projects', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer valid-token',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name: 'Novi Projekt' })
+        body: JSON.stringify({ name: '' }) // Prazno ime
       });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(400);
       const body = await response.json();
-      expect(body.title).toBe('Novi Projekt');
-      expect(body.userId).toBe('user-123');
-      expect(globalMockDb.insert).toHaveBeenCalled();
-      expect(globalMockDb.values).toHaveBeenCalled();
-      expect(globalMockDb.returning).toHaveBeenCalled();
+      expect(body.error).toContain('Validation failed');
+      expect(body.error).toContain('Name is required');
+    });
+
+    it('trebao bi vratiti 400 za POST /api/projects bez body-ja', async () => {
+      const response = await app.request('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer valid-token',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({}) // Nema name polja
+      });
+
+      expect(response.status).toBe(400);
+      const body = await response.json();
+      expect(body.error).toContain('Validation failed');
+      expect(body.error).toContain('expected string, received undefined');
     });
   });
 

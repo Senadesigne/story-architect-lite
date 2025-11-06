@@ -9,6 +9,10 @@ export const UpdateUserBodySchema = z.object({
 
 // ========== PROJECT VALIDATION SCHEMAS ==========
 
+export const CreateProjectBodySchema = z.object({
+  name: z.string().min(1, 'Name is required').trim(),
+});
+
 export const UpdateProjectBodySchema = z.object({
   logline: z.string().optional(),
   premise: z.string().optional(),
@@ -97,6 +101,7 @@ export const GenerateSceneSynopsisBodySchema = z.object({
 // ========== INFERRED TYPES ==========
 
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
+export type CreateProjectBody = z.infer<typeof CreateProjectBodySchema>;
 export type UpdateProjectBody = z.infer<typeof UpdateProjectBodySchema>;
 export type CreateLocationBody = z.infer<typeof CreateLocationBodySchema>;
 export type UpdateLocationBody = z.infer<typeof UpdateLocationBodySchema>;
