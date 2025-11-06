@@ -10,7 +10,6 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 ## [ ZADACI ZA ODRADITI (To-Do) ]
 
 ### Epic: AI Integracija - Faza A (Direktni API) 🔴
-* **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx)
 
 ### Epic: UI/UX Poboljšanja 🟢
 * **Zadatak 2.1:** Dodati vizualni indikator trenutne faze u navigaciji
@@ -24,6 +23,9 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 3.7:** Implementirati LocalLLMProvider za Ollama/Llama integraciju
 * **Zadatak 3.8:** Kreirati OrchestratorService klasu
 * **Zadatak 3.9:** Implementirati `POST /api/projects/:projectId/ai/orchestrate`
+
+### Epic: Tehnički Dug - Faza 3 (Post-AI) 🟢
+* **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
 
 
 ## [ TRENUTNO RADIMO (In Progress) ]
@@ -43,6 +45,7 @@ _Trenutno nema zadataka u tijeku._
 * **Zadatak 3.2:** Kreirati AI service sloj (`server/src/services/ai.service.ts`) - Tehnički plan kreiran u `TEHNICKI_PLAN_AI_FAZA_A.md` ✅
 * **Zadatak 3.3:** Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis` ✅
 * **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept) ✅
+* **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx) ✅
 
 ### Epic: MVP Implementacija ✅
 * Sve faze (1-6) implementirane i testirane
