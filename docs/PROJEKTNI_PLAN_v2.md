@@ -86,6 +86,7 @@ _Trenutno nema zadataka u tijeku._
 * **Zadatak 1.7:** Implementirati Zod validaciju za request body tipove ✅ Dovršeno
 * **Zadatak 1.8:** Dodati unit testove za error handling middleware ✅ Dovršeno
 * **Zadatak 1.9:** Optimizirati database query performanse (dodati indekse) ✅ Dovršeno
+* **Zadatak TBD:** Popraviti logiku i validaciju za `POST /api/projects` (Riješen bug s hardkodiranim imenom i popravljen `validation.ts` middleware) ✅
 
 ## Prioriteti Implementacije
 
@@ -158,18 +159,4 @@ _Trenutno nema zadataka u tijeku._
 
 ## NOVI ZADACI (Tehnički Dug - Otkriveno u Fazi Refaktoringa 2)
 
-### Zadatak TBD: Popraviti logiku i validaciju za `POST /api/projects`
-
-**Status:** 🟥 Na čekanju
-**Prioritet:** 🟠 Srednji
-**Opis:**
-Tijekom implementacije integration testova (Zadatak 1.8.6) otkriveno je da API ruta `POST /api/projects` trenutno **ne koristi Zod validaciju** i **potpuno ignorira request body**.
-
-Umjesto da koristi podatke iz `body`-ja (npr. `name`), ruta hardkodira naziv "Novi Projekt" prilikom kreiranja.
-
-**Akcijski koraci za rješavanje:**
-1. Ažurirati `server/src/schemas/validation.ts` i kreirati `CreateProjectBodySchema` (vjerojatno `z.object({ name: z.string().min(1) })`).
-2. Ažurirati rutu `POST /api/projects` u `server/src/api.ts`.
-3. Dodati `validateBody(CreateProjectBodySchema)` middleware na tu rutu.
-4. Modificirati logiku rute da koristi `c.var.validatedBody.name` prilikom kreiranja novog projekta u bazi.
-5. Ažurirati `api.integration.test.ts` da reflektira ovu promjenu (testirati da slanje `name` radi i da slanje praznog bodyja vraća 400).
+_Trenutno nema novih zadataka._
