@@ -26,6 +26,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 
 ### Epic: Tehnički Dug - Faza 3 (Post-AI) 🟢
 * **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
+* **Zadatak 4.2:** Popraviti tipizaciju u `api.ts`. Trenutno `getValidatedBody(c)` vraća `{}` umjesto pravilno tipiziranog objekta, što uzrokuje TypeScript greške u testovima.
 
 
 ## [ TRENUTNO RADIMO (In Progress) ]
