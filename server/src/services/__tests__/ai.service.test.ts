@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AnthropicProvider } from '../ai.service';
+import { AIProviderError, AIInvalidResponseError } from '../ai.errors';
 
 // Mock Anthropic SDK
 const mockAnthropicClient = {
@@ -97,7 +98,7 @@ describe('AnthropicProvider', () => {
 
       // Act & Assert
       await expect(provider.generateText('Test prompt'))
-        .rejects.toThrow('No valid text content received from Anthropic');
+        .rejects.toThrow(AIInvalidResponseError);
     });
 
     it('should handle response with no text content', async () => {
@@ -109,7 +110,7 @@ describe('AnthropicProvider', () => {
 
       // Act & Assert
       await expect(provider.generateText('Test prompt'))
-        .rejects.toThrow('No valid text content received from Anthropic');
+        .rejects.toThrow(AIInvalidResponseError);
     });
 
     it('should handle undefined content', async () => {
@@ -118,7 +119,7 @@ describe('AnthropicProvider', () => {
 
       // Act & Assert
       await expect(provider.generateText('Test prompt'))
-        .rejects.toThrow('No valid text content received from Anthropic');
+        .rejects.toThrow(AIInvalidResponseError);
     });
   });
 
@@ -154,7 +155,10 @@ describe('AnthropicProvider', () => {
 
       // Assert
       expect(result).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith('Anthropic connection validation failed:', apiError);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Anthropic connection validation failed:', 
+        expect.any(AIProviderError)
+      );
 
       // Cleanup
       consoleSpy.mockRestore();
@@ -173,7 +177,10 @@ describe('AnthropicProvider', () => {
 
       // Assert
       expect(result).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith('Anthropic connection validation failed:', networkError);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Anthropic connection validation failed:', 
+        expect.any(AIProviderError)
+      );
 
       // Cleanup
       consoleSpy.mockRestore();

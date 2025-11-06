@@ -1,4 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'; // <-- ZADATAK 3.2.4
+import { 
+  AIProviderError, 
+  AIInvalidResponseError,
+  mapAIError 
+} from './ai.errors';
 
 // 1. Osnovni AIProvider interface
 export interface AIProvider {
@@ -39,7 +44,8 @@ export class AnthropicProvider implements AIProvider {
       });
       return true;
     } catch (error) {
-      console.error('Anthropic connection validation failed:', error);
+      const mappedError = mapAIError(error, this.getProviderName());
+      console.error('Anthropic connection validation failed:', mappedError);
       return false;
     }
   }
@@ -63,11 +69,20 @@ export class AnthropicProvider implements AIProvider {
         return response.content[0].text;
       }
 
-      throw new Error('No valid text content received from Anthropic');
+      throw new AIInvalidResponseError(
+        this.getProviderName(), 
+        'No valid text content in response'
+      );
     } catch (error) {
-      console.error('Anthropic AI generation failed:', error);
-      // Ovdje ćemo kasnije implementirati custom Error klase iz plana
-      throw new Error(`AI generation failed: ${error.message}`);
+      // Ako je već naša custom greška, proslijedi je dalje
+      if (error instanceof AIProviderError) {
+        throw error;
+      }
+      
+      // Mapiraj vanjsku grešku u našu custom grešku
+      const mappedError = mapAIError(error, this.getProviderName());
+      console.error('Anthropic AI generation failed:', mappedError);
+      throw mappedError;
     }
   }
 }
