@@ -3,6 +3,7 @@ import { AIProvider, AIGenerationOptions } from '../ai.service';
 import { 
   AIProviderError, 
   AIInvalidResponseError,
+  AITimeoutError,
   mapAIError 
 } from '../ai.errors';
 import { retryWithBackoff, RetryConfigs } from '../../utils/retry';
@@ -20,16 +21,43 @@ export class AnthropicProvider implements AIProvider {
     return 'anthropic';
   }
 
-  // Implementirana stvarna validacija s retry logikom
+  // Implementirana stvarna validacija s retry logikom i timeout handlingom
   public async validateConnection(): Promise<boolean> {
     try {
       await retryWithBackoff(async () => {
-        // Radi "jeftin" poziv samo da provjeri radi li API ključ
-        await this.client.messages.create({
-          model: this.model,
-          messages: [{ role: 'user', content: 'Test' }],
-          max_tokens: 10,
-        });
+        // Postavi timeout (10 sekundi za validaciju - kraći od generateText)
+        const timeoutMs = 10000;
+        const controller = new AbortController();
+        
+        // Postavi timeout koji će pozvati controller.abort()
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, timeoutMs);
+
+        try {
+          // Radi "jeftin" poziv samo da provjeri radi li API ključ
+          await this.client.messages.create({
+            model: this.model,
+            messages: [{ role: 'user', content: 'Test' }],
+            max_tokens: 10,
+          }, {
+            signal: controller.signal
+          });
+
+          // Očisti timeout ako se poziv uspješno završi
+          clearTimeout(timeoutId);
+        } catch (error) {
+          // Očisti timeout u slučaju greške
+          clearTimeout(timeoutId);
+          
+          // Provjeri je li greška AbortError (timeout)
+          if (error.name === 'AbortError') {
+            throw new AITimeoutError(this.getProviderName(), timeoutMs);
+          }
+          
+          // Proslijedi ostale greške dalje
+          throw error;
+        }
       }, RetryConfigs.FAST_OPERATION);
       
       return true;
@@ -40,12 +68,21 @@ export class AnthropicProvider implements AIProvider {
     }
   }
 
-  // Implementirana stvarna logika generiranja s retry logikom
+  // Implementirana stvarna logika generiranja s retry logikom i timeout handlingom
   public async generateText(
     prompt: string,
     options?: AIGenerationOptions,
   ): Promise<string> {
     return retryWithBackoff(async () => {
+      // Postavi timeout (30 sekundi default)
+      const timeoutMs = options?.timeout || 30000;
+      const controller = new AbortController();
+      
+      // Postavi timeout koji će pozvati controller.abort()
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, timeoutMs);
+
       try {
         const response = await this.client.messages.create({
           model: this.model,
@@ -53,7 +90,12 @@ export class AnthropicProvider implements AIProvider {
           max_tokens: options?.maxTokens || 1024,
           temperature: options?.temperature || 0.7,
           // Ovdje možemo mapirati i druge opcije ako je potrebno
+        }, {
+          signal: controller.signal
         });
+
+        // Očisti timeout ako se poziv uspješno završi
+        clearTimeout(timeoutId);
 
         // Ekstrahiraj tekstualni odgovor iz Anthropicovog formata
         if (response.content && response.content[0]?.type === 'text') {
@@ -65,6 +107,14 @@ export class AnthropicProvider implements AIProvider {
           'No valid text content in response'
         );
       } catch (error) {
+        // Očisti timeout u slučaju greške
+        clearTimeout(timeoutId);
+        
+        // Provjeri je li greška AbortError (timeout)
+        if (error.name === 'AbortError') {
+          throw new AITimeoutError(this.getProviderName(), timeoutMs);
+        }
+        
         // Ako je već naša custom greška, proslijedi je dalje
         if (error instanceof AIProviderError) {
           throw error;
