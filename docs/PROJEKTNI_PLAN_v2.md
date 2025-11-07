@@ -19,10 +19,11 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 
 
 ### Epic: AI Integracija - Faza B (Orkestrator) 🟢
-* **Zadatak 3.6:** Dizajnirati arhitekturu za hibridni AI orkestrator
-* **Zadatak 3.7:** Implementirati LocalLLMProvider za Ollama/Llama integraciju
-* **Zadatak 3.8:** Kreirati OrchestratorService klasu
-* **Zadatak 3.9:** Implementirati `POST /api/projects/:projectId/ai/orchestrate`
+* **Zadatak 3.7 (NOVI):** Korak 1 - Postavljanje LangGraph.js i definiranje AgentState-a
+* **Zadatak 3.8 (NOVI):** Korak 2 - Implementacija RAG čvorova (transform_query i retrieve_context)
+* **Zadatak 3.9 (NOVI):** Korak 3 - Implementacija Usmjeravanja (route_task i handle_simple_retrieval)
+* **Zadatak 3.10 (NOVI):** Korak 4 - Implementacija 'Reflection' petlje (generate_draft, critique_draft, refine_draft)
+* **Zadatak 3.11 (NOVI):** Korak 5 - Finalna evaluacija i testiranje (Evals)
 
 ### Epic: Tehnički Dug - Faza 3 (Post-AI) 🟢
 * **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
@@ -48,6 +49,7 @@ _Trenutno nema zadataka u tijeku._
 * **Zadatak 3.3:** Implementirati `POST /api/projects/:projectId/ai/generate-scene-synopsis` ✅
 * **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept) ✅
 * **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx) ✅
+* **Zadatak 3.6:** Dizajnirati arhitekturu za hibridni AI orkestrator (Arhitektura v2.0 - Stateful Graf definirana u TEHNICKI_PLAN_AI_FAZA_B_v2.md) ✅
 
 ### Epic: MVP Implementacija ✅
 * Sve faze (1-6) implementirane i testirane
