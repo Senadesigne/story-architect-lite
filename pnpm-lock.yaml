@@ -67,6 +67,9 @@ importers:
       '@langchain/langgraph':
         specifier: ^0.2.74
         version: 0.2.74(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(zod-to-json-schema@3.24.6(zod@4.1.12))
+      '@langchain/openai':
+        specifier: ^1.0.0
+        version: 1.0.0(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12)))(ws@8.18.0)
       '@neondatabase/serverless':
         specifier: ^0.9.0
         version: 0.9.5
@@ -94,6 +97,9 @@ importers:
       langchain:
         specifier: ^0.3.36
         version: 0.3.36(@langchain/anthropic@0.3.33(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12)))(zod@4.1.12))(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12)))(@opentelemetry/api@1.9.0)(axios@1.13.1)(openai@6.7.0(ws@8.18.0)(zod@4.1.12))(ws@8.18.0)
+      pgvector:
+        specifier: ^0.2.1
+        version: 0.2.1
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
@@ -1920,6 +1926,12 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.3.68 <0.4.0'
+
+  '@langchain/openai@1.0.0':
+    resolution: {integrity: sha512-olKEUIjb3HBOiD/NR056iGJz4wiN6HhQ/u65YmGWYadWWoKOcGwheBw/FE0x6SH4zDlI3QmP+vMhuQoaww19BQ==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@langchain/core': ^1.0.0
 
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
@@ -5414,6 +5426,10 @@ packages:
   pgpass@1.0.5:
     resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
 
+  pgvector@0.2.1:
+    resolution: {integrity: sha512-nKaQY9wtuiidwLMdVIce1O3kL0d+FxrigCVzsShnoqzOSaWWWOvuctb/sYwlai5cTwwzRSNa+a/NtN2kVZGNJw==}
+    engines: {node: '>= 18'}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -7871,6 +7887,15 @@ snapshots:
       js-tiktoken: 1.0.21
       openai: 5.12.2(ws@8.18.0)(zod@3.25.76)
       zod: 3.25.76
+    transitivePeerDependencies:
+      - ws
+
+  '@langchain/openai@1.0.0(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12)))(ws@8.18.0)':
+    dependencies:
+      '@langchain/core': 0.3.79(@opentelemetry/api@1.9.0)(openai@6.7.0(ws@8.18.0)(zod@4.1.12))
+      js-tiktoken: 1.0.21
+      openai: 6.7.0(ws@8.18.0)(zod@4.1.12)
+      zod: 4.1.12
     transitivePeerDependencies:
       - ws
 
@@ -10587,7 +10612,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.1(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.13.1)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -11605,6 +11630,8 @@ snapshots:
     dependencies:
       split2: 4.2.0
 
+  pgvector@0.2.1: {}
+
   picocolors@1.1.1: {}
 
   picomatch@2.3.1: {}
@@ -11900,7 +11927,7 @@ snapshots:
 
   ret@0.1.15: {}
 
-  retry-axios@2.6.0(axios@1.13.1(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.13.1):
     dependencies:
       axios: 1.13.1(debug@4.4.3)
 
