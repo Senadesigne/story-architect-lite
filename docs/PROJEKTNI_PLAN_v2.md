@@ -29,6 +29,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
 * **Zadatak 4.2:** Popraviti tipizaciju u `api.ts`. Trenutno `getValidatedBody(c)` vraća `{}` umjesto pravilno tipiziranog objekta, što uzrokuje TypeScript greške u testovima.
 * **Zadatak 4.3:** Riješiti preostale generalne TypeScript greške u kodu koje je AI prijavio tijekom refaktoringa (greške nevezane za specifične zadatke).
+* **Zadatak 4.4 (Privremena Mjera):** Vratiti 'AI Mentora' na lokalni LLM. Trenutno je `ai.nodes.ts` hardkodiran da koristi `ChatAnthropic` (Haiku) umjesto `ChatOllama`. Kada lokalni server (Ollama) bude spreman, moramo revertati ovu promjenu.
 
 
 ## [ TRENUTNO RADIMO (In Progress) ]
