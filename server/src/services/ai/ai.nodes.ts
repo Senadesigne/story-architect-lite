@@ -1,19 +1,19 @@
 import { AgentState } from './ai.state';
 import { getRelevantContext } from './ai.retriever';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { ChatAnthropic } from '@langchain/anthropic';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 /**
  * Čvor 1: Transformira korisnički upit u bolji upit za RAG.
- * Koristi "AI Mentora" (Lokalni LLM).
+ * Koristi "AI Mentora" (Anthropic Claude Haiku).
  */
 export async function transformQueryNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 1: TRANSFORMACIJA UPITA ---");
   
   try {
-    const mentor = new ChatOllama({
-      baseUrl: process.env.LOCAL_LLM_URL, // Osiguraj da je LOCAL_LLM_URL u .env
-      model: process.env.LOCAL_LLM_MODEL || "llama3", // Osiguraj da je LOCAL_LLM_MODEL u .env
+    const mentor = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-haiku-20240307", // Koristimo brzi Haiku model
       temperature: 0.0,
     });
 
