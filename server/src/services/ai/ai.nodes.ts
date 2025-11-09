@@ -138,3 +138,174 @@ ${state.userInput}`;
     return { finalOutput: "Nažalost, dogodila se greška pri obradi vašeg upita. Molim pokušajte ponovo." };
   }
 }
+
+/**
+ * Čvor 5: Generira prvi nacrt kreativnog teksta.
+ * Koristi "Pisca" (Claude 3 Sonnet) za generiranje.
+ */
+export async function generateDraftNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 5: GENERIRANJE NACRTA ---");
+  
+  try {
+    const writer = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-sonnet-20240229", // Snažniji model za kreativno pisanje
+      temperature: 0.8, // Viša temperatura za kreativnost
+    });
+
+    const systemPrompt = `Ti si talentirani kreativni pisac. Na temelju korisničkog zahtjeva i dohvaćenog konteksta priče, napiši živopisan, uvjerljiv i emocionalno rezonantan tekst. Strogo se pridržavaj informacija iz konteksta (imena likova, lokacije, odnosi, prošli događaji), ali slobodno dodaj kreativne detalje koji obogaćuju priču.
+
+KONTEKST PRIČE:
+${state.ragContext || 'Nema specifičnog konteksta.'}
+
+GLOBALNI KONTEKST:
+${state.storyContext}
+
+KORISNIČKI ZAHTJEV:
+${state.userInput}
+
+Napiši tekst koji je:
+- Vjeran postojećem kontekstu i likovima
+- Emocionalno uvjerljiv
+- Živopisan i detaljan
+- Prirodan u dijalogu i opisu`;
+
+    const response = await writer.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const draft = response.content.toString();
+    const newDraftCount = state.draftCount + 1;
+    
+    console.log(`Generiran nacrt #${newDraftCount}, duljina: ${draft.length} znakova`);
+    return { 
+      draft: draft,
+      draftCount: newDraftCount
+    };
+    
+  } catch (error) {
+    console.error("Greška u generateDraftNode:", error);
+    return { 
+      draft: "Greška pri generiranju nacrta. Molim pokušajte ponovo.",
+      draftCount: state.draftCount + 1
+    };
+  }
+}
+
+/**
+ * Čvor 6: Kritizira trenutni nacrt.
+ * Koristi "Kritičara" (Claude 3 Haiku) za brzu analizu.
+ */
+export async function critiqueDraftNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 6: KRITIKA NACRTA ---");
+  
+  try {
+    const critic = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-haiku-20240307", // Brzi model za analizu
+      temperature: 0.1, // Niska temperatura za preciznu analizu
+    });
+
+    const systemPrompt = `Ti si 'AI Mentor', strogi, ali pošteni urednik kreativnog pisanja. Tvoj zadatak je pregledati sljedeći NACRT i osigurati da je 100% usklađen s pruženim KONTEKSTOM (RAG smjernicama). Budi precizan i nepopustljiv u vezi dosljednosti.
+
+KONTEKST (Smjernice koje se moraju poštovati):
+${state.ragContext || 'Nema specifičnog konteksta.'}
+
+KORISNIČKI ZAHTJEV:
+${state.userInput}
+
+NACRT (Tekst koji se pregledava):
+${state.draft}
+
+Tvoj zadatak:
+1. **Provjera Koherentnosti:** Pronađi BILO KAKVE činjenične kontradikcije između NACRTA i KONTEKSTA. Jesu li imena likova, lokacije i prošli događaji točno preneseni?
+2. **Provjera Dosljednosti Lika:** Odstupa li ponašanje lika u NACRTU od njegovog profila u KONTEKSTU?
+3. **Provjera Potpunosti:** Je li NACRT ispunio SVE zahtjeve iz originalnog korisničkog upita?
+
+Vrati SAMO JSON objekt sa svojim povratnim informacijama:
+{
+  "issues": ["Popis pronađenih problema..."],
+  "suggestions": ["Konkretni prijedlozi za poboljšanje..."],
+  "score": <ocjena od 0-100 o usklađenosti s kontekstom>,
+  "stop": <true ako je nacrt savršen, false ako treba poboljšanje>
+}`;
+
+    const response = await critic.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const critique = response.content.toString();
+    
+    console.log("Generirana kritika:", critique);
+    return { critique: critique };
+    
+  } catch (error) {
+    console.error("Greška u critiqueDraftNode:", error);
+    // Ako kritika ne uspije, prekidamo petlju
+    return { 
+      critique: JSON.stringify({ 
+        issues: [], 
+        suggestions: [], 
+        score: 100, 
+        stop: true 
+      })
+    };
+  }
+}
+
+/**
+ * Čvor 7: Poboljšava nacrt na temelju kritike.
+ * Koristi "Popravljača" (Claude 3 Sonnet) za refiniranje.
+ */
+export async function refineDraftNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 7: POBOLJŠAVANJE NACRTA ---");
+  
+  try {
+    const refiner = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-sonnet-20240229", // Snažniji model za poboljšanje
+      temperature: 0.6, // Umjerena temperatura za kontrolirane izmjene
+    });
+
+    const systemPrompt = `Ti si talentirani kreativni pisac koji poboljšava svoje tekstove na temelju konstruktivne kritike. Imaš svoj originalni nacrt i detaljnu kritiku s konkretnim prijedlozima za poboljšanje.
+
+KONTEKST PRIČE:
+${state.ragContext || 'Nema specifičnog konteksta.'}
+
+KORISNIČKI ZAHTJEV:
+${state.userInput}
+
+TVOJ ORIGINALNI NACRT:
+${state.draft}
+
+KRITIKA I PRIJEDLOZI:
+${state.critique}
+
+Poboljšaj svoj originalni nacrt. Strogo slijedi upute za ispravak iz JSON kritike kako bi riješio navedene probleme. Zadrži sve dobre elemente originalnog nacrta, ali ispravi identificirane nedostatke. Tekst mora biti:
+- Potpuno usklađen s kontekstom priče
+- Vjerno prikazivati likove i njihove odnose
+- Ispunjavati sve zahtjeve korisničkog upita
+- Zadržati kreativnu kvalitetu i emocionalnu dubinu`;
+
+    const response = await refiner.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const refinedDraft = response.content.toString();
+    const newDraftCount = state.draftCount + 1;
+    
+    console.log(`Poboljšan nacrt #${newDraftCount}, duljina: ${refinedDraft.length} znakova`);
+    return { 
+      draft: refinedDraft,
+      draftCount: newDraftCount
+    };
+    
+  } catch (error) {
+    console.error("Greška u refineDraftNode:", error);
+    // Ako poboljšanje ne uspije, zadržavamo originalni nacrt
+    return { 
+      draft: state.draft,
+      draftCount: state.draftCount + 1
+    };
+  }
+}
