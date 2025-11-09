@@ -60,9 +60,9 @@ export async function routeTaskNode(state: AgentState): Promise<Partial<AgentSta
   console.log("--- KORAK 3: USMJERAVANJE ZADATKA ---");
   
   try {
-    const router = new ChatOllama({
-      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-      model: process.env.OLLAMA_MODEL || "llama3.2",
+    const router = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-haiku-20240307",
       temperature: 0.0,
     });
 
@@ -110,9 +110,9 @@ export async function handleSimpleRetrievalNode(state: AgentState): Promise<Part
   console.log("--- KORAK 4: JEDNOSTAVNO DOHVAĆANJE ---");
   
   try {
-    const mentor = new ChatOllama({
-      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-      model: process.env.OLLAMA_MODEL || "llama3.2",
+    const mentor = new ChatAnthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      model: "claude-3-haiku-20240307",
       temperature: 0.3,
     });
 
