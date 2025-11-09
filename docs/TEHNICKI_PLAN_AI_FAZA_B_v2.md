@@ -355,7 +355,23 @@ Korak 2 (Implementacija RAG-a): Implementirati čvorove transform_query i retrie
 
 Korak 3 (Implementacija Usmjeravanja): Implementirati route_task čvor i handle_simple_retrieval čvor. Dodati prve add_conditional_edges. Testirati usmjeravanje (jednostavno vs. kreativno).   
 
-Korak 4 (Implementacija Refleksije): Implementirati punu "Reflection" petlju: čvorove generate_draft, critique_draft, refine_draft i uvjetni rub za petlju. Fino podesiti promptove za kritiku  kako bi se postigao željeni balans između strogosti i kreativne slobode.   
+Korak 4.a (Implementacija "Reflection" Čvorova): 
+   - Dodati tri ključna čvora u `ai.nodes.ts`:
+     - **generateDraftNode**: Koristi Cloud LLM (Anthropic Claude 3.5 Sonnet) za generiranje početne verzije priče. Prima RAG kontekst i korisničke zahtjeve, generira prvi nacrt koji se sprema u `state.storyDraft`.
+     - **critiqueDraftNode**: Koristi Lokalni LLM (Ollama) za analizu trenutne verzije. Vraća strukturiranu kritiku u JSON formatu s ocjenama po kriterijima (1-10), konkretnim prijedlozima i `stop: true/false` zastavicom. Također povećava `draftCount`.
+     - **refineDraftNode**: Koristi Cloud LLM (Anthropic Claude 3.5 Haiku za brže iteracije) za poboljšanje nacrta na temelju kritike. Prima originalni nacrt + JSON kritiku i generira poboljšanu verziju.
+   - Svi čvorovi moraju imati robusno error handling i detaljno logiranje za praćenje iteracija.
+
+Korak 4.b (Ažuriranje Grafa - Povezivanje Petlje):
+   - U `ai.graph.ts`:
+     - Ukloniti postojeći `generate_draft_placeholder` čvor
+     - Dodati nove čvorove iz koraka 4.a u graf koristeći `.addNode()` metodu
+     - Implementirati uvjetni rub nakon `critiqueDraftNode` pomoću `addConditionalEdges`:
+       - Provjeriti `stop: true` iz kritike → prekid petlje, prelazak na finalizaciju
+       - Provjeriti `draftCount >= 3` → prekid petlje nakon maksimalno 3 iteracije
+       - Inače → nastavak na `refineDraftNode` koji vraća tok na `generateDraftNode`
+     - Osigurati ispravno povezivanje s ostatkom grafa (ulaz iz route_story, izlaz prema END)
+   - Testirati cjelokupnu petlju s različitim scenarijima (brzi prekid, maksimalne iteracije)   
 
 Korak 5 (Evaluacija): Provesti kvantitativnu evaluaciju (Evals)  kako bi se izmjerilo poboljšanje kvalitete izlaza i smanjenje troškova (broj poziva Cloud LLM-a) u usporedbi s originalnom Arhitekturom 4.0.   
 
