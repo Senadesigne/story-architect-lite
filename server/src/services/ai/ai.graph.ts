@@ -5,7 +5,10 @@ import {
   transformQueryNode, 
   retrieveContextNode, 
   routeTaskNode, 
-  handleSimpleRetrievalNode 
+  handleSimpleRetrievalNode,
+  generateDraftNode,
+  critiqueDraftNode,
+  refineDraftNode
 } from "./ai.nodes";
 
 // Definiramo konfiguraciju za StateGraph
@@ -61,6 +64,17 @@ workflow.addNode("transform_query", transformQueryNode);
 workflow.addNode("retrieve_context", retrieveContextNode);
 workflow.addNode("route_task", routeTaskNode);
 workflow.addNode("handle_simple_retrieval", handleSimpleRetrievalNode);
+workflow.addNode("generate_draft", generateDraftNode);
+workflow.addNode("critique_draft", critiqueDraftNode);
+workflow.addNode("refine_draft", refineDraftNode);
+
+// Dodaj finalni čvor koji prebacuje draft u finalOutput
+workflow.addNode("finalize_output", async (state: AgentState) => {
+  console.log("--- FINALIZACIJA IZLAZA ---");
+  return { 
+    finalOutput: state.draft || "Greška: Nema generiranog teksta."
+  };
+});
 
 // 3. Postavi ulaznu točku
 workflow.setEntryPoint("transform_query");
@@ -80,9 +94,7 @@ workflow.addConditionalEdges(
     if (decision === "simple_retrieval") {
       return "handle_simple_retrieval";
     } else if (decision === "creative_generation") {
-      // TODO: Dodati generate_draft čvor u sljedećoj fazi
-      console.log("TODO: Implementirati creative_generation put");
-      return END;
+      return "generate_draft";
     } else {
       // cannot_answer ili nepoznata odluka
       return END;
@@ -91,6 +103,7 @@ workflow.addConditionalEdges(
   // Mapa mogućih izlaza (potrebno za TypeScript)
   {
     handle_simple_retrieval: "handle_simple_retrieval",
+    generate_draft: "generate_draft",
     [END]: END,
   }
 );
@@ -98,7 +111,46 @@ workflow.addConditionalEdges(
 // 6. Povežemo handle_simple_retrieval s krajem
 workflow.addEdge("handle_simple_retrieval", END);
 
-// 7. Kompajliraj graf
+// 7. Dodaj rubove za Reflection petlju
+workflow.addEdge("generate_draft", "critique_draft");
+workflow.addEdge("refine_draft", "critique_draft");
+
+// 8. Dodaj uvjetne rubove za critique - srce Reflection petlje
+const MAX_RETRIES = 3;
+
+workflow.addConditionalEdges(
+  "critique_draft",
+  // Funkcija koja odlučuje nastavlja li se petlja
+  (state: AgentState) => {
+    try {
+      // Pokušaj parsirati kritiku kao JSON
+      const critiqueObj = JSON.parse(state.critique || "{}");
+      const shouldStop = critiqueObj.stop === true;
+      const maxRetriesReached = state.draftCount >= MAX_RETRIES;
+      
+      console.log(`Reflection petlja - Iteracija: ${state.draftCount}, Stop: ${shouldStop}, Max reached: ${maxRetriesReached}`);
+      
+      if (shouldStop || maxRetriesReached) {
+        return "finalize_output";
+      } else {
+        return "refine_draft";
+      }
+    } catch (error) {
+      console.error("Greška pri parsiranju kritike, prekidam petlju:", error);
+      return "finalize_output";
+    }
+  },
+  // Mapa mogućih izlaza
+  {
+    refine_draft: "refine_draft",
+    finalize_output: "finalize_output",
+  }
+);
+
+// 9. Poveži finalizaciju s krajem
+workflow.addEdge("finalize_output", END);
+
+// 10. Kompajliraj graf
 export const appGraph = workflow.compile();
 
-console.log("AI Graf v2.0 (s routingom) kompajliran i spreman.");
+console.log("AI Graf v2.0 (s Reflection petljom) kompajliran i spreman.");
