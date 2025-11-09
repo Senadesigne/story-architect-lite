@@ -24,6 +24,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 3.9 (NOVI):** Korak 3 - Implementacija Usmjeravanja (route_task i handle_simple_retrieval)
 * **Zadatak 3.10 (NOVI):** Korak 4 - Implementacija 'Reflection' petlje (generate_draft, critique_draft, refine_draft)
 * **Zadatak 3.11 (NOVI):** Korak 5 - Finalna evaluacija i testiranje (Evals)
+* **Zadatak 3.12 (BUDUĆNOST - Faza C):** Nadograditi "Mentora" da bude "Dramaturg". Implementirati "Plan-and-Execute" logiku gdje "Mentor" (Haiku/Lokalni LLM) prvo stvara strukturirani plan (npr. raščlamba scene na 3 čina) prije nego što "Pisac" (Sonnet) krene s pisanjem, kako bi se osigurala bolja dramaturgija.
 
 ### Epic: Tehnički Dug - Faza 3 (Post-AI) 🟢
 * **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
