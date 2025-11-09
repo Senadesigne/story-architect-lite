@@ -33,6 +33,8 @@ import { createDefaultAIProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
 import { PromptService } from './services/prompt.service';
 import { aiRateLimiter } from './middleware/rateLimiter';
+import { appGraph } from './services/ai/ai.graph';
+import { AgentState } from './services/ai/ai.state';
 
 const app = new Hono();
 
@@ -81,6 +83,44 @@ app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
     console.error('AI /test endpoint error:', error);
     // Ovdje još ne koristimo globalni error handler, ali bismo trebali
     return c.json({ error: error.message || 'Internal server error' }, 500);
+  }
+});
+
+// POST /api/ai/test-agent
+// Ova ruta služi za testiranje cijelog AI grafa (Zadatak 3.11)
+app.post('/api/ai/test-agent', authMiddleware, async (c) => {
+  try {
+    // Korisnik je potreban za auth, ali ga ne koristimo u logici
+    c.get('user'); // Samo da se provjeri da je autenticiran
+    const body = await c.req.json();
+    const { userInput, storyContext } = body;
+
+    if (!userInput) {
+      return c.json({ error: 'userInput je obavezan' }, 400);
+    }
+
+    // Pripremi početno stanje za graf
+    // Napomena: 'messages' se automatski upravlja unutar grafa
+    const initialState: Partial<AgentState> = {
+      userInput: userInput,
+      storyContext: storyContext || "Nema pruženog globalnog konteksta priče.",
+      draftCount: 0,
+    };
+
+    console.log("--- POKRETANJE AI AGENTA (Test) ---", initialState);
+
+    // Pokreni graf
+    const finalState = await appGraph.invoke(initialState as AgentState);
+
+    console.log("--- AI AGENT ZAVRŠIO (Test) ---", finalState);
+
+    // Vrati *cijeli* finalni state da ga možemo analizirati
+    return c.json(finalState);
+
+  } catch (error: unknown) {
+    console.error('Greška u AI Agent testu:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ error: 'Test Agenta nije uspio', details: errorMessage }, 500);
   }
 });
 // ---------------------------------------------
