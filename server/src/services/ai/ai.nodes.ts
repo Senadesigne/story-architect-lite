@@ -2,6 +2,7 @@ import { AgentState } from './ai.state';
 import { getRelevantContext } from './ai.retriever';
 import { ChatAnthropic } from '@langchain/anthropic';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { ChatOllama } from '@langchain/community/chat_models/ollama';
 
 /**
  * Čvor 1: Transformira korisnički upit u bolji upit za RAG.
@@ -49,4 +50,91 @@ export async function retrieveContextNode(state: AgentState): Promise<Partial<Ag
   
   console.log("Dohvaćen RAG kontekst:", ragContext.substring(0, 100) + "...");
   return { ragContext: ragContext };
+}
+
+/**
+ * Čvor 3: Usmjerava zadatak na temelju korisničkog upita i konteksta.
+ * Koristi "AI Mentora" (Lokalni LLM - Ollama) kao router.
+ */
+export async function routeTaskNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 3: USMJERAVANJE ZADATKA ---");
+  
+  try {
+    const router = new ChatOllama({
+      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+      model: process.env.OLLAMA_MODEL || "llama3.2",
+      temperature: 0.0,
+    });
+
+    const systemPrompt = `Ti si 'AI Logističar' i usmjerivač zadataka. Tvoj zadatak je klasificirati korisnički upit u JEDNU od tri kategorije, na temelju upita i dohvaćenog RAG konteksta.
+
+KATEGORIJE:
+1. **simple_retrieval**: Upit traži jednostavnu činjenicu, sažetak ili informaciju koja je EKSPLICITNO prisutna u RAG kontekstu. (Npr. "Tko je...", "Što je...", "Podsjeti me...", "Gdje je...").
+2. **creative_generation**: Upit zahtijeva novo, kreativno pisanje (npr. pisanje nove scene, dijaloga, opisa, brainstorminga) koje se oslanja na RAG kontekst, ali NIJE direktno u njemu. (Npr. "Napiši...", "Opiši...", "Generiraj...", "Zammisli...").
+3. **cannot_answer**: Upit traži nešto što nije povezano s pričom ili RAG kontekst ne sadrži relevantne informacije za odgovor.
+
+KORISNIČKI UPIT:
+${state.userInput}
+
+DOHVAĆENI RAG KONTEKST:
+${state.ragContext || 'Nema konteksta.'}
+
+Vrati samo JEDNU riječ - naziv kategorije (npr. "simple_retrieval").`;
+
+    const response = await router.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const decision = response.content.toString().trim().toLowerCase();
+    const validDecisions = ["simple_retrieval", "creative_generation", "cannot_answer"];
+    
+    const routingDecision = validDecisions.includes(decision) 
+      ? decision as "simple_retrieval" | "creative_generation" | "cannot_answer"
+      : "cannot_answer";
+    
+    console.log("Odluka usmjeravanja:", routingDecision);
+    return { routingDecision };
+    
+  } catch (error) {
+    console.error("Greška u routeTaskNode:", error);
+    // Defaultno na kreativno generiranje ako je greška
+    return { routingDecision: "creative_generation" };
+  }
+}
+
+/**
+ * Čvor 4: Obrađuje jednostavne upite za dohvaćanje informacija.
+ * Koristi "AI Mentora" (Lokalni LLM - Ollama) za generiranje odgovora.
+ */
+export async function handleSimpleRetrievalNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 4: JEDNOSTAVNO DOHVAĆANJE ---");
+  
+  try {
+    const mentor = new ChatOllama({
+      baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+      model: process.env.OLLAMA_MODEL || "llama3.2",
+      temperature: 0.3,
+    });
+
+    const systemPrompt = `Ti si pomoćnik koji odgovara na pitanja o priči. Na temelju dohvaćenog konteksta, pruži jasan i koncizan odgovor na korisnikov upit. Koristi samo informacije iz konteksta. Ako informacija nije dostupna, ljubazno to naglasi.
+
+KONTEKST PRIČE:
+${state.ragContext || 'Nema dostupnog konteksta.'}
+
+KORISNIČKI UPIT:
+${state.userInput}`;
+
+    const response = await mentor.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const finalOutput = response.content.toString();
+    
+    console.log("Generirani odgovor:", finalOutput.substring(0, 100) + "...");
+    return { finalOutput };
+    
+  } catch (error) {
+    console.error("Greška u handleSimpleRetrievalNode:", error);
+    return { finalOutput: "Nažalost, dogodila se greška pri obradi vašeg upita. Molim pokušajte ponovo." };
+  }
 }
