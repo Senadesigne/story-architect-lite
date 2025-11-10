@@ -375,3 +375,275 @@ Korak 4.b (Ažuriranje Grafa - Povezivanje Petlje):
 
 Korak 5 (Evaluacija): Provesti kvantitativnu evaluaciju (Evals)  kako bi se izmjerilo poboljšanje kvalitete izlaza i smanjenje troškova (broj poziva Cloud LLM-a) u usporedbi s originalnom Arhitekturom 4.0.   
 
+VIII. PLAN POPRAVKA: POSTAVLJANJE VEKTORSKE BAZE
+
+8.1 Dijagnoza Problema
+Tijekom prvog testa AI agentnog sustava na ruti `/api/ai/test-agent`, identificiran je kritični problem s RAG (Retrieval-Augmented Generation) komponentom. Greška "Greška prilikom dohvaćanja konteksta iz vektorske baze" u `ragContext` polju ukazuje na sljedeće nedostatke:
+
+1. **Nedostaje pgvector ekstenzija** - PostgreSQL baza podataka nema instaliranu pgvector ekstenziju koja je preduvjet za rad s vektorskim tipovima podataka
+2. **Ne postoji tablica `story_architect_embeddings`** - PGVectorStore pokušava pristupiti tablici koja nije kreirana u bazi podataka
+3. **Nema definicije u Drizzle shemi** - Tablica za vektorske embeddings nije definirana u `schema.ts` datoteci
+
+Ovi nedostaci onemogućavaju funkcioniranje RAG sustava koji je ključan za dohvaćanje relevantnog konteksta iz priče.
+
+8.2 Arhitektura Rješenja
+Rješenje slijedi "Drizzle-ispravan" pristup koji održava integritet postojećeg razvojnog workflow-a projekta. Umjesto kreiranja ručnih SQL migracija, koristit će se kombinacija:
+- Drizzle schema definicija za tablicu
+- Jednokratna skripta za omogućavanje pgvector ekstenzije
+- Postojeći `pnpm db:push` mehanizam za sinkronizaciju sheme
+
+8.3 Detaljan Plan Implementacije
+
+### Korak 1: Kreiranje Skripte za Ekstenziju
+
+**Cilj**: Kreirati jednokratnu skriptu koja će omogućiti pgvector ekstenziju u PostgreSQL bazi.
+
+**Lokacija**: `server/scripts/setup-pgvector.ts`
+
+**Implementacija**:
+```typescript
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Učitaj environment varijable
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+async function setupPgVector() {
+  const connectionString = process.env.DATABASE_URL;
+  
+  if (!connectionString) {
+    console.error('❌ DATABASE_URL environment variable is not set!');
+    process.exit(1);
+  }
+
+  console.log('🔧 Connecting to database...');
+  
+  const sql = postgres(connectionString);
+  const db = drizzle(sql);
+
+  try {
+    // Provjeri postoji li već ekstenzija
+    const result = await sql`
+      SELECT * FROM pg_extension WHERE extname = 'vector'
+    `;
+    
+    if (result.length > 0) {
+      console.log('✅ pgvector extension is already installed');
+    } else {
+      console.log('📦 Installing pgvector extension...');
+      await sql`CREATE EXTENSION IF NOT EXISTS vector`;
+      console.log('✅ pgvector extension installed successfully');
+    }
+    
+    // Provjeri verziju
+    const version = await sql`
+      SELECT extversion FROM pg_extension WHERE extname = 'vector'
+    `;
+    
+    if (version.length > 0) {
+      console.log(`📌 pgvector version: ${version[0].extversion}`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error setting up pgvector:', error);
+    process.exit(1);
+  } finally {
+    await sql.end();
+    console.log('🔒 Database connection closed');
+  }
+}
+
+// Pokreni setup
+setupPgVector().then(() => {
+  console.log('✨ pgvector setup completed!');
+  console.log('📝 Next step: Run "pnpm db:push" to create the embeddings table');
+}).catch((error) => {
+  console.error('Failed to setup pgvector:', error);
+  process.exit(1);
+});
+```
+
+### Korak 2: Ažuriranje schema.ts
+
+**Cilj**: Dodati definiciju tablice `storyArchitectEmbeddings` u Drizzle shemu.
+
+**Lokacija**: `server/src/schema/schema.ts`
+
+**Implementacija** (dodati na kraj datoteke):
+```typescript
+// Custom type za pgvector - sigurna implementacija
+export const vector = customType<{ data: number[]; driverData: string }>({
+  dataType() { 
+    return 'vector(1536)'; // OpenAI text-embedding-3-small koristi 1536 dimenzija
+  },
+  toDriver(value: number[]): string {
+    // Pretvori array brojeva u PostgreSQL vector format
+    return JSON.stringify(value);
+  },
+  fromDriver(value: string): number[] {
+    // Pretvori PostgreSQL vector string natrag u array
+    return JSON.parse(value);
+  },
+});
+
+// Tablica za AI vektorske embeddings
+export const storyArchitectEmbeddings = pgTable('story_architect_embeddings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  content: text('content').notNull(),
+  metadata: jsonb('metadata').default({}).$type<{
+    docId?: string;
+    projectId?: string;
+    chunkIndex?: number;
+    sourceType?: 'character' | 'scene' | 'location' | 'project';
+    [key: string]: any;
+  }>(),
+  vector: vector('vector').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  // Indeks za brže vektorsko pretraživanje koristeći cosine distance
+  vectorIdx: index('idx_story_architect_embeddings_vector')
+    .using('ivfflat', table.vector.op('vector_cosine_ops'))
+    .with({ lists: 100 }),
+  // Dodatni indeksi za filtriranje
+  metadataProjectIdIdx: index('idx_embeddings_metadata_project_id')
+    .on(sql`(metadata->>'projectId')`),
+  createdAtIdx: index('idx_embeddings_created_at').on(table.createdAt),
+}));
+
+// Relacije za embeddings tablicu
+export const storyArchitectEmbeddingsRelations = relations(storyArchitectEmbeddings, ({ }) => ({
+  // Embeddings tablica nema direktne FK veze, koristi metadata za reference
+}));
+```
+
+### Korak 3: Ažuriranje ai.retriever.ts
+
+**Cilj**: Dodati provjeru postojanja tablice i poboljšati error handling.
+
+**Lokacija**: `server/src/services/ai/ai.retriever.ts`
+
+**Implementacija** (dodati prije `getRelevantContext` funkcije):
+```typescript
+/**
+ * Provjerava postoji li tablica u bazi podataka
+ */
+async function checkTableExists(tableName: string): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const result = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = ${tableName}
+      )
+    `);
+    return result.rows[0]?.exists || false;
+  } catch (error) {
+    console.error(`Error checking if table ${tableName} exists:`, error);
+    return false;
+  }
+}
+```
+
+**Ažuriranje `getRelevantContext` funkcije**:
+```typescript
+export async function getRelevantContext(query: string, k: number = 5): Promise<string> {
+  try {
+    // Provjeri postoji li tablica prije pokušaja dohvaćanja
+    const tableExists = await checkTableExists('story_architect_embeddings');
+    if (!tableExists) {
+      console.warn('Vector table not found. Please run setup-pgvector.ts and db:push');
+      return "Vektorska baza još nije konfigurirana. Molimo pokrenite postavljanje vektorske baze.";
+    }
+
+    // Postojeći kod za dohvaćanje...
+    const store = await getVectorStore();
+    const results = await store.similaritySearch(query, k);
+
+    if (results.length === 0) {
+      return "Nema pronađenog relevantnog konteksta.";
+    }
+
+    return results
+      .map((doc) => doc.pageContent)
+      .join("\n\n---\n\n");
+
+  } catch (error) {
+    console.error("Error during RAG retrieval:", error);
+    // Detaljnija poruka greške za lakše debugiranje
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+      console.error("Stack trace:", error.stack);
+    }
+    return "Greška prilikom dohvaćanja konteksta iz vektorske baze.";
+  }
+}
+```
+
+### Korak 4: Ažuriranje package.json
+
+**Cilj**: Dodati automatiziranu skriptu za postavljanje AI infrastrukture.
+
+**Lokacija**: `server/package.json`
+
+**Implementacija** (dodati u `scripts` sekciju):
+```json
+{
+  "scripts": {
+    // ... postojeće skripte ...
+    "setup:ai": "tsx scripts/setup-pgvector.ts && pnpm db:push",
+    "setup:ai:check": "tsx scripts/setup-pgvector.ts"
+  }
+}
+```
+
+### Korak 5: Upute za Izvršenje
+
+**Redoslijed pokretanja naredbi**:
+
+1. **Inicijalno postavljanje** (izvršava se jednom):
+   ```bash
+   cd server
+   pnpm setup:ai
+   ```
+   
+   Ova naredba će:
+   - Pokrenuti `setup-pgvector.ts` skriptu koja instalira pgvector ekstenziju
+   - Automatski pokrenuti `db:push` koji će kreirati `story_architect_embeddings` tablicu
+
+2. **Provjera statusa** (opcionalno):
+   ```bash
+   pnpm setup:ai:check
+   ```
+   
+   Ova naredba samo provjerava je li pgvector ekstenzija instalirana.
+
+3. **Testiranje**:
+   ```bash
+   pnpm dev
+   # U drugom terminalu:
+   # Testirati /api/ai/test-agent endpoint ponovno
+   ```
+
+**Napomene za proizvodnju**:
+- Za cloud PostgreSQL providere (Supabase, Neon, Railway), pgvector je obično već dostupan
+- Za self-hosted PostgreSQL, potrebno je instalirati pgvector paket na server nivou
+- Preporučuje se dokumentirati verziju pgvector ekstenzije u README.md
+
+8.4 Dodatne Preporuke za Budućnost
+
+1. **Skripta za popunjavanje početnih embeddings**:
+   - Kreirati `scripts/populate-embeddings.ts` koja će generirati embeddings za postojeće podatke
+
+2. **Monitoring i maintenance**:
+   - Dodati endpoint za provjeru zdravlja vektorske baze
+   - Implementirati periodičko reindeksiranje za optimalne performanse
+
+3. **Testovi**:
+   - Dodati unit testove za vector customType
+   - Dodati integraciju testove za RAG pipeline
+
+Ovaj plan osigurava robusnu implementaciju vektorske baze koja se savršeno uklapa u postojeću Drizzle/TypeScript arhitekturu projekta.
+
