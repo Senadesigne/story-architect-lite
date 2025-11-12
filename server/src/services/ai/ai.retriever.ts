@@ -1,5 +1,6 @@
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { sql } from 'drizzle-orm';
 import { getDatabase } from '../../lib/db';
 
 // 1. Postavi Drizzle klijenta koristeći postojeću infrastrukturu
@@ -38,6 +39,26 @@ const getVectorStore = async (): Promise<PGVectorStore> => {
 };
 
 /**
+ * Provjerava postoji li tablica u bazi podataka
+ */
+async function checkTableExists(tableName: string): Promise<boolean> {
+  try {
+    const db = await getDatabase();
+    const result = await db.execute(sql`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = ${tableName}
+      )
+    `);
+    return result.rows[0]?.exists || false;
+  } catch (error) {
+    console.error(`Error checking if table ${tableName} exists:`, error);
+    return false;
+  }
+}
+
+/**
  * Dohvaća relevantne dokumente iz vektorske baze.
  * @param query - Upit (npr. "transformirani upit" od AI Mentora)
  * @param k - Broj dokumenata za dohvat (default 5)
@@ -45,11 +66,17 @@ const getVectorStore = async (): Promise<PGVectorStore> => {
  */
 export async function getRelevantContext(query: string, k: number = 5): Promise<string> {
   try {
-    // 4. Izvrši pretraživanje
+    // Provjeri postoji li tablica prije pokušaja dohvaćanja
+    const tableExists = await checkTableExists('story_architect_embeddings');
+    if (!tableExists) {
+      console.warn('Vector table not found. Please run setup-pgvector.ts and db:push');
+      return "Vektorska baza još nije konfigurirana. Molimo pokrenite postavljanje vektorske baze.";
+    }
+
+    // Postojeći kod za dohvaćanje...
     const store = await getVectorStore();
     const results = await store.similaritySearch(query, k);
 
-    // 5. Formatiraj rezultate u jedan string
     if (results.length === 0) {
       return "Nema pronađenog relevantnog konteksta.";
     }
@@ -60,6 +87,11 @@ export async function getRelevantContext(query: string, k: number = 5): Promise<
 
   } catch (error) {
     console.error("Error during RAG retrieval:", error);
+    // Detaljnija poruka greške za lakše debugiranje
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+      console.error("Stack trace:", error.stack);
+    }
     return "Greška prilikom dohvaćanja konteksta iz vektorske baze.";
   }
 }

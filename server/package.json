@@ -14,14 +14,18 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:unit": "vitest run src/**/*.test.ts",
     "test:ci": "vitest run --coverage --reporter=verbose",
+    "test:graph": "tsx src/services/ai/test-graph.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "db:push": "node scripts/drizzle-wrapper.js push:pg",
     "db:generate": "node scripts/drizzle-wrapper.js generate:pg",
     "db:migrate": "node scripts/drizzle-wrapper.js up:pg",
-    "db:migrate:run": "node scripts/run-migrations.js",
+    "db:migrate:run": "tsx scripts/run-migrations.js",
     "db:studio": "node scripts/drizzle-wrapper.js studio",
-    "db:test": "node scripts/test-db-connection.js"
+    "db:test": "node scripts/test-db-connection.js",
+    "setup:ai": "tsx scripts/setup-pgvector.ts && pnpm db:generate && pnpm db:migrate:run && tsx scripts/create-vector-indexes.ts",
+    "setup:ai:check": "tsx scripts/setup-pgvector.ts",
+    "setup:ai:indexes": "tsx scripts/create-vector-indexes.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

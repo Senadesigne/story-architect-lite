@@ -10,9 +10,13 @@
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Učitaj environment varijable iz .env datoteke
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // The lock file is in the project root, two levels up from server/scripts
 const PORT_LOCK_FILE = path.join(__dirname, '../../.volo-app-ports.json');
@@ -38,9 +42,21 @@ function getDevServerConfig() {
 // CRITICAL: Set DATABASE_URL IMMEDIATELY before any imports
 const devConfig = getDevServerConfig();
 if (devConfig && devConfig.postgres) {
-  // Override DATABASE_URL with the active dev server port
+  // Check if there's an existing DATABASE_URL to get the database name
+  const existingDbUrl = process.env.DATABASE_URL;
+  let dbName = 'postgres'; // default fallback
+  
+  if (existingDbUrl) {
+    // Extract database name from existing URL
+    const urlMatch = existingDbUrl.match(/\/([^/?]+)(\?|$)/);
+    if (urlMatch && urlMatch[1]) {
+      dbName = urlMatch[1];
+    }
+  }
+  
+  // Override DATABASE_URL with the active dev server port and correct database name
   // CRITICAL: Always use 127.0.0.1 instead of localhost to avoid Windows IPv6/IPv4 issues
-  const dbUrl = `postgresql://postgres:password@127.0.0.1:${devConfig.postgres}/postgres`;
+  const dbUrl = `postgresql://postgres:password@127.0.0.1:${devConfig.postgres}/${dbName}?options=--search_path%3Dpublic`;
   process.env.DATABASE_URL = dbUrl;
   console.log(`🔄 Using active dev server database on 127.0.0.1:${devConfig.postgres}`);
   console.log(`📊 DATABASE_URL set to: ${dbUrl.replace(/password@/, '***@')}`);

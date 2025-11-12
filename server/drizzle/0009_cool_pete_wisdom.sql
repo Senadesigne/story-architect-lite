@@ -1,1 +1,0 @@
-DROP TABLE "characters_to_scenes";
