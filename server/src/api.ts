@@ -35,6 +35,7 @@ import { PromptService } from './services/prompt.service';
 import { aiRateLimiter } from './middleware/rateLimiter';
 import { appGraph } from './services/ai/ai.graph';
 import { AgentState } from './services/ai/ai.state';
+import { getRelevantContext } from './services/ai/ai.retriever';
 
 const app = new Hono();
 
@@ -83,6 +84,38 @@ app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
     console.error('AI /test endpoint error:', error);
     // Ovdje još ne koristimo globalni error handler, ali bismo trebali
     return c.json({ error: error.message || 'Internal server error' }, 500);
+  }
+});
+
+// GET /api/ai/test-rag
+// Test endpoint za RAG funkcionalnost - ne zahtijeva autentifikaciju
+app.get('/api/ai/test-rag', async (c) => {
+  try {
+    // Dohvati query parametar
+    const query = c.req.query('query') || 'test query';
+    
+    console.log('Testing RAG with query:', query);
+    
+    // Pozovi getRelevantContext funkciju
+    const result = await getRelevantContext(query);
+    
+    return c.json({
+      status: 'success',
+      query: query,
+      result: result,
+      timestamp: new Date().toISOString(),
+      message: 'RAG test completed successfully'
+    });
+    
+  } catch (error) {
+    console.error('RAG test endpoint error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return c.json({ 
+      status: 'error',
+      error: 'RAG test failed', 
+      details: errorMessage,
+      timestamp: new Date().toISOString()
+    }, 500);
   }
 });
 

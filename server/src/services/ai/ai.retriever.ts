@@ -4,17 +4,22 @@ import { sql } from 'drizzle-orm';
 import { getDatabase } from '../../lib/db';
 
 // 1. Postavi Drizzle klijenta koristeći postojeću infrastrukturu
-// Povući ćemo DATABASE_URL iz environmenta
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is not set!");
-}
+// Povući ćemo DATABASE_URL iz environmenta kada je potrebno
+const getConnectionString = (): string => {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is not set!");
+  }
+  return connectionString;
+};
 
 // 2. Konfiguriraj Embeddings model
-const embeddings = new OpenAIEmbeddings({
-  apiKey: process.env.OPENAI_API_KEY, // Morat ćemo dodati OPENAI_API_KEY u .env
-  model: "text-embedding-3-small"
-});
+const getEmbeddings = (): OpenAIEmbeddings => {
+  return new OpenAIEmbeddings({
+    apiKey: process.env.OPENAI_API_KEY, // Morat ćemo dodati OPENAI_API_KEY u .env
+    model: "text-embedding-3-small"
+  });
+};
 
 // 3. Konfiguriraj Vektorsku Bazu
 let vectorStore: PGVectorStore | null = null;
@@ -22,6 +27,8 @@ let vectorStore: PGVectorStore | null = null;
 const getVectorStore = async (): Promise<PGVectorStore> => {
   if (!vectorStore) {
     const db = await getDatabase();
+    const connectionString = getConnectionString();
+    const embeddings = getEmbeddings();
     vectorStore = new PGVectorStore(embeddings, {
       postgresConnectionOptions: {
         connectionString: connectionString,
