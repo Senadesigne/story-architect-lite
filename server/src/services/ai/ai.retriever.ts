@@ -96,15 +96,9 @@ const getVectorStore = async (): Promise<PGVectorStore> => {
 async function checkTableExists(tableName: string): Promise<boolean> {
   try {
     const db = await getDatabase();
-    const result = await db.execute(sql`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = ${tableName}
-      )
-    `);
+    const result = await db.execute(sql`SELECT to_regclass('public.${sql.raw(tableName)}')`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (result.rows[0] as any)?.exists || false;
+    return (result.rows[0] as any)?.to_regclass !== null;
   } catch (error) {
     console.error(`Error checking if table ${tableName} exists:`, error);
     return false;
