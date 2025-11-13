@@ -1,7 +1,13 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import 'dotenv/config';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
 import path from 'path';
+
+// ES module kompatibilnost
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Učitaj environment varijable
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
