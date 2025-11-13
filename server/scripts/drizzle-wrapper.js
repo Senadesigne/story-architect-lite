@@ -56,7 +56,7 @@ if (devConfig && devConfig.postgres) {
   
   // Override DATABASE_URL with the active dev server port and correct database name
   // CRITICAL: Always use 127.0.0.1 instead of localhost to avoid Windows IPv6/IPv4 issues
-  const dbUrl = `postgresql://postgres:password@127.0.0.1:${devConfig.postgres}/${dbName}?options=--search_path%3Dpublic`;
+  const dbUrl = `postgresql://postgres:password@127.0.0.1:${devConfig.postgres}/${dbName}`;
   process.env.DATABASE_URL = dbUrl;
   console.log(`🔄 Using active dev server database on 127.0.0.1:${devConfig.postgres}`);
   console.log(`📊 DATABASE_URL set to: ${dbUrl.replace(/password@/, '***@')}`);

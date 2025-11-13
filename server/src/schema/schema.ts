@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, index, customType, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, varchar, integer, index, vector, jsonb } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 // Korisnici - Povezujemo se s Firebase Auth putem ID-a
@@ -122,23 +122,6 @@ export const scenesRelations = relations(scenes, ({ one }) => ({
     location: one(locations, { fields: [scenes.locationId], references: [locations.id] }),
 }));
 
-// Custom type za pgvector - sigurna implementacija
-export const vector = customType<{ data: number[]; driverData: string }>({
-  dataType() { 
-    return 'vector(1536)'; // OpenAI text-embedding-3-small koristi 1536 dimenzija
-  },
-  toDriver(value: number[]): string {
-    // Pretvori array brojeva u PostgreSQL vector format
-    // pgvector koristi format: [1,2,3,...]
-    return `[${value.join(',')}]`;
-  },
-  fromDriver(value: string): number[] {
-    // Pretvori PostgreSQL vector string natrag u array
-    // Format iz pgvector: [1,2,3,...] ili (1,2,3,...)
-    const cleanValue = value.replace(/^\[|\]$/g, '').replace(/^\(|\)$/g, '');
-    return cleanValue.split(',').map(v => parseFloat(v.trim()));
-  },
-});
 
 // Tablica za AI vektorske embeddings
 export const storyArchitectEmbeddings = pgTable('story_architect_embeddings', {
@@ -151,13 +134,11 @@ export const storyArchitectEmbeddings = pgTable('story_architect_embeddings', {
     sourceType?: 'character' | 'scene' | 'location' | 'project';
     [key: string]: any;
   }>(),
-  vector: vector('vector').notNull(),
+  vector: vector('vector', { dimensions: 1536 }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
-  // Vektorski indeks se kreira putem create-vector-indexes.ts skripte (IVFFLAT tip)
-  // vectorIdx: index('idx_story_architect_embeddings_vector').on(table.vector),
-  // JSON indeks se kreira ručno u create-vector-indexes.ts zbog Drizzle limitacija
-  // metadataProjectIdIdx: index('idx_embeddings_metadata_project_id').on(sql`(metadata->>'projectId')`),
+  // Vektorski indeks za brzu pretragu sličnosti
+  vectorIdx: index('idx_story_architect_embeddings_vector').using('hnsw', table.vector.op('vector_cosine_ops')),
   createdAtIdx: index('idx_embeddings_created_at').on(table.createdAt),
 }));
 

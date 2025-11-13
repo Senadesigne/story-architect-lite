@@ -19,9 +19,9 @@ console.log('   Final connection string:', databaseUrl || 'postgresql://postgres
 export default {
   schema: './src/schema/*',
   out: './drizzle',
-  driver: 'pg',
+  dialect: 'postgresql',
   dbCredentials: {
-    connectionString: databaseUrl || 'postgresql://postgres:password@127.0.0.1:5432/postgres',
+    url: databaseUrl || 'postgresql://postgres:password@127.0.0.1:5432/postgres',
   },
   schemaFilter: ['public'],
 } satisfies Config; 

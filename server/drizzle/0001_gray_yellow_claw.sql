@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "story_architect_embeddings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"content" text NOT NULL,
 	"metadata" jsonb DEFAULT '{}'::jsonb,
-	"vector" "vector(1536)" NOT NULL,
+	"vector" vector(1536) NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -65,40 +65,42 @@ CREATE TABLE IF NOT EXISTS "users" (
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_characters_project_id" ON "characters" ("project_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_locations_project_id" ON "locations" ("project_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_projects_user_id" ON "projects" ("user_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_scenes_project_id" ON "scenes" ("project_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_scenes_order" ON "scenes" ("project_id","order");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_scenes_location_id" ON "scenes" ("location_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_embeddings_created_at" ON "story_architect_embeddings" ("created_at");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users" ("email");--> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "characters" ADD CONSTRAINT "characters_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "characters" ADD CONSTRAINT "characters_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "locations" ADD CONSTRAINT "locations_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "locations" ADD CONSTRAINT "locations_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "projects" ADD CONSTRAINT "projects_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "projects" ADD CONSTRAINT "projects_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "scenes" ADD CONSTRAINT "scenes_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "scenes" ADD CONSTRAINT "scenes_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "scenes" ADD CONSTRAINT "scenes_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "locations"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "scenes" ADD CONSTRAINT "scenes_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_characters_project_id" ON "characters" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_locations_project_id" ON "locations" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_projects_user_id" ON "projects" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_scenes_project_id" ON "scenes" USING btree ("project_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_scenes_order" ON "scenes" USING btree ("project_id","order");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_scenes_location_id" ON "scenes" USING btree ("location_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_story_architect_embeddings_vector" ON "story_architect_embeddings" USING hnsw ("vector" vector_cosine_ops);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_embeddings_created_at" ON "story_architect_embeddings" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users" USING btree ("email");
