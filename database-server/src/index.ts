@@ -1,43 +1,15 @@
-import { startEmbeddedPostgres, stopEmbeddedPostgres } from './embedded-postgres.js';
+// Database server is now handled by Docker
+// This file is kept for compatibility but no longer starts embedded PostgreSQL
 
-// Parse CLI arguments for port
-const parseCliArgs = () => {
-  const args = process.argv.slice(2);
-  const portIndex = args.indexOf('--port');
-  
-  return {
-    port: portIndex !== -1 ? parseInt(args[portIndex + 1]) : 5502,
-  };
-};
-
-const { port } = parseCliArgs();
-
-// Start database server
-const startDatabaseServer = async () => {
-  console.log('🚀 Starting volo-app Database Server...');
-  
-  try {
-    // Start PostgreSQL
-    await startEmbeddedPostgres(port);
-    
-  } catch (error) {
-    console.error('❌ Failed to start database server:', error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  }
-};
+console.log('⚠️  Database server functionality has been moved to Docker.');
+console.log('🐳 Please use Docker Compose to start the PostgreSQL database.');
+console.log('💡 Run: docker-compose up -d in the database-server directory');
 
 // Graceful shutdown
 const shutdown = async (signal: string) => {
-  console.log(`\n🛑 Received ${signal}, shutting down database server...`);
-  
-  try {
-    await stopEmbeddedPostgres();
-    console.log('✅ Database server stopped gracefully');
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Error during shutdown:', error);
-    process.exit(1);
-  }
+  console.log(`\n🛑 Received ${signal}, shutting down...`);
+  console.log('✅ No embedded database to stop - using Docker instead');
+  process.exit(0);
 };
 
 // Handle shutdown signals
@@ -60,5 +32,6 @@ process.on('unhandledRejection', (reason, promise) => {
   shutdown('unhandledRejection');
 });
 
-// Start the server
-startDatabaseServer(); 
+// No server to start - Docker handles the database
+console.log('🔄 Database server stub running (Docker mode)');
+console.log('📡 Listening for shutdown signals...'); 
