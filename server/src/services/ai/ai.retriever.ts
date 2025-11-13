@@ -2,6 +2,8 @@ import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../../lib/db';
+import { Pool, PoolConfig } from 'pg';
+import { registerType } from 'pgvector/pg';
 
 // 1. Postavi Drizzle klijenta koristeći postojeću infrastrukturu
 // Povući ćemo DATABASE_URL iz environmenta kada je potrebno
@@ -11,6 +13,42 @@ const getConnectionString = (): string => {
     throw new Error("DATABASE_URL environment variable is not set!");
   }
   return connectionString;
+};
+
+// Singleton Pool instanca s registriranim pgvector tipovima
+let pgPool: Pool | null = null;
+let typesRegistered = false;
+
+const getPgPool = async (): Promise<Pool> => {
+  if (!pgPool) {
+    const connectionString = getConnectionString();
+    
+    // Kreiraj Pool konfiguraciju
+    const poolConfig: PoolConfig = {
+      connectionString,
+      max: 20, // maksimalno 20 konekcija u pool-u
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    };
+    
+    pgPool = new Pool(poolConfig);
+    
+    // Registriraj pgvector tipove jednom
+    if (!typesRegistered) {
+      try {
+        const client = await pgPool.connect();
+        await registerType(client);
+        client.release();
+        typesRegistered = true;
+        console.log('Successfully registered pgvector types');
+      } catch (error) {
+        console.error('Error registering pgvector types:', error);
+        throw error;
+      }
+    }
+  }
+  
+  return pgPool;
 };
 
 // 2. Konfiguriraj Embeddings model
@@ -26,13 +64,12 @@ let vectorStore: PGVectorStore | null = null;
 
 const getVectorStore = async (): Promise<PGVectorStore> => {
   if (!vectorStore) {
-    const db = await getDatabase();
-    const connectionString = getConnectionString();
+    const pool = await getPgPool();
     const embeddings = getEmbeddings();
+    
     vectorStore = new PGVectorStore(embeddings, {
-      postgresConnectionOptions: {
-        connectionString: connectionString,
-      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pool: pool as any, // Koristi konfigurirani pool s registriranim tipovima
       tableName: "story_architect_embeddings", // Ime tablice za vektore
       columns: {
         idColumnName: "id",
@@ -58,7 +95,8 @@ async function checkTableExists(tableName: string): Promise<boolean> {
         AND table_name = ${tableName}
       )
     `);
-    return result.rows[0]?.exists || false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (result.rows[0] as any)?.exists || false;
   } catch (error) {
     console.error(`Error checking if table ${tableName} exists:`, error);
     return false;
@@ -110,9 +148,26 @@ export async function getRelevantContext(query: string, k: number = 5): Promise<
 export async function addDocumentsToVectorStore(docs: Array<{ pageContent: string, metadata: object }>) {
   try {
     const store = await getVectorStore();
-    await store.addDocuments(docs, { ids: docs.map(d => (d.metadata as any).docId) });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await store.addDocuments(docs, { ids: docs.map(d => (d.metadata as Record<string, any>).docId) });
     console.log(`Successfully added ${docs.length} documents to vector store.`);
   } catch (error) {
     console.error("Error adding documents to vector store:", error);
+  }
+}
+
+/**
+ * Graceful shutdown funkcija za zatvaranje pool-a
+ */
+export async function closeVectorStorePool(): Promise<void> {
+  if (pgPool) {
+    try {
+      await pgPool.end();
+      pgPool = null;
+      typesRegistered = false;
+      console.log('Vector store pool closed successfully');
+    } catch (error) {
+      console.error('Error closing vector store pool:', error);
+    }
   }
 }
