@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "story_architect_embeddings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"content" text NOT NULL,
 	"metadata" jsonb DEFAULT '{}'::jsonb,
-	"vector" vector(1536) NOT NULL,
+	"vector" text NOT NULL,
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
@@ -101,6 +101,6 @@ CREATE INDEX IF NOT EXISTS "idx_projects_user_id" ON "projects" USING btree ("us
 CREATE INDEX IF NOT EXISTS "idx_scenes_project_id" ON "scenes" USING btree ("project_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_scenes_order" ON "scenes" USING btree ("project_id","order");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_scenes_location_id" ON "scenes" USING btree ("location_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_story_architect_embeddings_vector" ON "story_architect_embeddings" USING hnsw ("vector" vector_cosine_ops);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_story_architect_embeddings_vector" ON "story_architect_embeddings" USING btree ("vector");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_embeddings_created_at" ON "story_architect_embeddings" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users" USING btree ("email");

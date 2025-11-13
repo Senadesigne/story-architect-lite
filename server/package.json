@@ -17,9 +17,9 @@
     "test:graph": "tsx src/services/ai/test-graph.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "db:push": "node scripts/drizzle-wrapper.js push:pg",
-    "db:generate": "node scripts/drizzle-wrapper.js generate:pg",
-    "db:migrate": "node scripts/drizzle-wrapper.js up:pg",
+    "db:push": "node scripts/drizzle-wrapper.js push",
+    "db:generate": "node scripts/drizzle-wrapper.js generate",
+    "db:migrate": "node scripts/drizzle-wrapper.js migrate",
     "db:studio": "node scripts/drizzle-wrapper.js studio",
     "db:test": "node scripts/test-db-connection.js"
   },
