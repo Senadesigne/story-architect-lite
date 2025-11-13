@@ -10,7 +10,10 @@ import { registerType } from 'pgvector/pg';
 const getConnectionString = (): string => {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error("DATABASE_URL environment variable is not set!");
+    throw new Error(
+      "DATABASE_URL environment variable is not set! " +
+      "Please ensure your .env file contains: DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/story_architect_lite_db"
+    );
   }
   return connectionString;
 };
@@ -37,6 +40,11 @@ const getPgPool = async (): Promise<Pool> => {
     if (!typesRegistered) {
       try {
         const client = await pgPool.connect();
+        
+        // Self-Healing: Osiguraj postojanje vector ekstenzije prije registracije tipova
+        await client.query('CREATE EXTENSION IF NOT EXISTS vector');
+        console.log('Ensured vector extension exists in database');
+        
         await registerType(client);
         client.release();
         typesRegistered = true;

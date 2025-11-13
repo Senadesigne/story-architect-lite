@@ -56,12 +56,12 @@ export function getDatabaseUrl(): string | undefined {
 }
 
 /**
- * Check if DATABASE_URL points to local PostgreSQL database server
+ * Check if DATABASE_URL points to local Docker database
  */
-export function isLocalEmbeddedPostgres(): boolean {
+export function isLocalDockerDatabase(): boolean {
   const dbUrl = getDatabaseUrl();
-  // Check if it's a localhost/127.0.0.1 PostgreSQL connection (local database server)
-  return dbUrl ? ((dbUrl.includes('localhost:') || dbUrl.includes('127.0.0.1:')) && dbUrl.includes('postgres:password')) : false;
+  // Check if it's pointing to Docker database on standard port 5432
+  return dbUrl ? (dbUrl.includes('127.0.0.1:5432') || dbUrl.includes('localhost:5432')) : false;
 }
 
 /**

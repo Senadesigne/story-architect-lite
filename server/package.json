@@ -21,7 +21,8 @@
     "db:generate": "node scripts/drizzle-wrapper.js generate",
     "db:migrate": "node scripts/drizzle-wrapper.js migrate",
     "db:studio": "node scripts/drizzle-wrapper.js studio",
-    "db:test": "node scripts/test-db-connection.js"
+    "db:test": "node scripts/test-db-connection.js",
+    "db:validate": "tsx scripts/validate-db-config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

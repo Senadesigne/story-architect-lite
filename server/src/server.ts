@@ -3,7 +3,7 @@ import 'dotenv/config';
 // Svi ostali importi dolaze NAKON ovog bloka...
 import { serve } from '@hono/node-server';
 import app from './api';
-import { getEnv, getDatabaseUrl, isLocalEmbeddedPostgres } from './lib/env';
+import { getEnv, getDatabaseUrl } from './lib/env';
 
 // Parse CLI arguments
 const parseCliArgs = () => {
@@ -33,10 +33,17 @@ const { port } = parseCliArgs();
 const startServer = async () => {
   console.log(`🚀 Starting backend server on port ${port}`);
   
-  if (!getDatabaseUrl() || isLocalEmbeddedPostgres()) {
-    console.log('🔗 Using local database connection (expecting database server on dynamic port)');
+  const dbUrl = getDatabaseUrl();
+  if (dbUrl) {
+    // Mask password for security in logs
+    const maskedUrl = dbUrl.replace(/:([^:@]+)@/, ':***@');
+    if (dbUrl.includes('127.0.0.1:5432') || dbUrl.includes('localhost:5432')) {
+      console.log(`🔗 Using Docker database connection: ${maskedUrl}`);
+    } else {
+      console.log(`🔗 Using external database connection: ${maskedUrl}`);
+    }
   } else {
-    console.log('🔗 Using external database connection');
+    console.error('❌ DATABASE_URL not found! Server will fail to start.');
   }
 
   serve({

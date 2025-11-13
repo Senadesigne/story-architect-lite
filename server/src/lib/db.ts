@@ -41,17 +41,18 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
 };
 
 export const getDatabase = async (connectionString?: string): Promise<DatabaseConnection> => {
-  // Use default local database connection if no external connection string provided
-  // Note: In development, the port is dynamically allocated by port-manager.js
-  const defaultLocalConnection = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5502/postgres';
-  const connStr = connectionString || defaultLocalConnection;
+  // Always use DATABASE_URL from environment or provided connectionString
+  const connStr = connectionString || process.env.DATABASE_URL;
 
   if (cachedConnection && cachedConnectionString === connStr) {
     return cachedConnection;
   }
 
   if (!connStr) {
-    throw new Error('No database connection available. Ensure database server is running or provide a connection string.');
+    throw new Error(
+      'DATABASE_URL environment variable is not set! ' +
+      'Please ensure your .env file contains: DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/story_architect_lite_db'
+    );
   }
 
   cachedConnection = await createConnection(connStr);
