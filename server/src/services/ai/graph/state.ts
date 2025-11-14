@@ -111,5 +111,4 @@ export function createInitialState(
 export const MAX_DRAFT_ITERATIONS = 3;
 export const MAX_RAG_RESULTS = 5;
 
-// Re-export AgentState interface za lakše korištenje
-export type { AgentState, AgentStateUpdate };
+// Note: AgentState and AgentStateUpdate are already exported above

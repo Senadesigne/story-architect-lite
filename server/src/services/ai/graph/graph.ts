@@ -1,6 +1,7 @@
 import { StateGraph, START, END } from "@langchain/langgraph";
 import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state";
 import type { AgentState } from "./state";
+import { retrieveContextNode, transformQueryNode } from "./nodes";
 
 /**
  * LangGraph StateGraph inicijalizacija za Story Architect AI Orkestrator
@@ -17,12 +18,14 @@ import type { AgentState } from "./state";
 export function createStoryArchitectGraph() {
   // Za sada kreiram jednostavan graf bez tipizacije
   // TODO: Dodati pravilnu tipizaciju kada se razjasni StateGraph API
-  const graph = new StateGraph({});
+  const graph = new StateGraph({}) as any;
 
-  // TODO: Dodati čvorove (nodes) u sljedećim fazama implementacije
+  // ✅ IMPLEMENTIRANI ČVOROVI (Zadatak 3.8):
+  graph.addNode("transform_query", transformQueryNode);
+  graph.addNode("retrieve_context", retrieveContextNode);
+  
+  // TODO: Dodati preostale čvorove u sljedećim fazama implementacije
   // Planirani čvorovi prema specifikaciji:
-  // - transform_query: AI Mentor transformira upit za RAG
-  // - retrieve_context: Logističar dohvaća kontekst iz vektorske baze
   // - route_task: AI Mentor klasificira vrstu zadatka
   // - handle_simple_retrieval: AI Mentor odgovara na jednostavne upite
   // - generate_draft: Pisac (Cloud LLM) generira prvi nacrt
@@ -34,10 +37,13 @@ export function createStoryArchitectGraph() {
   // - Nakon route_task: usmjeravanje na simple_retrieval ili creative_generation
   // - Nakon critique_draft: provjera draftCount i stop zastavice za petlju
 
-  // Postavljanje početnog čvora (START će se povezati s prvim čvorom kada se doda)
-  // graph.addEdge(START, "transform_query"); // TODO: Dodati kada se implementira transform_query čvor
+  // ✅ PRIVREMENI EDGE-OVI ZA TESTIRANJE (Zadatak 3.8):
+  graph.addEdge(START, "transform_query");
+  graph.addEdge("transform_query", "retrieve_context");
+  graph.addEdge("retrieve_context", END); // Privremeno za testiranje
 
-  // Postavljanje završnog čvora (zadnji čvor će se povezati s END)
+  // TODO: Ažurirati edge-ove kada se dodaju preostali čvorovi
+  // Finalni tijek će biti: START -> transform_query -> retrieve_context -> route_task -> ...
   // graph.addEdge("finalize_output", END); // TODO: Dodati kada se implementira finalize_output čvor
 
   return graph;
