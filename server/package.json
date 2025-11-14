@@ -14,7 +14,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:unit": "vitest run src/**/*.test.ts",
     "test:ci": "vitest run --coverage --reporter=verbose",
-    "test:graph": "tsx src/services/ai/test-graph.ts",
+    "test:graph": "tsx src/services/ai/graph/basic-test.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "db:push": "node scripts/drizzle-wrapper.js push",
