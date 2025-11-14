@@ -341,3 +341,318 @@ ili ako informacija nije dostupna:
     };
   }
 }
+
+/**
+ * Čvor za generiranje početnog nacrta kreativnog sadržaja
+ * 
+ * Koristi Anthropic Haiku model za kreativno pisanje na temelju RAG konteksta
+ * 
+ * @param state - Trenutno stanje agenta
+ * @returns Ažuriranje stanja s draft poljem
+ */
+export async function generateDraftNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[GENERATE_DRAFT] Starting with input:", {
+    userInput: state.userInput?.substring(0, 100) + "...",
+    hasRagContext: !!state.ragContext,
+    ragContextLength: state.ragContext?.length || 0
+  });
+
+  try {
+    if (!state.userInput) {
+      console.error("[GENERATE_DRAFT] Error: No userInput available");
+      return {
+        draft: "Greška: Nema dostupnog korisničkog upita za generiranje nacrta."
+      };
+    }
+
+    if (!state.ragContext) {
+      console.warn("[GENERATE_DRAFT] Warning: No RAG context available");
+      return {
+        draft: "Greška: Nema dostupnog konteksta priče za generiranje kreativnog sadržaja."
+      };
+    }
+
+    // Kreiranje AI providera s Anthropic Haiku konfigurацijom
+    const aiProvider = await createDefaultAIProvider();
+    
+    // Konfiguracija za kreativno generiranje (visoka kreativnost)
+    const options: AIGenerationOptions = {
+      temperature: 0.7, // Visoka kreativnost za pisanje
+      maxTokens: 1000,  // Dovoljno za detaljnu scenu
+      timeout: 30000    // 30 sekundi za kompleksno generiranje
+    };
+
+    // Sistemski prompt za kreativno pisanje
+    const systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča i scenarija.
+
+Tvoja uloga je generirati kreativni sadržaj na temelju korisničkog zahtjeva i dostupnog konteksta priče.
+
+KORISNIČKI ZAHTJEV:
+${state.userInput}
+
+KONTEKST PRIČE:
+${state.ragContext}
+
+ZADATAK:
+Generiraj kreativni sadržaj koji ispunjava korisnički zahtjev. Slijedi ova pravila:
+
+1. Koristi informacije iz konteksta priče kao temelj za pisanje
+2. Održi dosljednost s postojećim likovima, lokacijama i događajima
+3. Piši prirodno, elokventno i angažirajuće
+4. Fokusiraj se na emocije, dijalog i atmosferu
+5. Kreiraj živi, dinamičan sadržaj koji čitatelja uvlači u priču
+
+FORMAT ODGOVORA:
+Generiraj samo kreativni sadržaj bez dodatnih objašnjenja ili komentara.
+
+STIL PISANJA:
+- Koristi živi, opisni jezik
+- Uključi dijalog gdje je to prikladno
+- Stvori atmosferu i emocionalnu dubinu
+- Održi konzistentan ton s kontekstom priče`;
+
+    console.log("[GENERATE_DRAFT] Calling AI provider for draft generation");
+    
+    const draft = await aiProvider.generateText(systemPrompt, options);
+    
+    console.log("[GENERATE_DRAFT] AI response received, length:", draft.length);
+    console.log("[GENERATE_DRAFT] Draft preview:", draft.substring(0, 200) + "...");
+
+    console.log("[GENERATE_DRAFT] Completed successfully");
+
+    return {
+      draft: draft.trim()
+    };
+
+  } catch (error) {
+    console.error("[GENERATE_DRAFT] Error during draft generation:", error);
+    
+    // Graceful degradation
+    return {
+      draft: `Greška prilikom generiranja nacrta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
+    };
+  }
+}
+
+/**
+ * Čvor za kritiku nacrta kreativnog sadržaja
+ * 
+ * Koristi Anthropic Haiku model za analizu i kritiku nacrta
+ * 
+ * @param state - Trenutno stanje agenta
+ * @returns Ažuriranje stanja s critique poljem i povećanim draftCount
+ */
+export async function critiqueDraftNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[CRITIQUE_DRAFT] Starting with input:", {
+    userInput: state.userInput?.substring(0, 100) + "...",
+    hasDraft: !!state.draft,
+    draftLength: state.draft?.length || 0,
+    currentDraftCount: state.draftCount
+  });
+
+  try {
+    if (!state.draft) {
+      console.error("[CRITIQUE_DRAFT] Error: No draft available for critique");
+      return {
+        critique: JSON.stringify({
+          issues: ["Nema dostupnog nacrta za kritiku"],
+          plan: "Potrebno je prvo generirati nacrt",
+          score: 0,
+          stop: true
+        }),
+        draftCount: state.draftCount + 1
+      };
+    }
+
+    if (!state.userInput || !state.ragContext) {
+      console.warn("[CRITIQUE_DRAFT] Warning: Missing context for proper critique");
+    }
+
+    // Kreiranje AI providera s Anthropic Haiku konfigurацijom
+    const aiProvider = await createDefaultAIProvider();
+    
+    // Konfiguracija za kritiku (niska temperatura za konzistentnost)
+    const options: AIGenerationOptions = {
+      temperature: 0.2, // Niska temperatura za konzistentnu kritiku
+      maxTokens: 500,   // Strukturirana JSON kritika
+      timeout: 20000    // 20 sekundi
+    };
+
+    // Sistemski prompt za kritiku
+    const systemPrompt = `Ti si AI Mentor, strogi ali pošteni urednik kreativnog pisanja.
+
+Tvoj zadatak je pregledati sljedeći NACRT i osigurati da je 100% usklađen s pruženim KONTEKSTOM i korisničkim zahtjevom.
+
+ORIGINALNI KORISNIČKI ZAHTJEV:
+${state.userInput || "Nije dostupan"}
+
+KONTEKST PRIČE (Smjernice koje se moraju poštovati):
+${state.ragContext || "Nije dostupan"}
+
+NACRT (Tekst koji se pregledava):
+${state.draft}
+
+ZADATAK:
+Analiziraj nacrt prema sljedećim kriterijima:
+
+1. **Provjera Koherentnosti:** Pronađi BILO KAKVE činjenične kontradikcije između NACRTA i KONTEKSTA. Jesu li imena likova, lokacije i prošli događaji točno preneseni?
+
+2. **Provjera Dosljednosti Lika:** Odstupa li ponašanje lika u NACRTU od njegovog profila u KONTEKSTU?
+
+3. **Provjera Potpunosti:** Je li NACRT ispunio SVE zahtjeve iz originalnog korisničkog upita?
+
+4. **Provjera Kvalitete:** Je li pisanje elokventno, angažirajuće i emocionalno uvjerljivo?
+
+VAŽNO: Vrati SAMO JSON objekt sa svojim povratnim informacijama:
+{
+  "issues": ["Popis konkretnih problema koji trebaju ispravak..."],
+  "plan": "Kratki plan kako poboljšati nacrt",
+  "score": <ocjena od 0-100 o ukupnoj kvaliteti>,
+  "stop": <true ako je nacrt zadovoljavajući (score >= 85), false ako treba poboljšanje>
+}`;
+
+    console.log("[CRITIQUE_DRAFT] Calling AI provider for critique generation");
+    
+    const aiResponse = await aiProvider.generateText(systemPrompt, options);
+    
+    console.log("[CRITIQUE_DRAFT] AI response received:", aiResponse);
+
+    // Pokušaj parsirati JSON odgovor
+    let critique = aiResponse.trim();
+    try {
+      // Provjeri je li odgovor valjan JSON
+      const parsed = JSON.parse(critique);
+      console.log("[CRITIQUE_DRAFT] JSON critique parsed successfully:", parsed);
+    } catch (jsonError) {
+      console.warn("[CRITIQUE_DRAFT] AI response is not valid JSON, wrapping in default structure");
+      critique = JSON.stringify({
+        issues: ["AI je dao nestrukturirani odgovor"],
+        plan: aiResponse.substring(0, 200),
+        score: 50,
+        stop: false
+      });
+    }
+
+    const newDraftCount = state.draftCount + 1;
+    console.log("[CRITIQUE_DRAFT] Completed successfully, draftCount:", newDraftCount);
+
+    return {
+      critique,
+      draftCount: newDraftCount
+    };
+
+  } catch (error) {
+    console.error("[CRITIQUE_DRAFT] Error during critique generation:", error);
+    
+    // Graceful degradation
+    const fallbackCritique = JSON.stringify({
+      issues: [`Greška prilikom kritike: ${error instanceof Error ? error.message : 'Nepoznata greška'}`],
+      plan: "Pokušaj ponovno generirati nacrt",
+      score: 0,
+      stop: true
+    });
+
+    return {
+      critique: fallbackCritique,
+      draftCount: state.draftCount + 1
+    };
+  }
+}
+
+/**
+ * Čvor za poboljšanje nacrta na temelju kritike
+ * 
+ * Koristi Anthropic Haiku model za poboljšanje postojećeg nacrta
+ * 
+ * @param state - Trenutno stanje agenta
+ * @returns Ažuriranje stanja s poboljšanim draft poljem
+ */
+export async function refineDraftNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[REFINE_DRAFT] Starting with input:", {
+    userInput: state.userInput?.substring(0, 100) + "...",
+    hasDraft: !!state.draft,
+    hasCritique: !!state.critique,
+    draftCount: state.draftCount
+  });
+
+  try {
+    if (!state.draft) {
+      console.error("[REFINE_DRAFT] Error: No draft available for refinement");
+      return {
+        draft: "Greška: Nema dostupnog nacrta za poboljšanje."
+      };
+    }
+
+    if (!state.critique) {
+      console.error("[REFINE_DRAFT] Error: No critique available for refinement");
+      return {
+        draft: state.draft // Vrati postojeći draft ako nema kritike
+      };
+    }
+
+    // Kreiranje AI providera s Anthropic Haiku konfigurацijom
+    const aiProvider = await createDefaultAIProvider();
+    
+    // Konfiguracija za poboljšanje (umjerena kreativnost)
+    const options: AIGenerationOptions = {
+      temperature: 0.6, // Umjerena kreativnost za poboljšanje
+      maxTokens: 1000,  // Poboljšana verzija
+      timeout: 30000    // 30 sekundi
+    };
+
+    // Sistemski prompt za poboljšanje
+    const systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča.
+
+Tvoj zadatak je poboljšati postojeći nacrt na temelju dobivene kritike od AI Mentora.
+
+ORIGINALNI KORISNIČKI ZAHTJEV:
+${state.userInput || "Nije dostupan"}
+
+KONTEKST PRIČE:
+${state.ragContext || "Nije dostupan"}
+
+POSTOJEĆI NACRT:
+${state.draft}
+
+KRITIKA OD AI MENTORA:
+${state.critique}
+
+ZADATAK:
+Poboljšaj postojeći nacrt adresiranjem svih problema spomenutih u kritici. Slijedi ova pravila:
+
+1. Pažljivo pročitaj kritiku i identificiraj sve probleme
+2. Zadrži sve dobre dijelove originalnog nacrta
+3. Poboljšaj ili zamijeni problematične dijelove
+4. Osiguraj da poboljšana verzija zadovoljava sve zahtjeve iz kritike
+5. Održi ili poboljšaj kreativnost i kvalitetu pisanja
+
+FORMAT ODGOVORA:
+Generiraj samo poboljšani kreativni sadržaj bez dodatnih objašnjenja.
+
+CILJ:
+Stvori verziju koja će zadovoljiti AI Mentora i dobiti ocjenu 85+ bodova.`;
+
+    console.log("[REFINE_DRAFT] Calling AI provider for draft refinement");
+    
+    const refinedDraft = await aiProvider.generateText(systemPrompt, options);
+    
+    console.log("[REFINE_DRAFT] AI response received, length:", refinedDraft.length);
+    console.log("[REFINE_DRAFT] Refined draft preview:", refinedDraft.substring(0, 200) + "...");
+
+    console.log("[REFINE_DRAFT] Completed successfully");
+
+    return {
+      draft: refinedDraft.trim()
+    };
+
+  } catch (error) {
+    console.error("[REFINE_DRAFT] Error during draft refinement:", error);
+    
+    // Graceful degradation - vrati postojeći draft
+    console.log("[REFINE_DRAFT] Falling back to original draft due to error");
+    
+    return {
+      draft: state.draft || `Greška prilikom poboljšanja nacrta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
+    };
+  }
+}

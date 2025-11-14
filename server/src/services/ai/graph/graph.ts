@@ -2,7 +2,15 @@ import { StateGraph, START, END, StateGraphArgs } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
 import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state";
 import type { AgentState } from "./state";
-import { retrieveContextNode, transformQueryNode, routeTaskNode, handleSimpleRetrievalNode } from "./nodes";
+import { 
+  retrieveContextNode, 
+  transformQueryNode, 
+  routeTaskNode, 
+  handleSimpleRetrievalNode,
+  generateDraftNode,
+  critiqueDraftNode,
+  refineDraftNode
+} from "./nodes";
 
 /**
  * LangGraph StateGraph inicijalizacija za Story Architect AI Orkestrator
@@ -70,11 +78,10 @@ export function createStoryArchitectGraph() {
   graph.addNode("route_task", routeTaskNode);
   graph.addNode("handle_simple_retrieval", handleSimpleRetrievalNode);
   
-  // TODO: Dodati preostale čvorove u sljedećim fazama implementacije
-  // Planirani čvorovi prema specifikaciji:
-  // - generate_draft: Pisac (Cloud LLM) generira prvi nacrt
-  // - critique_draft: AI Mentor kritizira nacrt
-  // - refine_draft: Pisac poboljšava nacrt na temelju kritike
+  // ✅ REFLECTION ČVOROVI (Zadatak 3.10):
+  graph.addNode("generate_draft", generateDraftNode);
+  graph.addNode("critique_draft", critiqueDraftNode);
+  graph.addNode("refine_draft", refineDraftNode);
 
   // TODO: Dodati uvjetne rubove (conditional edges) u sljedećim fazama
   // Planirani uvjetni rubovi:
@@ -89,6 +96,10 @@ export function createStoryArchitectGraph() {
   graph.addEdge("retrieve_context", "route_task"); // Povezuje RAG fazu s usmjeravanjem
   graph.addEdge("handle_simple_retrieval", END); // Završava tijek za jednostavne upite
 
+  // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
+  graph.addEdge("generate_draft", "critique_draft"); // Generirani nacrt ide na kritiku
+  graph.addEdge("refine_draft", "critique_draft"); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
+
   // ✅ UVJETNI EDGE-OVI (Zadatak 3.9):
   // Usmjeravanje nakon route_task čvora na temelju routingDecision
   graph.addConditionalEdges(
@@ -96,14 +107,21 @@ export function createStoryArchitectGraph() {
     routingCondition, // koristi postojeću funkciju
     {
       "handle_simple_retrieval": "handle_simple_retrieval",
-      "generate_draft": END, // privremeno dok ne implementiramo Pisca
+      "generate_draft": "generate_draft", // ✅ Sada vodi na generate_draft čvor
       [END]: END
     }
   );
 
-  // TODO: Ažurirati edge-ove kada se dodaju preostali čvorovi
-  // Finalni tijek će biti: START -> transform_query -> retrieve_context -> route_task -> [uvjetno grananje]
-  // graph.addEdge("finalize_output", END); // TODO: Dodati kada se implementira finalize_output čvor
+  // ✅ UVJETNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
+  // Usmjeravanje nakon critique_draft čvora na temelju draftCount i critique.stop
+  graph.addConditionalEdges(
+    "critique_draft",
+    reflectionCondition, // koristi postojeću funkciju na liniji 189
+    {
+      "refine_draft": "refine_draft", // nastavi petlju
+      [END]: END // završi petlju
+    }
+  );
 
   return graph;
 }
@@ -187,9 +205,17 @@ export function routingCondition(state: AgentState): string {
  * Implementira logiku iterativnog poboljšanja
  */
 export function reflectionCondition(state: AgentState): string {
+  console.log(`[REFLECTION_CONDITION] Evaluating state: draftCount=${state.draftCount}, hasCritique=${!!state.critique}`);
+  
   // Provjeri je li postignuto maksimalno iteracija
   if (state.draftCount >= MAX_DRAFT_ITERATIONS) {
-    console.log(`Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, ending reflection loop`);
+    console.log(`[REFLECTION_CONDITION] Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, ending reflection loop`);
+    // Postavi finalOutput prije završetka
+    if (state.draft) {
+      console.log(`[REFLECTION_CONDITION] Setting finalOutput from draft (length: ${state.draft.length})`);
+      // Note: LangGraph će automatski primijeniti ovu promjenu kroz state reducer
+      (state as any).finalOutput = state.draft;
+    }
     return END;
   }
 
@@ -197,17 +223,24 @@ export function reflectionCondition(state: AgentState): string {
   if (state.critique) {
     try {
       const critiqueData = JSON.parse(state.critique);
+      console.log(`[REFLECTION_CONDITION] Parsed critique: score=${critiqueData.score}, stop=${critiqueData.stop}`);
+      
       if (critiqueData.stop === true) {
-        console.log("Critique indicates draft is satisfactory, ending reflection loop");
+        console.log("[REFLECTION_CONDITION] Critique indicates draft is satisfactory, ending reflection loop");
+        // Postavi finalOutput prije završetka
+        if (state.draft) {
+          console.log(`[REFLECTION_CONDITION] Setting finalOutput from satisfactory draft (length: ${state.draft.length})`);
+          (state as any).finalOutput = state.draft;
+        }
         return END;
       }
     } catch (error) {
-      console.warn("Could not parse critique JSON, continuing with iteration");
+      console.warn("[REFLECTION_CONDITION] Could not parse critique JSON, continuing with iteration");
     }
   }
 
   // Nastavi s poboljšanjem
-  console.log(`Continuing reflection loop (iteration ${state.draftCount + 1}/${MAX_DRAFT_ITERATIONS})`);
+  console.log(`[REFLECTION_CONDITION] Continuing reflection loop (iteration ${state.draftCount}/${MAX_DRAFT_ITERATIONS})`);
   return "refine_draft";
 }
 
