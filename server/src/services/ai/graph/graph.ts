@@ -1,7 +1,8 @@
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { StateGraph, START, END, StateGraphArgs } from "@langchain/langgraph";
+import { BaseMessage } from "@langchain/core/messages";
 import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state";
 import type { AgentState } from "./state";
-import { retrieveContextNode, transformQueryNode } from "./nodes";
+import { retrieveContextNode, transformQueryNode, routeTaskNode, handleSimpleRetrievalNode } from "./nodes";
 
 /**
  * LangGraph StateGraph inicijalizacija za Story Architect AI Orkestrator
@@ -12,22 +13,65 @@ import { retrieveContextNode, transformQueryNode } from "./nodes";
  * Temelji se na specifikaciji iz TEHNICKI_PLAN_AI_FAZA_B_v2.md - Sekcija 6.2
  */
 
+// Definiramo konfiguraciju za StateGraph
+const graphConfig: StateGraphArgs<AgentState> = {
+  channels: {
+    // Ulazni podaci
+    userInput: {
+      value: null,
+    },
+    storyContext: {
+      value: null,
+    },
+    // RAG faza
+    transformedQuery: {
+      value: null,
+    },
+    ragContext: {
+      value: null,
+    },
+    // Routing
+    routingDecision: {
+      value: null,
+    },
+    // Reflection petlja
+    draftCount: {
+      value: (x?: number, y?: number) => (x ?? 0) + (y ?? 0),
+      default: () => 0,
+    },
+    draft: {
+      value: null,
+    },
+    critique: {
+      value: null,
+    },
+    // Izlaz
+    finalOutput: {
+      value: null,
+    },
+    // Messages za buduću upotrebu
+    messages: {
+      value: (x: BaseMessage[], y: BaseMessage[]) => x.concat(y),
+      default: () => [],
+    },
+  },
+};
+
 /**
  * Kreiranje i konfiguracija StateGraph instance
  */
 export function createStoryArchitectGraph() {
-  // Za sada kreiram jednostavan graf bez tipizacije
-  // TODO: Dodati pravilnu tipizaciju kada se razjasni StateGraph API
-  const graph = new StateGraph({}) as any;
+  // Kreiraj graf s pravilnom tipizacijom
+  const graph = new StateGraph<AgentState>(graphConfig);
 
-  // ✅ IMPLEMENTIRANI ČVOROVI (Zadatak 3.8):
+  // ✅ IMPLEMENTIRANI ČVOROVI (Zadatak 3.8 i 3.9):
   graph.addNode("transform_query", transformQueryNode);
   graph.addNode("retrieve_context", retrieveContextNode);
+  graph.addNode("route_task", routeTaskNode);
+  graph.addNode("handle_simple_retrieval", handleSimpleRetrievalNode);
   
   // TODO: Dodati preostale čvorove u sljedećim fazama implementacije
   // Planirani čvorovi prema specifikaciji:
-  // - route_task: AI Mentor klasificira vrstu zadatka
-  // - handle_simple_retrieval: AI Mentor odgovara na jednostavne upite
   // - generate_draft: Pisac (Cloud LLM) generira prvi nacrt
   // - critique_draft: AI Mentor kritizira nacrt
   // - refine_draft: Pisac poboljšava nacrt na temelju kritike
@@ -37,13 +81,28 @@ export function createStoryArchitectGraph() {
   // - Nakon route_task: usmjeravanje na simple_retrieval ili creative_generation
   // - Nakon critique_draft: provjera draftCount i stop zastavice za petlju
 
-  // ✅ PRIVREMENI EDGE-OVI ZA TESTIRANJE (Zadatak 3.8):
-  graph.addEdge(START, "transform_query");
+  // ✅ POSTAVLJANJE ULAZNE TOČKE:
+  graph.setEntryPoint("transform_query");
+
+  // ✅ LINEARNI EDGE-OVI (Zadatak 3.8 i 3.9):
   graph.addEdge("transform_query", "retrieve_context");
-  graph.addEdge("retrieve_context", END); // Privremeno za testiranje
+  graph.addEdge("retrieve_context", "route_task"); // Povezuje RAG fazu s usmjeravanjem
+  graph.addEdge("handle_simple_retrieval", END); // Završava tijek za jednostavne upite
+
+  // ✅ UVJETNI EDGE-OVI (Zadatak 3.9):
+  // Usmjeravanje nakon route_task čvora na temelju routingDecision
+  graph.addConditionalEdges(
+    "route_task",
+    routingCondition, // koristi postojeću funkciju
+    {
+      "handle_simple_retrieval": "handle_simple_retrieval",
+      "generate_draft": END, // privremeno dok ne implementiramo Pisca
+      [END]: END
+    }
+  );
 
   // TODO: Ažurirati edge-ove kada se dodaju preostali čvorovi
-  // Finalni tijek će biti: START -> transform_query -> retrieve_context -> route_task -> ...
+  // Finalni tijek će biti: START -> transform_query -> retrieve_context -> route_task -> [uvjetno grananje]
   // graph.addEdge("finalize_output", END); // TODO: Dodati kada se implementira finalize_output čvor
 
   return graph;
@@ -51,17 +110,15 @@ export function createStoryArchitectGraph() {
 
 /**
  * Helper funkcija za kompajliranje grafa u izvršnu verziju
- * Ova funkcija će se koristiti kada se dodaju svi čvorovi i rubovi
  */
 export async function compileStoryArchitectGraph() {
   const graph = createStoryArchitectGraph();
   
-  // TODO: Kompajliranje će se omogućiti kada se dodaju čvorovi
-  // return graph.compile();
+  // Kompajliraj graf - sada je spreman za izvršavanje
+  const compiledGraph = graph.compile();
+  console.log("✅ Story Architect Graph successfully compiled and ready for execution");
   
-  // Privremeno vraćamo nekompajlirani graf za testiranje strukture
-  console.log("Graph structure created, but not yet compiled (waiting for nodes implementation)");
-  return graph;
+  return compiledGraph;
 }
 
 /**
@@ -77,20 +134,29 @@ export async function runStoryArchitectGraph(
   // Kreiranje početnog stanja
   const initialState = createInitialState(userInput, storyContext);
   
-  console.log("Initial state created:", {
+  console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,
     storyContext: initialState.storyContext.substring(0, 100) + "...", // Skraćeni prikaz
     draftCount: initialState.draftCount
   });
 
-  // TODO: Pokretanje kompajliranog grafa kada se implementiraju čvorovi
-  // const compiledGraph = await compileStoryArchitectGraph();
-  // const result = await compiledGraph.invoke(initialState);
-  // return result;
-
-  // Privremeno vraćamo početno stanje za testiranje
-  console.log("Graph execution not yet implemented (waiting for nodes)");
-  return initialState;
+  try {
+    // Kompajliraj i pokreni graf
+    const compiledGraph = await compileStoryArchitectGraph();
+    const result = await compiledGraph.invoke(initialState);
+    
+    console.log("✅ Graph execution completed successfully");
+    return result;
+    
+  } catch (error) {
+    console.error("❌ Error during graph execution:", error);
+    
+    // Graceful degradation - vrati početno stanje s greškom
+    return {
+      ...initialState,
+      finalOutput: `Greška prilikom izvršavanja grafa: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
+    };
+  }
 }
 
 /**
@@ -100,13 +166,18 @@ export async function runStoryArchitectGraph(
 export function routingCondition(state: AgentState): string {
   const decision = state.routingDecision;
   
+  console.log("[ROUTING_CONDITION] Processing decision:", decision);
+  
   switch (decision) {
     case "simple_retrieval":
+      console.log("[ROUTING_CONDITION] Routing to handle_simple_retrieval");
       return "handle_simple_retrieval";
     case "creative_generation":
+      console.log("[ROUTING_CONDITION] Routing to generate_draft (currently END)");
       return "generate_draft";
     case "cannot_answer":
     default:
+      console.log("[ROUTING_CONDITION] Routing to END (cannot answer or unknown)");
       return END;
   }
 }
