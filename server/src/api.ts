@@ -36,6 +36,8 @@ import { aiRateLimiter } from './middleware/rateLimiter';
 import { appGraph } from './services/ai/ai.graph';
 import { AgentState } from './services/ai/ai.state';
 import { getRelevantContext } from './services/ai/ai.retriever';
+import { createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
+import type { AgentState as GraphAgentState } from './services/ai/graph/state';
 
 const app = new Hono();
 
@@ -114,6 +116,82 @@ app.get('/api/ai/test-rag', async (c) => {
       status: 'error',
       error: 'RAG test failed', 
       details: errorMessage,
+      timestamp: new Date().toISOString()
+    }, 500);
+  }
+});
+
+// GET /api/ai/test-graph
+// Test endpoint za testiranje cijelog AI grafa (Zadaci 3.8 i 3.9) - ne zahtijeva autentifikaciju
+app.get('/api/ai/test-graph', async (c) => {
+  try {
+    // Dohvati query parametar
+    const query = c.req.query('query') || 'Napiši kratku scenu gdje se glavni lik suočava s dilemom';
+    
+    console.log('Testing Graph with query:', query);
+    
+    // Kreiraj testni story context
+    const testStoryContext = `
+PRIČA: "Tajna Starog Dvorca"
+ŽANR: Misterij/Fantazija
+
+GLAVNI LIKOVI:
+- Ana Marković (25): Mlada arheologinja, radoznala i hrabra
+- Marko Petrović (30): Lokalni vodič, pozna sve tajne kraja
+- Profesor Novak (60): Anin mentor, stručnjak za srednjovjekovnu povijest
+
+LOKACIJE:
+- Stari dvorac na brdu: Napušteni dvorac iz 15. stoljeća
+- Selo Kamenjak: Malo selo u podnožju brda
+- Biblioteka u dvorcu: Skrivena prostorija puna starih knjiga
+
+TRENUTNA SITUACIJA:
+Ana je došla u selo istražiti legende o dvorcu. Marko joj je rekao da se u dvorcu čuju čudni zvukovi noću.
+Profesor Novak je pronašao staru mapu koja pokazuje skrivene prolaze u dvorcu.
+    `.trim();
+    
+    // Kreiraj početno stanje za graf
+    const initialState = createInitialState(query, testStoryContext);
+    
+    console.log('Created initial state:', {
+      userInput: initialState.userInput,
+      storyContext: initialState.storyContext.substring(0, 100) + '...',
+      draftCount: initialState.draftCount
+    });
+    
+    // Kreiraj i kompajliraj graf
+    const graph = createStoryArchitectGraph();
+    const compiledGraph = graph.compile();
+    
+    console.log('Graph compiled successfully, invoking...');
+    
+    // Pozovi graf
+    const startTime = Date.now();
+    const finalState = await compiledGraph.invoke(initialState);
+    const executionTime = Date.now() - startTime;
+    
+    console.log('Graph execution completed in', executionTime, 'ms');
+    
+    // Vrati cijeli finalState objekt kao JSON odgovor
+    return c.json({
+      status: 'success',
+      query: query,
+      executionTime: executionTime,
+      timestamp: new Date().toISOString(),
+      finalState: finalState,
+      message: 'Graph test completed successfully'
+    });
+    
+  } catch (error) {
+    console.error('Graph test endpoint error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    return c.json({ 
+      status: 'error',
+      error: 'Graph test failed', 
+      details: errorMessage,
+      stack: errorStack,
       timestamp: new Date().toISOString()
     }, 500);
   }
