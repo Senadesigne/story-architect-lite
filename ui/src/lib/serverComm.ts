@@ -79,12 +79,13 @@ export async function getProjects() {
   return response.json();
 }
 
-export async function createProject() {
+export async function createProject(name: string) {
   const response = await fetchWithAuth('/api/projects', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ name }),
   });
   return response.json();
 }

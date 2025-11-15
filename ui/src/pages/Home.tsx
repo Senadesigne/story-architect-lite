@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Project } from '@/lib/types';
 import { Link } from 'react-router-dom';
+import { CreateProjectDialog } from '@/components/CreateProjectDialog';
 
 export function Home() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [projectsError, setProjectsError] = useState('');
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [createProjectResult, setCreateProjectResult] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [createProjectResult, setCreateProjectResult] = useState<{ success: boolean; project?: Project; error?: string } | null>(null);
 
   // Funkcija za dohvaćanje projekata
   const fetchProjects = useCallback(async () => {
@@ -37,23 +38,14 @@ export function Home() {
     fetchProjects();
   }, [user, fetchProjects]);
 
-  const handleCreateProject = async () => {
-    if (!user) return;
-    
-    setIsCreatingProject(true);
-    setCreateProjectResult(null);
-    
-    try {
-      const newProject = await api.createProject();
-      setCreateProjectResult({ success: true, project: newProject });
-      // Automatski osvježi listu projekata nakon kreiranja
-      await fetchProjects();
-    } catch (error) {
-      setCreateProjectResult({ success: false, error: error.message });
-      console.error('Error creating project:', error);
-    } finally {
-      setIsCreatingProject(false);
-    }
+  const handleOpenDialog = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleProjectCreated = async (project: Project) => {
+    setCreateProjectResult({ success: true, project });
+    // Automatski osvježi listu projekata nakon kreiranja
+    await fetchProjects();
   };
 
   return (
@@ -68,26 +60,18 @@ export function Home() {
             </p>
           </div>
           <Button 
-            onClick={handleCreateProject} 
-            disabled={!user || isCreatingProject}
+            onClick={handleOpenDialog} 
+            disabled={!user}
             size="lg"
           >
-            {isCreatingProject ? 'Kreiram...' : '+ Novi Projekt'}
+            + Novi Projekt
           </Button>
         </div>
 
         {/* Prikaz rezultata kreiranja projekta */}
-        {createProjectResult && (
-          <div className={`p-4 rounded-lg ${
-            createProjectResult.success 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {createProjectResult.success ? (
-              <p className="font-medium">✅ Projekt uspješno stvoren!</p>
-            ) : (
-              <p className="font-medium">❌ Greška: {createProjectResult.error}</p>
-            )}
+        {createProjectResult && createProjectResult.success && (
+          <div className="p-4 rounded-lg bg-green-50 text-green-800 border border-green-200">
+            <p className="font-medium">✅ Projekt "{createProjectResult.project?.title}" uspješno stvoren!</p>
           </div>
         )}
 
@@ -165,6 +149,13 @@ export function Home() {
           )}
         </div>
       </div>
+
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onSuccess={handleProjectCreated}
+      />
     </div>
   );
 } 
