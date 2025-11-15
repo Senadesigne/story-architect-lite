@@ -812,12 +812,16 @@ app.post(
     
     await requireProjectOwnership(db, projectId, user.id);
     
-    // Placeholder odgovor
-    return c.json({ 
-      message: 'Chat API Skeleton OK', 
-      projectId, 
-      userInput 
+    // AI Graf Integracija
+    const finalState = await handleDatabaseOperation(async () => {
+      const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
+      const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
+      const initialState = createInitialState(userInput, storyContext);
+      const state = await appGraph.invoke(initialState as AgentState);
+      return state;
     });
+
+    return c.json(finalState);
   }
 );
 // --------------------------------------------------
