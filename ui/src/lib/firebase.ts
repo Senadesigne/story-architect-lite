@@ -1,11 +1,40 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, connectAuthEmulator } from 'firebase/auth';
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  connectAuthEmulator,
+  setPersistence,
+  browserLocalPersistence,
+  indexedDBLocalPersistence
+} from 'firebase/auth';
 import firebaseConfig from './firebase-config.json';
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Eksplicitno postavi persistence za trajno spremanje sesije
+// Koristi browserLocalPersistence (Local Storage) kao primarni, 
+// s fallback na indexedDBLocalPersistence
+const initializePersistence = async () => {
+  try {
+    // Pokušaj s Local Storage persistence
+    await setPersistence(auth, browserLocalPersistence);
+    console.log('✅ Firebase Auth persistence postavljena na browserLocalPersistence (Local Storage)');
+  } catch (error) {
+    try {
+      // Fallback na IndexedDB persistence
+      await setPersistence(auth, indexedDBLocalPersistence);
+      console.log('✅ Firebase Auth persistence postavljena na indexedDBLocalPersistence (IndexedDB)');
+    } catch (fallbackError) {
+      console.error('❌ Greška pri postavljanju Firebase Auth persistence:', fallbackError);
+    }
+  }
+};
+
+// Inicijaliziraj persistence
+initializePersistence();
 
 // Connect to Firebase Auth emulator in development mode or when explicitly enabled
 const isDevelopment = import.meta.env.DEV;

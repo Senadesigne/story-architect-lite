@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Project } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
+import { debugAuthState } from '@/lib/auth-utils';
 
 export function Home() {
   const { user } = useAuth();
@@ -36,6 +37,12 @@ export function Home() {
   // Učitavanje projekata kada se komponenta učita
   useEffect(() => {
     fetchProjects();
+    
+    // Debug: Provjeri auth stanje kada se Home učita
+    if (user) {
+      console.log('🏠 Home komponenta učitana za korisnika:', user.email);
+      debugAuthState();
+    }
   }, [user, fetchProjects]);
 
   const handleOpenDialog = () => {

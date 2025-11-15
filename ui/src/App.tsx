@@ -13,13 +13,20 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, isReady } = useAuth();
   
   // Aktiviraj session timeout za prijavljene korisnike
   useSessionTimeout();
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen"></div>;
+  if (loading || !isReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Inicijalizacija autentifikacije...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
