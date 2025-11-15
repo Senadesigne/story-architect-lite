@@ -130,28 +130,8 @@ app.get('/api/ai/test-graph', async (c) => {
     
     console.log('Testing Graph with query:', query);
     
-    // Kreiraj testni story context
-    const testStoryContext = `
-PRIČA: "Tajna Starog Dvorca"
-ŽANR: Misterij/Fantazija
-
-GLAVNI LIKOVI:
-- Ana Marković (25): Mlada arheologinja, radoznala i hrabra
-- Marko Petrović (30): Lokalni vodič, pozna sve tajne kraja
-- Profesor Novak (60): Anin mentor, stručnjak za srednjovjekovnu povijest
-
-LOKACIJE:
-- Stari dvorac na brdu: Napušteni dvorac iz 15. stoljeća
-- Selo Kamenjak: Malo selo u podnožju brda
-- Biblioteka u dvorcu: Skrivena prostorija puna starih knjiga
-
-TRENUTNA SITUACIJA:
-Ana je došla u selo istražiti legende o dvorcu. Marko joj je rekao da se u dvorcu čuju čudni zvukovi noću.
-Profesor Novak je pronašao staru mapu koja pokazuje skrivene prolaze u dvorcu.
-    `.trim();
-    
-    // Kreiraj početno stanje za graf
-    const initialState = createInitialState(query, testStoryContext);
+    // Postavljamo prazan storyContext kako bi se AI oslanjao isključivo na RAG kontekst iz vektorske baze
+    const initialState = createInitialState(query, "");
     
     console.log('Created initial state:', {
       userInput: initialState.userInput,

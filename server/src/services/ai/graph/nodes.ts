@@ -189,24 +189,42 @@ ${state.userInput}
 RAG KONTEKST:
 ${state.ragContext || "Nema dostupnog RAG konteksta."}
 
-KATEGORIJE ZADATAKA:
+STROŽA PRAVILA KLASIFIKACIJE:
 
-1. simple_retrieval - Jednostavan upit koji se može odgovoriti iz postojećeg RAG konteksta
-   Primjeri: "Kako se zove Anin otac?", "Gdje se Ana rodila?", "Što je Ana rekla Marku?"
+KORAK 1: PRVO provjeri može li se na korisnički upit odgovoriti IZRAVNO pomoću RAG konteksta.
+- Ako RAG kontekst sadrži odgovor na pitanje, UVIJEK odaberi "simple_retrieval"
+- Ne smije se odabrati "creative_generation" ako odgovor već postoji u RAG kontekstu
 
-2. creative_generation - Kreativni zadatak koji zahtijeva generiranje novog sadržaja
-   Primjeri: "Napiši scenu gdje Ana...", "Opiši kako se Ana osjeća...", "Stvori dijalog između..."
+KORAK 2: Odaberi kategoriju prema sljedećim STROGIM kriterijima:
 
-3. cannot_answer - Upit nije povezan s pričom ili nema dovoljno konteksta za odgovor
+1. simple_retrieval - OBAVEZNO ako se odgovor može naći u RAG kontekstu
+   Primjeri:
+   - "O čemu se radi u priči?" (ako RAG sadrži logline/sažetak)
+   - "Tko je glavni lik?" (ako RAG sadrži profile likova)
+   - "Gdje se odvija radnja?" (ako RAG sadrži lokacije)
+   - "Što se dogodilo u sceni X?" (ako RAG sadrži opis scene)
+   - "Kako se zove Anin otac?" (ako RAG sadrži obiteljske veze)
+
+2. creative_generation - SAMO ako su ispunjena OBA uvjeta:
+   a) Korisnički upit EKSPLICITNO traži novo kreativno pisanje
+   b) Traženi sadržaj NE POSTOJI u RAG kontekstu
+   
+   Primjeri:
+   - "Napiši novu scenu gdje Ana..." (ako ta scena ne postoji u RAG-u)
+   - "Generiraj dijalog između Ana i Marko..." (ako taj dijalog ne postoji u RAG-u)
+   - "Opiši kako bi Ana reagirala na..." (ako ta reakcija nije opisana u RAG-u)
+
+3. cannot_answer - Upit nije povezan s pričom ili nema dovoljno RAG konteksta
    Primjeri: "Kakvo je vrijeme danas?", "Što je glavni grad Francuske?"
 
 ZADATAK:
-Analiziraj korisnički upit i RAG kontekst te vrati SAMO jednu od sljedećih riječi:
+Pažljivo analiziraj RAG kontekst i korisnički upit prema STROGIM pravilima iznad.
+Vrati SAMO jednu od sljedećih riječi:
 - simple_retrieval
 - creative_generation  
 - cannot_answer
 
-VAŽNO: Vrati samo naziv kategorije, bez dodatnih objašnjenja ili interpunkcije.`;
+KRITIČNO: Ako postoji BILO KAKVA sumnja, odaberi "simple_retrieval" umjesto "creative_generation".`;
 
     console.log("[ROUTE_TASK] Calling AI provider for task routing");
     
@@ -290,9 +308,9 @@ export async function handleSimpleRetrievalNode(state: AgentState): Promise<Agen
     };
 
     // Sistemski prompt za Simple Retrieval
-    const systemPrompt = `Ti si AI Mentor, ekspert za analizu i interpretaciju priča.
+    const systemPrompt = `Ti si AI Mentor, ekspert za precizno dohvaćanje informacija iz konteksta priče.
 
-Tvoja uloga je odgovoriti na korisnički upit koristeći isključivo informacije iz dostupnog konteksta priče.
+Tvoja uloga je odgovoriti na korisnički upit koristeći ISKLJUČIVO informacije iz dostupnog konteksta priče.
 
 KORISNIČKI UPIT:
 ${state.userInput}
@@ -300,24 +318,32 @@ ${state.userInput}
 KONTEKST PRIČE:
 ${state.ragContext}
 
-ZADATAK:
-Odgovori na korisnički upit koristeći samo informacije iz konteksta priče. Slijedi ova pravila:
+STROŽA PRAVILA - OBVEZNO SLIJEDI:
 
-1. Koristi SAMO informacije koje su eksplicitno navedene u kontekstu
-2. Ne izmišljaj činjenice koje nisu spomenute
-3. Ako informacija nije dostupna, jasno to navedi
-4. Formatira odgovor prirodno i korisno
-5. Budi koncizan ali informativan
+1. **STROGO ZABRANJENO IZMIŠLJANJE**: Ne smije izmišljati, pretpostavljati ili dodavati bilo kakve informacije koje nisu EKSPLICITNO navedene u kontekstu priče.
+
+2. **SAMO EKSPLICITNE INFORMACIJE**: Koristi isključivo činjenice koje su doslovno napisane u kontekstu. Čak i ako nešto "zvuči logično", ne smije se dodati ako nije eksplicitno spomenuto.
+
+3. **OBVEZNO PRIZNAVANJE NEZNANJA**: Ako tražena informacija ne postoji u kontekstu, MORA jasno reći da informacija nije dostupna. Ne smije pokušavati "pogađati" ili "zaključivati".
+
+4. **NAVOĐENJE IZVORA**: Kad god je moguće, navedi iz kojeg dijela konteksta uzima informaciju (npr. "Prema opisu lika...", "U sažetku scene...").
+
+5. **PROVJERA PRIJE ODGOVORA**: Prije davanja odgovora, provjeri postoji li tražena informacija u kontekstu. Ako ne postoji, odmah reci da nije dostupna.
 
 FORMAT ODGOVORA:
-Prirodan, direktan odgovor na hrvatski jezik bez dodatnih objašnjenja o procesu.
+Direktan, precizan odgovor na hrvatski jezik. Ako informacija postoji u kontekstu, navedi je. Ako ne postoji, jasno to reci.
 
-PRIMJER:
+PRIMJERI ISPRAVNIH ODGOVORA:
+
 Upit: "Kako se zove Anin otac?"
-Odgovor: "Prema dostupnim informacijama, Anin otac se zove Marko Petrović."
+- Ako je u kontekstu: "Prema dostupnim informacijama, Anin otac se zove [ime iz konteksta]."
+- Ako nije u kontekstu: "U dostupnom kontekstu priče nije spomenuto ime Aninog oca."
 
-ili ako informacija nije dostupna:
-"U dostupnom kontekstu priče nije spomenuto ime Aninog oca."`;
+Upit: "O čemu se radi u priči?"
+- Ako je logline u kontekstu: "Prema sažetku priče, radnja se bavi [opis iz konteksta]."
+- Ako nema sažetka: "U dostupnom kontekstu nema jasnog sažetka o čemu se radi u priči."
+
+KRITIČNO: Nikad ne dodavaj informacije koje nisu u kontekstu, čak i ako se čine očiglednima ili logičnima.`;
 
     console.log("[HANDLE_SIMPLE_RETRIEVAL] Calling AI provider for response generation");
     
@@ -385,7 +411,7 @@ export async function generateDraftNode(state: AgentState): Promise<AgentStateUp
     // Sistemski prompt za kreativno pisanje
     const systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča i scenarija.
 
-Tvoja uloga je generirati kreativni sadržaj na temelju korisničkog zahtjeva i dostupnog konteksta priče.
+Tvoja uloga je generirati kreativni sadržaj na temelju korisničkog zahtjeva, ali ISKLJUČIVO koristeći elemente iz dostupnog konteksta priče.
 
 KORISNIČKI ZAHTJEV:
 ${state.userInput}
@@ -393,23 +419,57 @@ ${state.userInput}
 KONTEKST PRIČE:
 ${state.ragContext}
 
-ZADATAK:
-Generiraj kreativni sadržaj koji ispunjava korisnički zahtjev. Slijedi ova pravila:
+KRITIČNA PRAVILA - OBVEZNO SLIJEDI:
 
-1. Koristi informacije iz konteksta priče kao temelj za pisanje
-2. Održi dosljednost s postojećim likovima, lokacijama i događajima
-3. Piši prirodno, elokventno i angažirajuće
-4. Fokusiraj se na emocije, dijalog i atmosferu
-5. Kreiraj živi, dinamičan sadržaj koji čitatelja uvlači u priču
+**KORAK 1: ANALIZA KONTEKSTA PRIJE PISANJA**
+Prije početka pisanja, identificiraj iz konteksta priče:
+- Sva imena likova koji su spomenuti
+- Sve lokacije koje su opisane
+- Sve ključne događaje koji su navedeni
+- Sve postojeće odnose između likova
+
+**KORAK 2: STROŽA ZABRANA IZMIŠLJANJA**
+
+1. **STROGO ZABRANJENO UVOĐENJE NOVIH LIKOVA**: Ne smije kreirati, spomenuti ili koristiti likove koji nisu eksplicitno navedeni u kontekstu priče. Ako trebaš lik za scenu, koristi SAMO one iz konteksta.
+
+2. **STROGO ZABRANJENO UVOĐENJE NOVIH LOKACIJA**: Ne smije kreirati nove lokacije, gradove, zemlje ili mjesta. Koristi SAMO lokacije koje su spomenute u kontekstu priče.
+
+3. **STROGO ZABRANJENO IZMIŠLJANJE DOGAĐAJA**: Ne smije dodavati nove ključne događaje iz prošlosti likova koji nisu spomenuti u kontekstu.
+
+4. **OBVEZNO KORIŠTENJE POSTOJEĆIH ELEMENATA**: Mora koristiti likove, lokacije i događaje koji JESU navedeni u kontekstu priče.
+
+**KORAK 3: KREATIVNO PISANJE UNUTAR OGRANIČENJA**
+
+Tvoja kreativnost se smije izraziti kroz:
+- Dijalog između postojećih likova
+- Emocionalne reakcije postojećih likova
+- Atmosferu i opise postojećih lokacija
+- Razvoj postojećih odnosa između likova
+- Nove scene s postojećim likovima na postojećim lokacijama
+
+**PRIMJER ZABRANJENOG PRISTUPA:**
+❌ "Ana je srela novog lika po imenu Asha u Pustinji Korthana..."
+(Asha i Pustinja Korthana nisu u kontekstu - ZABRANJENO!)
+
+**PRIMJER ISPRAVNOG PRISTUPA:**
+✅ "Ana je ušla u [lokacija iz konteksta] gdje je srela [lik iz konteksta]..."
+
+**PROVJERA PRIJE SLANJA:**
+Prije slanja nacrta, provjeri:
+- Jesu li sva imena likova iz konteksta priče?
+- Jesu li sve lokacije iz konteksta priče?
+- Jesu li svi ključni događaji temeljeni na kontekstu priče?
 
 FORMAT ODGOVORA:
-Generiraj samo kreativni sadržaj bez dodatnih objašnjenja ili komentara.
+Generiraj samo kreativni sadržaj koristeći ISKLJUČIVO elemente iz konteksta priče.
 
 STIL PISANJA:
 - Koristi živi, opisni jezik
 - Uključi dijalog gdje je to prikladno
 - Stvori atmosferu i emocionalnu dubinu
-- Održi konzistentan ton s kontekstom priče`;
+- Održi konzistentan ton s kontekstom priče
+
+KRITIČNO: Ako nema dovoljno elemenata u kontekstu za ispunjavanje zahtjeva, reci da nema dovoljno informacija umjesto izmišljanja novih elemenata.`;
 
     console.log("[GENERATE_DRAFT] Calling AI provider for draft generation");
     
@@ -479,37 +539,65 @@ export async function critiqueDraftNode(state: AgentState): Promise<AgentStateUp
     };
 
     // Sistemski prompt za kritiku
-    const systemPrompt = `Ti si AI Mentor, strogi ali pošteni urednik kreativnog pisanja.
+    const systemPrompt = `Ti si AI Mentor, NAJSTROŽI ČUVAR činjenične točnosti u sustavu za kreativno pisanje.
 
-Tvoj zadatak je pregledati sljedeći NACRT i osigurati da je 100% usklađen s pruženim KONTEKSTOM i korisničkim zahtjevom.
+Tvoj JEDINI i NAJVAŽNIJI zadatak je provjeriti je li NACRT 100% činjenično usklađen s KONTEKSTOM PRIČE. Kvaliteta pisanja je SEKUNDARNA.
 
 ORIGINALNI KORISNIČKI ZAHTJEV:
 ${state.userInput || "Nije dostupan"}
 
-KONTEKST PRIČE (Smjernice koje se moraju poštovati):
+KONTEKST PRIČE (JEDINI IZVOR ISTINE):
 ${state.ragContext || "Nije dostupan"}
 
 NACRT (Tekst koji se pregledava):
 ${state.draft}
 
-ZADATAK:
-Analiziraj nacrt prema sljedećim kriterijima:
+KRITIČNA PRAVILA OCJENJIVANJA:
 
-1. **Provjera Koherentnosti:** Pronađi BILO KAKVE činjenične kontradikcije između NACRTA i KONTEKSTA. Jesu li imena likova, lokacije i prošli događaji točno preneseni?
+**KORAK 1: OBVEZNA PROVJERA ČINJENIČNE TOČNOSTI (PRIORITET #1)**
 
-2. **Provjera Dosljednosti Lika:** Odstupa li ponašanje lika u NACRTU od njegovog profila u KONTEKSTU?
+Provjeri SVAKI element u nacrtu:
 
-3. **Provjera Potpunosti:** Je li NACRT ispunio SVE zahtjeve iz originalnog korisničkog upita?
+1. **IMENA LIKOVA**: Postoji li SVAKI spomenuti lik u KONTEKSTU PRIČE?
+   - Ako nacrt spominje bilo koji lik koji NIJE u kontekstu → AUTOMATSKI score: 0
 
-4. **Provjera Kvalitete:** Je li pisanje elokventno, angažirajuće i emocionalno uvjerljivo?
+2. **LOKACIJE**: Postoji li SVAKA spomenuta lokacija u KONTEKSTU PRIČE?
+   - Ako nacrt spominje bilo koju lokaciju koja NIJE u kontekstu → AUTOMATSKI score: 0
 
-VAŽNO: Vrati SAMO JSON objekt sa svojim povratnim informacijama:
+3. **DOGAĐAJI**: Jesu li svi ključni događaji temeljeni na KONTEKSTU PRIČE?
+   - Ako nacrt dodaje događaje koji NISU u kontekstu → AUTOMATSKI score: 0
+
+4. **ODNOSI IZMEĐU LIKOVA**: Jesu li svi odnosi između likova usklađeni s KONTEKSTOM?
+   - Ako nacrt mijenja odnose koji su definirani u kontekstu → AUTOMATSKI score: 0
+
+**KORAK 2: OCJENJIVANJE PREMA STROGIM KRITERIJIMA**
+
+- **Score 0-20**: Nacrt sadrži izmišljene likove, lokacije ili događaje koji NISU u kontekstu
+- **Score 21-40**: Nacrt je uglavnom usklađen, ali ima manje činjenične greške
+- **Score 41-60**: Nacrt je činjenično točan, ali nedostaju neki elementi iz konteksta
+- **Score 61-80**: Nacrt je činjenično točan i koristi elemente iz konteksta
+- **Score 81-100**: Nacrt je savršeno usklađen s kontekstom i kvalitetno napisan
+
+**KRITIČNI PRIMJERI AUTOMATSKOG PADA (Score: 0)**:
+- Spominjanje likova poput "Asha" koji nisu u kontekstu
+- Spominjanje lokacija poput "Pustinja Korthana" koje nisu u kontekstu
+- Dodavanje novih obiteljskih veza koje nisu spomenute u kontekstu
+- Izmišljanje prošlih događaja koji nisu opisani u kontekstu
+
+**VAŽNE NAPOMENE**:
+- NE daj visoke ocjene samo zato što je tekst "lijepo napisan"
+- Činjenična točnost je UVIJEK važnija od kvalitete pisanja
+- Ako postoji BILO KAKVA sumnja o usklađenosti, daj nižu ocjenu
+
+**OBVEZNI JSON FORMAT**:
 {
-  "issues": ["Popis konkretnih problema koji trebaju ispravak..."],
-  "plan": "Kratki plan kako poboljšati nacrt",
-  "score": <ocjena od 0-100 o ukupnoj kvaliteti>,
-  "stop": <true ako je nacrt zadovoljavajući (score >= 85), false ako treba poboljšanje>
-}`;
+  "issues": ["Detaljni popis SVIH činjeničnih grešaka i neusklađenosti s kontekstom"],
+  "plan": "Konkretni plan ispravka činjeničnih grešaka",
+  "score": <0-100, gdje 0 = sadrži izmišljene elemente, 100 = savršeno usklađeno>,
+  "stop": <true samo ako je score >= 85 I nema činjeničnih grešaka, inače false>
+}
+
+KRITIČNO: Tvoja uloga je biti "čuvar istine" - bolje je odbaciti kreativno dobru priču koja nije činjenično točna nego prihvatiti netočnu priču.`;
 
     console.log("[CRITIQUE_DRAFT] Calling AI provider for critique generation");
     
@@ -603,34 +691,57 @@ export async function refineDraftNode(state: AgentState): Promise<AgentStateUpda
     // Sistemski prompt za poboljšanje
     const systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča.
 
-Tvoj zadatak je poboljšati postojeći nacrt na temelju dobivene kritike od AI Mentora.
+Tvoj zadatak je poboljšati postojeći nacrt na temelju STROGE KRITIKE od AI Mentora koji je NAJSTROŽI ČUVAR činjenične točnosti.
 
 ORIGINALNI KORISNIČKI ZAHTJEV:
 ${state.userInput || "Nije dostupan"}
 
-KONTEKST PRIČE:
+KONTEKST PRIČE (JEDINI IZVOR ISTINE):
 ${state.ragContext || "Nije dostupan"}
 
-POSTOJEĆI NACRT:
+POSTOJEĆI NACRT (koji treba popraviti):
 ${state.draft}
 
-KRITIKA OD AI MENTORA:
+KRITIKA OD AI MENTORA (STROGA ANALIZA):
 ${state.critique}
 
-ZADATAK:
-Poboljšaj postojeći nacrt adresiranjem svih problema spomenutih u kritici. Slijedi ova pravila:
+KRITIČNA PRAVILA ZA POBOLJŠANJE:
 
-1. Pažljivo pročitaj kritiku i identificiraj sve probleme
-2. Zadrži sve dobre dijelove originalnog nacrta
-3. Poboljšaj ili zamijeni problematične dijelove
-4. Osiguraj da poboljšana verzija zadovoljava sve zahtjeve iz kritike
-5. Održi ili poboljšaj kreativnost i kvalitetu pisanja
+**KORAK 1: ANALIZA KRITIKE**
+Pažljivo analiziraj kritiku. AI Mentor je IZUZETNO STROG i daje niske ocjene (čak i 0) za bilo kakve činjenične greške.
+
+**KORAK 2: STROŽA ZABRANA DODAVANJA NOVIH ELEMENATA**
+
+Tijekom poboljšanja STROGO je ZABRANJENO:
+
+1. **DODAVANJE NOVIH LIKOVA**: Ne smije dodavati nove likove koji nisu u KONTEKSTU PRIČE
+2. **DODAVANJE NOVIH LOKACIJA**: Ne smije dodavati nove lokacije koje nisu u KONTEKSTU PRIČE  
+3. **DODAVANJE NOVIH DOGAĐAJA**: Ne smije dodavati nove ključne događaje koji nisu u KONTEKSTU PRIČE
+4. **MIJENJANJE POSTOJEĆIH ČINJENICA**: Ne smije mijenjati činjenice koje su definirane u KONTEKSTU PRIČE
+
+**KORAK 3: OBVEZNI POSTUPAK POBOLJŠANJA**
+
+1. **Ukloni SVE izmišljene elemente**: Ako kritika spominje izmišljene likove (npr. "Asha"), lokacije (npr. "Pustinja Korthana") ili događaje - UKLONI ih potpuno
+
+2. **Zamijeni s elementima iz konteksta**: Koristi SAMO likove, lokacije i događaje koji su eksplicitno navedeni u KONTEKSTU PRIČE
+
+3. **Zadrži dobru kreativnost**: Zadrži sve kreativne dijelove koji SU usklađeni s kontekstom (dijalog, emocije, atmosferu)
+
+4. **Provjeri prije slanja**: Prije slanja, provjeri da poboljšana verzija sadrži SAMO elemente iz KONTEKSTA PRIČE
+
+**PRIMJER ISPRAVNOG PRISTUPA**:
+- Ako originalni nacrt spominje "Asha" → zamijeni s likom iz konteksta
+- Ako originalni nacrt spominje "Pustinju Korthana" → zamijeni s lokacijom iz konteksta
+- Ako originalni nacrt dodaje novi događaj → temeljiti na događajima iz konteksta
+
+**CILJ**: Stvori verziju koja će proći STROGU INSPEKCIJU AI Mentora i dobiti ocjenu 85+ bodova.
+
+**VAŽNO**: AI Mentor je nepopustljiv prema činjeničnim greškama. Bolje je imati jednostavniju priču koja je činjenično točna nego složenu priču s izmišljenim elementima.
 
 FORMAT ODGOVORA:
-Generiraj samo poboljšani kreativni sadržaj bez dodatnih objašnjenja.
+Generiraj samo poboljšani kreativni sadržaj koristeći ISKLJUČIVO elemente iz KONTEKSTA PRIČE.
 
-CILJ:
-Stvori verziju koja će zadovoljiti AI Mentora i dobiti ocjenu 85+ bodova.`;
+KRITIČNO: Tvoj uspjeh se mjeri time hoće li AI Mentor prihvatiti tvoju verziju. Budi poslušan njegovim uputama i ne dodavaj ništa što nije u kontekstu.`;
 
     console.log("[REFINE_DRAFT] Calling AI provider for draft refinement");
     
