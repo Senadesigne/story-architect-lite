@@ -98,6 +98,10 @@ export const GenerateSceneSynopsisBodySchema = z.object({
   sceneId: z.string().uuid('Invalid Scene ID'),
 });
 
+export const ChatRequestBodySchema = z.object({
+  userInput: z.string().min(1, 'User input is required').trim(),
+});
+
 // ========== INFERRED TYPES ==========
 
 export type UpdateUserBody = z.infer<typeof UpdateUserBodySchema>;
@@ -110,4 +114,5 @@ export type UpdateCharacterBody = z.infer<typeof UpdateCharacterBodySchema>;
 export type CreateSceneBody = z.infer<typeof CreateSceneBodySchema>;
 export type UpdateSceneBody = z.infer<typeof UpdateSceneBodySchema>;
 export type GenerateSceneSynopsisBody = z.infer<typeof GenerateSceneSynopsisBodySchema>;
+export type ChatRequestBody = z.infer<typeof ChatRequestBodySchema>;
 

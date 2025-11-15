@@ -27,7 +27,8 @@ import {
   UpdateCharacterBodySchema,
   CreateSceneBodySchema,
   UpdateSceneBodySchema,
-  GenerateSceneSynopsisBodySchema
+  GenerateSceneSynopsisBodySchema,
+  ChatRequestBodySchema
 } from './schemas/validation';
 import { createDefaultAIProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
@@ -792,6 +793,32 @@ app.post(
       synopsis: synopsis,
     });
   },
+);
+
+// --- Chat API (Zadatak C.1) ---
+app.post(
+  '/api/projects/:projectId/chat',
+  aiRateLimiter.middleware(),
+  validateBody(ChatRequestBodySchema),
+  async (c) => {
+    const user = c.get('user');
+    const { projectId } = c.req.param();
+    const { userInput } = getValidatedBody(c);
+    
+    requireValidUUID(projectId, 'project ID');
+    
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+    
+    await requireProjectOwnership(db, projectId, user.id);
+    
+    // Placeholder odgovor
+    return c.json({ 
+      message: 'Chat API Skeleton OK', 
+      projectId, 
+      userInput 
+    });
+  }
 );
 // --------------------------------------------------
 
