@@ -9,7 +9,8 @@ import {
   handleSimpleRetrievalNode,
   generateDraftNode,
   critiqueDraftNode,
-  refineDraftNode
+  refineDraftNode,
+  modifyTextNode
 } from "./nodes";
 
 /**
@@ -83,6 +84,9 @@ export function createStoryArchitectGraph() {
   graph.addNode("critique_draft", critiqueDraftNode);
   graph.addNode("refine_draft", refineDraftNode);
   
+  // ✅ TEXT MODIFICATION ČVOR:
+  graph.addNode("modify_text", modifyTextNode);
+  
   // ✅ FINALIZACIJA ČVOR:
   graph.addNode("final_output", finalOutputNode);
 
@@ -103,6 +107,9 @@ export function createStoryArchitectGraph() {
   graph.addEdge("generate_draft", "critique_draft"); // Generirani nacrt ide na kritiku
   graph.addEdge("refine_draft", "critique_draft"); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
   
+  // ✅ TEXT MODIFICATION EDGE:
+  graph.addEdge("modify_text", END); // Modificirani tekst ide direktno na završetak
+  
   // ✅ FINALIZACIJA EDGE:
   graph.addEdge("final_output", END);
 
@@ -114,6 +121,7 @@ export function createStoryArchitectGraph() {
     {
       "handle_simple_retrieval": "handle_simple_retrieval",
       "generate_draft": "generate_draft", // ✅ Sada vodi na generate_draft čvor
+      "modify_text": "modify_text", // ✅ Nova ruta za modifikaciju teksta
       [END]: END
     }
   );
@@ -197,8 +205,11 @@ export function routingCondition(state: AgentState): string {
       console.log("[ROUTING_CONDITION] Routing to handle_simple_retrieval");
       return "handle_simple_retrieval";
     case "creative_generation":
-      console.log("[ROUTING_CONDITION] Routing to generate_draft (currently END)");
+      console.log("[ROUTING_CONDITION] Routing to generate_draft");
       return "generate_draft";
+    case "text_modification":
+      console.log("[ROUTING_CONDITION] Routing to modify_text");
+      return "modify_text";
     case "cannot_answer":
     default:
       console.log("[ROUTING_CONDITION] Routing to END (cannot answer or unknown)");

@@ -1,4 +1,26 @@
-Spremni Promptovi za Cursor
+## Uputa za Gemini (Naš Tijek Rada)
+
+**(Zalijepiti Geminiju na početku svake nove sesije)**
+
+Pozdrav. Nastavljamo s radom. Naš tijek rada je striktni "Plan-and-Approve":
+
+1.  Ti (Gemini) analiziraš problem i pripremaš **prompt za Cursor**.
+2.  Ja (Korisnik) taj prompt dajem Cursoru.
+3.  Cursor predlaže **tehnički plan** (bez koda).
+4.  Ja ti zalijepim plan na **odobrenje**.
+5.  Nakon odobrenja, Cursor implementira plan.
+6.  Ja ti zalijepim Cursorov kod (diff) na **pregled**.
+7.  Ti (Gemini) daješ konačnu preporuku ("Keep All" ili "Undo All").
+
+Tvoj zadatak je samo pripremati promptove i raditi preglede plana/koda, ne i sam pisati konačna rješenja.
+
+**IZNIMKA:** Ovo strogo pravilo ne vrijedi ako ja (korisnik) eksplicitno zatražim direktno rješenje, prijedlog ili akciju od tebe (npr. "kako da popravim X?", "napiši mi prompt za Cursora"). U tim slučajevima, slobodno mi daj direktan odgovor.
+
+---
+
+(Ovdje počinje ostatak datoteke...)
+
+# Spremni Promptovi za Cursor
 Ova datoteka sadrži standardizirane promptove koje koristimo u razvoju "Story Architect Lite" kako bismo osigurali konzistentnost i kvalitetu.
 
 1. Planiranje Nove Značajke

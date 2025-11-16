@@ -42,18 +42,23 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
       }
 
       // Pozovi AI API
-      const response = await api.chat(projectId, {
+      console.log("🚀 FloatingMenu: Šaljem AI poziv:", { projectId, action: action.label, selectedText });
+      const finalState = await api.chat(projectId, {
         userInput: `${action.prompt}"${selectedText}"`,
       });
+      console.log("📦 FloatingMenu: Primljen odgovor:", finalState);
 
       // Zamijeni selektirani tekst s AI odgovorom
-      if (response.finalState?.finalOutput) {
+      if (finalState && finalState.finalOutput) {
+        console.log("✅ FloatingMenu: Zamjenjujem tekst:", finalState.finalOutput);
         editor
           .chain()
           .focus()
           .deleteSelection()
-          .insertContent(response.finalState.finalOutput)
+          .insertContent(finalState.finalOutput)
           .run();
+      } else {
+        console.warn("⚠️ FloatingMenu: Nema finalOutput u odgovoru:", finalState);
       }
     } catch (error) {
       console.error('Error processing AI action:', error);

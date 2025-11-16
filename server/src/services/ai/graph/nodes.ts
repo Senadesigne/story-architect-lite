@@ -191,6 +191,11 @@ ${state.ragContext || "Nema dostupnog RAG konteksta."}
 
 STROŽA PRAVILA KLASIFIKACIJE:
 
+KORAK 0: PROVJERA MODIFIKACIJSKIH UPITA (NAJVIŠI PRIORITET)
+- Ako korisnički upit počinje s riječima poput "Prepravi", "Skrati", "Proširi", "Promijeni ton", "Poboljšaj" i sadrži tekst u navodnicima ili nakon dvotočke
+- UVIJEK odaberi "text_modification"
+- Modifikacija teksta NE KORISTI RAG kontekst i ide direktno na modificiranje
+
 KORAK 1: PRVO provjeri može li se na korisnički upit odgovoriti IZRAVNO pomoću RAG konteksta.
 - Ako RAG kontekst sadrži odgovor na pitanje, UVIJEK odaberi "simple_retrieval"
 - Ne smije se odabrati "creative_generation" ako odgovor već postoji u RAG kontekstu
@@ -205,26 +210,39 @@ KORAK 2: Odaberi kategoriju prema sljedećim STROGIM kriterijima:
    - "Što se dogodilo u sceni X?" (ako RAG sadrži opis scene)
    - "Kako se zove Anin otac?" (ako RAG sadrži obiteljske veze)
 
-2. creative_generation - SAMO ako su ispunjena OBA uvjeta:
-   a) Korisnički upit EKSPLICITNO traži novo kreativno pisanje
-   b) Traženi sadržaj NE POSTOJI u RAG kontekstu
-   
+2. text_modification - Odaberi za modifikaciju postojećeg teksta
+   Primjeri:
+   - "Prepravi sljedeći tekst: [tekst]"
+   - "Skrati sljedeći tekst zadržavajući ključne informacije: [tekst]"
+   - "Proširi i obogati sljedeći tekst: [tekst]"
+   - "Promijeni ton sljedećeg teksta na formalniji: [tekst]"
+   - "Poboljšaj sljedeći tekst: [tekst]"
+
+3. creative_generation - Odaberi za kreiranje NOVOG sadržaja koji ne postoji u RAG kontekstu
    Primjeri:
    - "Napiši novu scenu gdje Ana..." (ako ta scena ne postoji u RAG-u)
    - "Generiraj dijalog između Ana i Marko..." (ako taj dijalog ne postoji u RAG-u)
    - "Opiši kako bi Ana reagirala na..." (ako ta reakcija nije opisana u RAG-u)
 
-3. cannot_answer - Upit nije povezan s pričom ili nema dovoljno RAG konteksta
+4. cannot_answer - Upit nije povezan s pričom ili nema dovoljno RAG konteksta
    Primjeri: "Kakvo je vrijeme danas?", "Što je glavni grad Francuske?"
+
+POSEBNA PROVJERA ZA MODIFIKACIJU TEKSTA:
+1. Sadrži li upit riječi poput "Prepravi", "Skrati", "Proširi", "Promijeni ton"?
+2. Ako DA → automatski odaberi "text_modification"
+3. Ako NE → nastavi s normalnom klasifikacijom
 
 ZADATAK:
 Pažljivo analiziraj RAG kontekst i korisnički upit prema STROGIM pravilima iznad.
 Vrati SAMO jednu od sljedećih riječi:
 - simple_retrieval
-- creative_generation  
+- text_modification
+- creative_generation
 - cannot_answer
 
-KRITIČNO: Ako postoji BILO KAKVA sumnja, odaberi "simple_retrieval" umjesto "creative_generation".`;
+KRITIČNO: 
+- Za modifikacijske upite (Prepravi, Skrati, Proširi, Promijeni ton): UVIJEK odaberi "text_modification"
+- Za ostale upite: Ako postoji sumnja, odaberi "simple_retrieval" umjesto "creative_generation"`;
 
     console.log("[ROUTE_TASK] Calling AI provider for task routing");
     
@@ -234,12 +252,15 @@ KRITIČNO: Ako postoji BILO KAKVA sumnja, odaberi "simple_retrieval" umjesto "cr
 
     // Normalizacija i validacija odgovora
     const normalizedResponse = aiResponse.trim().toLowerCase();
-    let routingDecision: "simple_retrieval" | "creative_generation" | "cannot_answer";
+    console.log("[ROUTE_TASK] Normalized response:", normalizedResponse);
+    let routingDecision: "simple_retrieval" | "text_modification" | "creative_generation" | "cannot_answer";
 
     if (normalizedResponse.includes("simple_retrieval")) {
       routingDecision = "simple_retrieval";
     } else if (normalizedResponse.includes("creative_generation")) {
       routingDecision = "creative_generation";
+    } else if (normalizedResponse.includes("text_modification")) {
+      routingDecision = "text_modification";
     } else if (normalizedResponse.includes("cannot_answer")) {
       routingDecision = "cannot_answer";
     } else {
@@ -794,6 +815,88 @@ Generiraj SAMO čisti tekstualni odgovor.`;
     
     return {
       draft: state.draft || `Greška prilikom poboljšanja nacrta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
+    };
+  }
+}
+
+/**
+ * Čvor za modificiranje postojećeg teksta
+ * 
+ * Ovaj čvor je dizajniran za jednostavne modifikacije teksta poput:
+ * - Prepravljanje
+ * - Skraćivanje 
+ * - Proširivanje
+ * - Promjena tona
+ * - Poboljšanje
+ * 
+ * Ne koristi RAG kontekst i ne prolazi kroz critique/refine petlju.
+ * 
+ * @param state - Trenutno stanje agenta
+ * @returns Ažuriranje stanja s finalOutput poljem
+ */
+export async function modifyTextNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[MODIFY_TEXT] Starting with input:", {
+    userInput: state.userInput?.substring(0, 100) + "..."
+  });
+
+  try {
+    if (!state.userInput) {
+      console.error("[MODIFY_TEXT] Error: No userInput available");
+      return {
+        finalOutput: "Greška: Nema dostupnog teksta za modifikaciju."
+      };
+    }
+
+    // Kreiranje AI providera s Anthropic Haiku konfigurацijom
+    const aiProvider = await createDefaultAIProvider();
+    
+    // Konfiguracija za modifikaciju teksta (umjerena kreativnost)
+    const options: AIGenerationOptions = {
+      temperature: 0.3, // Niska temperatura za konzistentne modifikacije
+      maxTokens: 800,   // Dovoljno za modificirani tekst
+      timeout: 15000    // 15 sekundi timeout
+    };
+
+    // Sistemski prompt za modifikaciju teksta
+    const systemPrompt = `Ti si AI Editor, ekspert za modifikaciju i poboljšanje teksta.
+
+Tvoja uloga je modificirati postojeći tekst prema korisničkom zahtjevu.
+
+KORISNIČKI ZAHTJEV:
+${state.userInput}
+
+PRAVILA MODIFIKACIJE:
+
+1. **ZADRŽI ZNAČENJE**: Osnovno značenje i poruka teksta moraju ostati isti
+2. **SLIJEDI INSTRUKCIJU**: Točno izvršiti što korisnik traži (skratiti, proširiti, promijeniti ton, itd.)
+3. **ZADRŽI KONTEKST**: Ne dodavati nove likove, lokacije ili događaje koji nisu u originalnom tekstu
+4. **VRATI SAMO MODIFICIRANI TEKST**: Bez objašnjenja ili komentara
+
+PRIMJERI MODIFIKACIJA:
+- Skrati: Zadrži ključne informacije, ukloni suvišne detalje
+- Proširi: Dodaj opise, emocije, atmosferu, ali ne nove događaje
+- Promijeni ton: Prilagodi stil (formalni/neformalni/poetski/dramatični)
+- Prepravi: Poboljšaj jasnoću i čitljivost zadržavajući značenje
+
+ODGOVORI SAMO S MODIFICIRANIM TEKSTOM, bez dodatnih objašnjenja.`;
+
+    console.log("[MODIFY_TEXT] Calling AI provider for text modification");
+    
+    const modifiedText = await aiProvider.generateText(systemPrompt, options);
+
+    console.log("[MODIFY_TEXT] Text successfully modified");
+    console.log("[MODIFY_TEXT] Modified text preview:", modifiedText.substring(0, 100) + "...");
+    
+    return {
+      finalOutput: modifiedText.trim()
+    };
+
+  } catch (error) {
+    console.error("[MODIFY_TEXT] Error during text modification:", error);
+    
+    // Graceful degradation - vrati korisnu poruku greške
+    return {
+      finalOutput: `Greška prilikom modificiranja teksta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
     };
   }
 }
