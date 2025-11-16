@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import type { Editor } from '@tiptap/core';
 import { FloatingMenuUI } from './FloatingMenuUI';
+import { useEffect } from 'react';
 
 interface StudioEditorProps {
   content: string;
@@ -43,6 +44,13 @@ export function StudioEditor({
       onSelectionChange({ from, to, empty, text: editor.state.doc.textBetween(from, to) });
     },
   });
+
+  // Ažuriraj editor sadržaj kada se content prop promijeni
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   return (
     <>

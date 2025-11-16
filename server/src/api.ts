@@ -34,11 +34,8 @@ import { createDefaultAIProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
 import { PromptService } from './services/prompt.service';
 import { aiRateLimiter } from './middleware/rateLimiter';
-import { appGraph } from './services/ai/ai.graph';
-import { AgentState } from './services/ai/ai.state';
 import { getRelevantContext } from './services/ai/ai.retriever';
-import { createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
-import type { AgentState as GraphAgentState } from './services/ai/graph/state';
+import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
 
 const app = new Hono();
 
@@ -191,18 +188,13 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
       return c.json({ error: 'userInput je obavezan' }, 400);
     }
 
-    // Pripremi početno stanje za graf
-    // Napomena: 'messages' se automatski upravlja unutar grafa
-    const initialState: Partial<AgentState> = {
-      userInput: userInput,
-      storyContext: storyContext || "Nema pruženog globalnog konteksta priče.",
-      draftCount: 0,
-    };
+    console.log("--- POKRETANJE AI AGENTA (Test) ---", { userInput, storyContext });
 
-    console.log("--- POKRETANJE AI AGENTA (Test) ---", initialState);
-
-    // Pokreni graf
-    const finalState = await appGraph.invoke(initialState as AgentState);
+    // Pokreni graf koristeći novi runStoryArchitectGraph
+    const finalState = await runStoryArchitectGraph(
+      userInput, 
+      storyContext || "Nema pruženog globalnog konteksta priče."
+    );
 
     console.log("--- AI AGENT ZAVRŠIO (Test) ---", finalState);
 
@@ -816,10 +808,14 @@ app.post(
     const finalState = await handleDatabaseOperation(async () => {
       const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
       const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
-      const initialState = createInitialState(userInput, storyContext);
-      const state = await appGraph.invoke(initialState as AgentState);
+      const state = await runStoryArchitectGraph(userInput, storyContext);
       return state;
     });
+
+    // Dijagnostički logovi za provjeru izlaza
+    console.log("🔄 Backend šalje finalState (iz api.ts):", finalState);
+    console.log("🔍 Sadrži 'finalOutput' polje:", finalState.hasOwnProperty('finalOutput'));
+    console.log("🔍 Vrijednost 'finalOutput' (skraćeno):", finalState.finalOutput ? finalState.finalOutput.substring(0, 100) + '...' : finalState.finalOutput);
 
     return c.json(finalState);
   }

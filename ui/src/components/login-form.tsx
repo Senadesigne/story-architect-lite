@@ -34,36 +34,8 @@ export function LoginForm() {
     try {
       await signInWithEmailAndPassword(auth, email, password)
     } catch (err: unknown) {
-      const firebaseError = err as { code?: string; message?: string };
-      console.error('Login error:', firebaseError);
-      
-      switch (firebaseError.code) {
-        case 'auth/user-not-found':
-          setError("Korisnik s ovom email adresom ne postoji. Molimo registrirajte se.")
-          break;
-        case 'auth/wrong-password':
-          setError("Pogrešna lozinka. Molimo pokušajte ponovno.")
-          break;
-        case 'auth/invalid-credential':
-          // U Firebase v9+, ovo može značiti pogrešnu lozinku ili nepostojeći korisnik
-          setError("Neispravni podaci za prijavu. Provjerite email i lozinku.")
-          break;
-        case 'auth/invalid-email':
-          setError("Neispravna email adresa.")
-          break;
-        case 'auth/user-disabled':
-          setError("Ovaj korisnički račun je onemogućen.")
-          break;
-        case 'auth/too-many-requests':
-          setError("Previše neuspješnih pokušaja. Molimo pričekajte prije ponovnog pokušaja.")
-          break;
-        case 'auth/network-request-failed':
-          setError("Greška mreže. Provjerite internetsku vezu.")
-          break;
-        default:
-          setError("Greška pri prijavi. Molimo pokušajte ponovno.")
-          console.error('Unhandled auth error:', firebaseError)
-      }
+      console.error("Firebase Login Error:", err);
+      setError("Neispravan email ili lozinka. Molimo pokušajte ponovo.");
     } finally {
       setIsLoading(false)
     }

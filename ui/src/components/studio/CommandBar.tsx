@@ -23,18 +23,28 @@ export function CommandBar({ projectId }: CommandBarProps) {
     setIsLoading(true);
     
     try {
-      const response = await api.chat(projectId, { userInput: command });
-      
-      // Provjeri je li odgovor uspješan
-      if (response.finalState?.finalOutput) {
-        insertTextAtCursor(response.finalState.finalOutput);
+      // Logiraj što šaljemo
+      console.log("🚀 Šaljem API poziv:", { projectId, command });
+
+      const finalState = await api.chat(projectId, { userInput: command });
+
+      // Logiraj točno što smo dobili natrag
+      console.log("📦 Primljen odgovor od servera (finalState):", finalState);
+
+      if (finalState && finalState.finalOutput) {
+        // Uspjeh!
+        console.log("✅ Ubacujem tekst u editor:", finalState.finalOutput);
+        insertTextAtCursor(finalState.finalOutput);
+      } else {
+        // Server je vratio odgovor, ali bez finalOutputa
+        console.warn("⚠️ AI je vratio uspješan odgovor, ali bez 'finalOutput' polja.", finalState);
       }
       
-      // Očisti input polje
       setCommand('');
     } catch (error) {
-      console.error('Error calling AI chat:', error);
-      // TODO: Dodaj toast notifikaciju za greške
+      // Kritična greška, npr. server je pao
+      console.error("❌ Greška prilikom poziva api.chat:", error);
+      // Ovdje možemo dodati i obavijest za korisnika, npr. toast
     } finally {
       setIsLoading(false);
     }

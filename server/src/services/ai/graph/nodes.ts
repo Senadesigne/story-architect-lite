@@ -343,7 +343,17 @@ Upit: "O čemu se radi u priči?"
 - Ako je logline u kontekstu: "Prema sažetku priče, radnja se bavi [opis iz konteksta]."
 - Ako nema sažetka: "U dostupnom kontekstu nema jasnog sažetka o čemu se radi u priči."
 
-KRITIČNO: Nikad ne dodavaj informacije koje nisu u kontekstu, čak i ako se čine očiglednima ili logičnima.`;
+KRITIČNO: Nikad ne dodavaj informacije koje nisu u kontekstu, čak i ako se čine očiglednima ili logičnima.
+
+KRITIČNO PRAVILO ZA ODGOVOR:
+Tvoj odgovor mora sadržavati **ISKLJUČIVO I SAMO** traženi tekst (kreativni sadržaj ili odgovor na pitanje).
+NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
+- "Evo poboljšane verzije..."
+- "Razumijem kritiku..."
+- "Poštovani AI Mentor..."
+- "Nadam se da će..."
+
+Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[HANDLE_SIMPLE_RETRIEVAL] Calling AI provider for response generation");
     
@@ -469,7 +479,17 @@ STIL PISANJA:
 - Stvori atmosferu i emocionalnu dubinu
 - Održi konzistentan ton s kontekstom priče
 
-KRITIČNO: Ako nema dovoljno elemenata u kontekstu za ispunjavanje zahtjeva, reci da nema dovoljno informacija umjesto izmišljanja novih elemenata.`;
+KRITIČNO: Ako nema dovoljno elemenata u kontekstu za ispunjavanje zahtjeva, reci da nema dovoljno informacija umjesto izmišljanja novih elemenata.
+
+KRITIČNO PRAVILO ZA ODGOVOR:
+Tvoj odgovor mora sadržavati **ISKLJUČIVO I SAMO** traženi tekst (kreativni sadržaj ili odgovor na pitanje).
+NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
+- "Evo poboljšane verzije..."
+- "Razumijem kritiku..."
+- "Poštovani AI Mentor..."
+- "Nadam se da će..."
+
+Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[GENERATE_DRAFT] Calling AI provider for draft generation");
     
@@ -741,7 +761,17 @@ Tijekom poboljšanja STROGO je ZABRANJENO:
 FORMAT ODGOVORA:
 Generiraj samo poboljšani kreativni sadržaj koristeći ISKLJUČIVO elemente iz KONTEKSTA PRIČE.
 
-KRITIČNO: Tvoj uspjeh se mjeri time hoće li AI Mentor prihvatiti tvoju verziju. Budi poslušan njegovim uputama i ne dodavaj ništa što nije u kontekstu.`;
+KRITIČNO: Tvoj uspjeh se mjeri time hoće li AI Mentor prihvatiti tvoju verziju. Budi poslušan njegovim uputama i ne dodavaj ništa što nije u kontekstu.
+
+KRITIČNO PRAVILO ZA ODGOVOR:
+Tvoj odgovor mora sadržavati **ISKLJUČIVO I SAMO** traženi tekst (kreativni sadržaj ili odgovor na pitanje).
+NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
+- "Evo poboljšane verzije..."
+- "Razumijem kritiku..."
+- "Poštovani AI Mentor..."
+- "Nadam se da će..."
+
+Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[REFINE_DRAFT] Calling AI provider for draft refinement");
     

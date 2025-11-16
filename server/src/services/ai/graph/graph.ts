@@ -82,6 +82,9 @@ export function createStoryArchitectGraph() {
   graph.addNode("generate_draft", generateDraftNode);
   graph.addNode("critique_draft", critiqueDraftNode);
   graph.addNode("refine_draft", refineDraftNode);
+  
+  // ✅ FINALIZACIJA ČVOR:
+  graph.addNode("final_output", finalOutputNode);
 
   // TODO: Dodati uvjetne rubove (conditional edges) u sljedećim fazama
   // Planirani uvjetni rubovi:
@@ -99,6 +102,9 @@ export function createStoryArchitectGraph() {
   // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
   graph.addEdge("generate_draft", "critique_draft"); // Generirani nacrt ide na kritiku
   graph.addEdge("refine_draft", "critique_draft"); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
+  
+  // ✅ FINALIZACIJA EDGE:
+  graph.addEdge("final_output", END);
 
   // ✅ UVJETNI EDGE-OVI (Zadatak 3.9):
   // Usmjeravanje nakon route_task čvora na temelju routingDecision
@@ -119,7 +125,7 @@ export function createStoryArchitectGraph() {
     reflectionCondition, // koristi postojeću funkciju na liniji 189
     {
       "refine_draft": "refine_draft", // nastavi petlju
-      [END]: END // završi petlju
+      "final_output": "final_output" // završi petlju kroz finalizaciju
     }
   );
 
@@ -200,6 +206,12 @@ export function routingCondition(state: AgentState): string {
   }
 }
 
+// Novi čvor za finalizaciju
+const finalOutputNode = (state: AgentState): Partial<AgentState> => {
+  console.log("--- FINALIZACIJA IZLAZA (Eksplicitni čvor) ---");
+  return { finalOutput: state.draft };
+};
+
 /**
  * Uvjetna funkcija za reflection petlju nakon critique_draft čvora
  * Implementira logiku iterativnog poboljšanja
@@ -210,13 +222,7 @@ export function reflectionCondition(state: AgentState): string {
   // Provjeri je li postignuto maksimalno iteracija
   if (state.draftCount >= MAX_DRAFT_ITERATIONS) {
     console.log(`[REFLECTION_CONDITION] Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, ending reflection loop`);
-    // Postavi finalOutput prije završetka
-    if (state.draft) {
-      console.log(`[REFLECTION_CONDITION] Setting finalOutput from draft (length: ${state.draft.length})`);
-      // Note: LangGraph će automatski primijeniti ovu promjenu kroz state reducer
-      (state as any).finalOutput = state.draft;
-    }
-    return END;
+    return "final_output";
   }
 
   // Provjeri stop zastavicu iz kritike (ako postoji)
@@ -227,12 +233,7 @@ export function reflectionCondition(state: AgentState): string {
       
       if (critiqueData.stop === true) {
         console.log("[REFLECTION_CONDITION] Critique indicates draft is satisfactory, ending reflection loop");
-        // Postavi finalOutput prije završetka
-        if (state.draft) {
-          console.log(`[REFLECTION_CONDITION] Setting finalOutput from satisfactory draft (length: ${state.draft.length})`);
-          (state as any).finalOutput = state.draft;
-        }
-        return END;
+        return "final_output";
       }
     } catch (error) {
       console.warn("[REFLECTION_CONDITION] Could not parse critique JSON, continuing with iteration");
