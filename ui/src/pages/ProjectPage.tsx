@@ -9,6 +9,7 @@ import { Phase3Form } from '@/components/Phase3Form';
 import { Phase4Form } from '@/components/Phase4Form';
 import { Phase5Form } from '@/components/Phase5Form';
 import { Phase6Form } from '@/components/Phase6Form';
+import { Studio } from './Studio';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -360,6 +361,9 @@ export function ProjectPage() {
               />
             } 
           />
+          
+          {/* Nova Studio ruta */}
+          <Route path="studio" element={<Studio />} />
         </Routes>
       </div>
     </div>

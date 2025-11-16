@@ -244,6 +244,17 @@ export async function generateSceneSynopsis(projectId: string, sceneId: string) 
   return response.json();
 }
 
+export async function chat(projectId: string, data: { userInput: string }) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
 // User API
 export async function updateUser(data: { displayName?: string; avatarUrl?: string }) {
   const response = await fetchWithAuth('/api/user', {
@@ -285,4 +296,5 @@ export const api = {
   updateScene,
   deleteScene,
   generateSceneSynopsis,
+  chat,
 }; 
