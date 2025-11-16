@@ -39,7 +39,7 @@ initializePersistence();
 // Connect to Firebase Auth emulator in development mode or when explicitly enabled
 const isDevelopment = import.meta.env.DEV;
 const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' || 
-                   (isDevelopment && firebaseConfig.projectId === 'demo-project');
+                   (isDevelopment && (firebaseConfig.projectId === 'demo-project' || firebaseConfig.projectId === 'story-architect-lite-dev'));
 
 if (useEmulator) {
   try {
@@ -47,9 +47,11 @@ if (useEmulator) {
     const emulatorUrl = `http://localhost:${firebaseAuthPort}`;
     connectAuthEmulator(auth, emulatorUrl, { disableWarnings: true });
     console.log(`🧪 Connected to Firebase Auth emulator at ${emulatorUrl}`);
+    console.log(`📋 Emulator data will be persisted locally for testing`);
   } catch (error) {
     // Emulator already connected or not available
-    console.debug('Firebase Auth emulator connection skipped:', error);
+    console.warn('⚠️ Firebase Auth emulator connection failed:', error);
+    console.log('🔄 Falling back to production Firebase Auth');
   }
 } else {
   console.log(`🏭 Using production Firebase Auth (Project: ${firebaseConfig.projectId})`);
