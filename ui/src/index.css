@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -154,11 +155,10 @@ button {
   }
 }
 
-/* TipTap ProseMirror editor styles for proper overflow handling */
+/* TipTap ProseMirror editor styles for book-like design */
 @layer components {
   .ProseMirror {
     outline: none;
-    height: 100%;
     min-height: 100%;
   }
   

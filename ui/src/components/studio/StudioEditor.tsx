@@ -60,11 +60,18 @@ export function StudioEditor({
   return (
     <div className="h-full flex flex-col">
       {editor && <FloatingMenuUI editor={editor} />}
-      <div className="flex-1 overflow-y-auto p-6">
-        <EditorContent 
-          editor={editor} 
-          className="prose prose-lg max-w-none h-full min-h-full" 
-        />
+      {/* Outer wrapper - scroll container s pozadinom */}
+      <div className="flex-1 overflow-y-auto bg-muted/50 py-8 px-4 md:px-8">
+        {/* Paper container - centriran "papir" s vizualnim identitetom */}
+        <div className="mx-auto w-full max-w-3xl min-h-[calc(100%-4rem)] bg-background rounded-lg shadow-lg border border-border/50">
+          {/* Content area - editor s prose stilovima */}
+          <div className="p-12 md:p-16">
+            <EditorContent 
+              editor={editor} 
+              className="prose prose-lg prose-slate dark:prose-invert max-w-none focus:outline-none" 
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
