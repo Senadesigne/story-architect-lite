@@ -19,11 +19,7 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 
 
 ### Epic: AI Integracija - Faza B (Orkestrator) 🟢
-* **Zadatak 3.7 (NOVI):** Korak 1 - Postavljanje LangGraph.js i definiranje AgentState-a
-* **Zadatak 3.8 (NOVI):** Korak 2 - Implementacija RAG čvorova (transform_query i retrieve_context)
-* **Zadatak 3.9 (NOVI):** Korak 3 - Implementacija Usmjeravanja (route_task i handle_simple_retrieval)
-* **Zadatak 3.10 (NOVI):** Korak 4 - Implementacija 'Reflection' petlje (generate_draft, critique_draft, refine_draft)
-* **Zadatak 3.11 (NOVI):** Korak 5 - Finalna evaluacija i testiranje (Evals)
+* **Zadatak 3.11 (Djelomično):** Korak 5 - Finalna evaluacija i testiranje (Evals) - ⚠️ Test endpoint `/api/ai/test-agent` postoji, ali formalna evaluacija (evals) još nije implementirana
 * **Zadatak 3.12 (BUDUĆNOST - Faza C):** Nadograditi "Mentora" da bude "Dramaturg". Implementirati "Plan-and-Execute" logiku gdje "Mentor" (Haiku/Lokalni LLM) prvo stvara strukturirani plan (npr. raščlamba scene na 3 čina) prije nego što "Pisac" (Sonnet) krene s pisanjem, kako bi se osigurala bolja dramaturgija.
 * **Zadatak 3.13 (BUDUĆNOST - Faza C+):** 🟡 Implementirati "Stop" gumb (AbortController) u Studio UI-ju. Korisnik mora moći prekinuti AI generiranje koje je u tijeku i dobiti natrag svoj originalni prompt.
 * **Zadatak 3.14 (BUDUĆNOST - Faza C+):** 🟢 Implementirati odabir LLM-a (Model Switcher) u Studio UI-ju. Nadograditi 'ai.service.ts' da podržava više providera (Anthropic, Google, OpenAI, Groq) i dopustiti korisniku odabir modela.
@@ -54,6 +50,12 @@ _Trenutno nema zadataka u tijeku._
 * **Zadatak 3.4:** Implementirati `POST /api/ai/test` (Proof of Concept) ✅
 * **Zadatak 3.5:** Integrirati AI funkcionalnost u frontend (Phase5Form.tsx) ✅
 * **Zadatak 3.6:** Dizajnirati arhitekturu za hibridni AI orkestrator (Arhitektura v2.0 - Stateful Graf definirana u TEHNICKI_PLAN_AI_FAZA_B_v2.md) ✅
+* **Zadatak 3.7:** Korak 1 - Postavljanje LangGraph.js i definiranje AgentState-a ✅ (Implementirano u `server/src/services/ai/graph/state.ts` i `graph.ts`)
+* **Zadatak 3.8:** Korak 2 - Implementacija RAG čvorova (transform_query i retrieve_context) ✅ (Implementirano u `server/src/services/ai/graph/nodes.ts`)
+* **Zadatak 3.9:** Korak 3 - Implementacija Usmjeravanja (route_task i handle_simple_retrieval) ✅ (Implementirano u `server/src/services/ai/graph/nodes.ts` i `graph.ts` s uvjetnim grananjem)
+* **Zadatak 3.10:** Korak 4 - Implementacija 'Reflection' petlje (generate_draft, critique_draft, refine_draft) ✅ (Implementirano u `server/src/services/ai/graph/nodes.ts` i `graph.ts` s reflectionCondition petljom)
+
+**Napomena:** AI Orkestrator graf je potpuno integritan u chat API endpoint (`POST /api/projects/:projectId/chat` u `server/src/api.ts`). Graf također uključuje dodatnu funkcionalnost `modifyTextNode` za modifikaciju teksta koja nije bila u originalnom planu.
 
 ### Epic: MVP Implementacija ✅
 * Sve faze (1-6) implementirane i testirane

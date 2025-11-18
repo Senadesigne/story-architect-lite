@@ -12,11 +12,11 @@ export function ProjectLayout({ children }: ProjectLayoutProps) {
   const isStudio = location.pathname.includes('/studio');
   
   return (
-    <div className="flex flex-col w-full min-h-screen">
+    <div className="flex flex-col w-full h-full">
       <ProjectNav projectId={projectId!} />
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {!isStudio && <ProjectSidebar />}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0 overflow-hidden">
           {children}
         </div>
       </div>

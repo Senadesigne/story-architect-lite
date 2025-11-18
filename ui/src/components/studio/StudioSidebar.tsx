@@ -211,7 +211,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
   }
 
   return (
-    <div className="w-64 h-full bg-background border-r border-border flex flex-col">
+    <div className="w-64 h-full bg-background border-r border-border flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">

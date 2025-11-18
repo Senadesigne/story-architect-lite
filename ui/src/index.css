@@ -77,15 +77,30 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+/* Chain of Height: Root level - osigurava da aplikacija zauzima točno 100% visine viewporta */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Sprječava scroll na razini preglednika */
+}
+
 /* Smooth theme transitions - only on specific elements that need it */
 html {
   transition: background-color 0.2s ease;
 }
 
 body {
-  min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: hidden; /* Zadržavamo horizontalni overflow hidden */
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Osiguraj da #root bude flex container za djecu */
+#root {
+  display: flex;
+  flex-direction: column;
 }
 
 button {
@@ -136,5 +151,18 @@ button {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* TipTap ProseMirror editor styles for proper overflow handling */
+@layer components {
+  .ProseMirror {
+    outline: none;
+    height: 100%;
+    min-height: 100%;
+  }
+  
+  .ProseMirror-focused {
+    outline: none;
   }
 }

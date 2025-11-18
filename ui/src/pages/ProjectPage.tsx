@@ -1,4 +1,4 @@
-import { useParams, Routes, Route, Navigate } from 'react-router-dom';
+import { useParams, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { api } from '@/lib/serverComm';
 import { Project, ProjectUpdateData } from '@/lib/types';
@@ -21,6 +21,8 @@ type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'br
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const location = useLocation();
+  const isStudio = location.pathname.includes('/studio');
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -277,95 +279,102 @@ export function ProjectPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="space-y-6">
-        {/* Header section */}
-        <div>
-          <h1 className="text-3xl font-bold">{project.title}</h1>
-          <p className="text-muted-foreground mt-2">
-            Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} | 
-            Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
-          </p>
+    <>
+      {isStudio ? (
+        <div className="h-full overflow-hidden">
+          <Routes>
+            <Route path="studio" element={<Studio />} />
+          </Routes>
         </div>
+      ) : (
+        <div className="container mx-auto p-6">
+          <div className="space-y-6">
+            {/* Header section */}
+            <div>
+              <h1 className="text-3xl font-bold">{project.title}</h1>
+              <p className="text-muted-foreground mt-2">
+                Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} | 
+                Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
+              </p>
+            </div>
 
-        {/* Nested routes content */}
-        <Routes>
-          <Route index element={<Navigate to="ideation" replace />} />
-          <Route 
-            path="ideation" 
-            element={
-              <IdeationForm 
-                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                formData={{
-                  logline: formData.logline ?? '',
-                  premise: formData.premise ?? '',
-                  theme: formData.theme ?? '',
-                  genre: formData.genre ?? '',
-                  audience: formData.audience ?? ''
-                }}
+            {/* Nested routes content */}
+            <Routes>
+              <Route index element={<Navigate to="ideation" replace />} />
+              <Route 
+                path="ideation" 
+                element={
+                  <IdeationForm 
+                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                    formData={{
+                      logline: formData.logline ?? '',
+                      premise: formData.premise ?? '',
+                      theme: formData.theme ?? '',
+                      genre: formData.genre ?? '',
+                      audience: formData.audience ?? ''
+                    }}
+                  />
+                } 
               />
-            } 
-          />
-          <Route 
-            path="planning" 
-            element={
-              <Phase2Form 
-                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                formData={{
-                  brainstorming: formData.brainstorming ?? '',
-                  research: formData.research ?? ''
-                }}
+              <Route 
+                path="planning" 
+                element={
+                  <Phase2Form 
+                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                    formData={{
+                      brainstorming: formData.brainstorming ?? '',
+                      research: formData.research ?? ''
+                    }}
+                  />
+                } 
               />
-            } 
-          />
-          <Route 
-            path="worldbuilding" 
-            element={
-              <Phase3Form 
-                project={project} 
-                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                formData={{
-                  rules_definition: formData.rules_definition ?? '',
-                  culture_and_history: formData.culture_and_history ?? ''
-                }}
+              <Route 
+                path="worldbuilding" 
+                element={
+                  <Phase3Form 
+                    project={project} 
+                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                    formData={{
+                      rules_definition: formData.rules_definition ?? '',
+                      culture_and_history: formData.culture_and_history ?? ''
+                    }}
+                  />
+                } 
               />
-            } 
-          />
-          <Route path="characters" element={<Phase4Form />} />
-          <Route 
-            path="structure" 
-            element={
-              <Phase5Form 
-                project={project} 
-                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                formData={{
-                  synopsis: formData.synopsis ?? '',
-                  outline_notes: formData.outline_notes ?? ''
-                }}
+              <Route path="characters" element={<Phase4Form />} />
+              <Route 
+                path="structure" 
+                element={
+                  <Phase5Form 
+                    project={project} 
+                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                    formData={{
+                      synopsis: formData.synopsis ?? '',
+                      outline_notes: formData.outline_notes ?? ''
+                    }}
+                  />
+                } 
               />
-            } 
-          />
-          <Route 
-            path="finalization" 
-            element={
-              <Phase6Form 
-                onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                formData={{
-                  point_of_view: formData.point_of_view ?? ''
-                }}
+              <Route 
+                path="finalization" 
+                element={
+                  <Phase6Form 
+                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                    formData={{
+                      point_of_view: formData.point_of_view ?? ''
+                    }}
+                  />
+                } 
               />
-            } 
-          />
-          
-          {/* Nova Studio ruta */}
-          <Route path="studio" element={<Studio />} />
-        </Routes>
-      </div>
-    </div>
+            </Routes>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

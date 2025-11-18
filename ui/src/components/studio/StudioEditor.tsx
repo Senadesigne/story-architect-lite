@@ -58,9 +58,14 @@ export function StudioEditor({
 
 
   return (
-    <>
+    <div className="h-full flex flex-col">
       {editor && <FloatingMenuUI editor={editor} />}
-      <EditorContent editor={editor} className="prose prose-lg max-w-none" />
-    </>
+      <div className="flex-1 overflow-y-auto p-6">
+        <EditorContent 
+          editor={editor} 
+          className="prose prose-lg max-w-none h-full min-h-full" 
+        />
+      </div>
+    </div>
   );
 }

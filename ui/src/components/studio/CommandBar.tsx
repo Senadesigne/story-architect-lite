@@ -51,7 +51,7 @@ export function CommandBar({ projectId }: CommandBarProps) {
   };
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="flex-shrink-0 border-t bg-background p-4">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="flex gap-2">
           <Input

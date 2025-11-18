@@ -30,7 +30,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-background">
+    <div className="flex flex-col w-full h-full bg-background">
       <Navbar />
       {!user ? (
         <main className="flex flex-col items-center justify-center flex-1 p-4">
