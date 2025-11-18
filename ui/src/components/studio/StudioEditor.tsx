@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import type { Editor } from '@tiptap/core';
 import { FloatingMenuUI } from './FloatingMenuUI';
 import { useEffect } from 'react';
+import { useStudioStore } from '@/stores/studioStore';
 
 interface StudioEditorProps {
   content: string;
@@ -33,9 +34,15 @@ export function StudioEditor({
   onContentChange,
   onSelectionChange 
 }: StudioEditorProps) {
+  const { setEditor } = useStudioStore();
+  
   const editor = useEditor({
     extensions,
     content,
+    onCreate: ({ editor }) => {
+      // Dijeli editor instancu sa store-om kada se kreira
+      setEditor(editor);
+    },
     onUpdate: ({ editor }) => {
       onContentChange(editor.getHTML());
     },
@@ -43,14 +50,12 @@ export function StudioEditor({
       const { from, to, empty } = editor.state.selection;
       onSelectionChange({ from, to, empty, text: editor.state.doc.textBetween(from, to) });
     },
+    onDestroy: () => {
+      // Očisti editor instancu kada se komponenta uništi
+      setEditor(null);
+    },
   });
 
-  // Ažuriraj editor sadržaj kada se content prop promijeni
-  useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
 
   return (
     <>

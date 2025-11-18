@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { Scene } from '@/lib/types';
+import type { Editor } from '@tiptap/core';
+import { api } from '@/lib/serverComm';
 
 interface StudioState {
   // Editor stanje
@@ -7,6 +9,7 @@ interface StudioState {
   editorContent: string;
   cursorPosition: number;
   selectedText: string | null;
+  editor: Editor | null;
   
   // Scene stanje
   scenes: Scene[];
@@ -16,13 +19,22 @@ interface StudioState {
   isCommandBarVisible: boolean;
   
   // Akcije
-  setActiveScene: (sceneId: string) => void;
+  setActiveScene: (sceneId: string) => Promise<void>;
   updateContent: (content: string) => void;
   setCursorPosition: (position: number) => void;
   setSelectedText: (text: string | null) => void;
+  setEditor: (editor: Editor | null) => void;
   setScenes: (scenes: Scene[]) => void;
+  addScene: (scene: Scene) => void;
+  deleteSceneFromStore: (sceneId: string) => void;
+  restoreSceneToStore: (scene: Scene, wasActive: boolean) => void;
+  renameSceneInStore: (sceneId: string, newTitle: string) => void;
+  updateSceneInStore: (sceneId: string, updates: Partial<Scene>) => void;
+  updateSceneSummaryInStore: (sceneId: string, summary: string) => void;
+  saveActiveScene: () => Promise<void>;
   toggleSidebar: () => void;
   insertTextAtCursor: (text: string) => void;
+  initializeWithScenes: (scenes: Scene[]) => void;
 }
 
 export const useStudioStore = create<StudioState>((set, get) => ({
@@ -31,12 +43,25 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   editorContent: '',
   cursorPosition: 0,
   selectedText: null,
+  editor: null,
   scenes: [],
   isSidebarOpen: true,
   isCommandBarVisible: true,
   
   // Implementacija akcija
-  setActiveScene: (sceneId: string) => {
+  setActiveScene: async (sceneId: string) => {
+    const state = get();
+    
+    // Spremi trenutnu aktivnu scenu prije prebacivanja
+    if (state.activeSceneId && state.editorContent) {
+      try {
+        await get().saveActiveScene();
+      } catch (error) {
+        console.error('Greška pri spremanju trenutne scene:', error);
+      }
+    }
+    
+    // Prebaci na novu scenu
     set((state) => {
       const scene = state.scenes.find(s => s.id === sceneId);
       return {
@@ -58,24 +83,172 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set({ selectedText: text });
   },
   
+  setEditor: (editor: Editor | null) => {
+    set({ editor });
+  },
+  
   setScenes: (scenes: Scene[]) => {
     set({ scenes });
+  },
+  
+  addScene: (scene: Scene) => {
+    set((state) => ({ 
+      scenes: [...state.scenes, scene],
+      activeSceneId: scene.id,
+      editorContent: scene.summary || ''
+    }));
+  },
+  
+  initializeWithScenes: (scenes: Scene[]) => {
+    set((state) => {
+      // Ako već imamo aktivnu scenu, ne mijenjaj ništa
+      if (state.activeSceneId && scenes.find(s => s.id === state.activeSceneId)) {
+        return { scenes };
+      }
+      
+      // Inače, postavi prvu scenu kao aktivnu
+      if (scenes.length > 0) {
+        const firstScene = scenes[0];
+        return {
+          scenes,
+          activeSceneId: firstScene.id,
+          editorContent: firstScene.summary || ''
+        };
+      }
+      
+      // Ako nema scena, samo postavi scene
+      return { scenes };
+    });
   },
   
   toggleSidebar: () => {
     set((state) => ({ isSidebarOpen: !state.isSidebarOpen }));
   },
   
-  insertTextAtCursor: (text: string) => {
-    const { editorContent, cursorPosition } = get();
-    const beforeCursor = editorContent.slice(0, cursorPosition);
-    const afterCursor = editorContent.slice(cursorPosition);
-    const newContent = beforeCursor + text + afterCursor;
-    const newCursorPosition = cursorPosition + text.length;
-    
-    set({ 
-      editorContent: newContent,
-      cursorPosition: newCursorPosition 
+  deleteSceneFromStore: (sceneId: string) => {
+    set((state) => {
+      const updatedScenes = state.scenes.filter(scene => scene.id !== sceneId);
+      
+      // Ako je obrisana scena bila aktivna, postavi novu aktivnu scenu
+      let newActiveSceneId = state.activeSceneId;
+      let newEditorContent = state.editorContent;
+      
+      if (state.activeSceneId === sceneId) {
+        if (updatedScenes.length > 0) {
+          // Postavi prvu dostupnu scenu kao aktivnu
+          const firstScene = updatedScenes[0];
+          newActiveSceneId = firstScene.id;
+          newEditorContent = firstScene.summary || '';
+        } else {
+          // Nema više scena
+          newActiveSceneId = null;
+          newEditorContent = '';
+        }
+      }
+      
+      return {
+        scenes: updatedScenes,
+        activeSceneId: newActiveSceneId,
+        editorContent: newEditorContent
+      };
     });
+  },
+
+  restoreSceneToStore: (scene: Scene, wasActive: boolean) => {
+    set((state) => {
+      // Dodaj scenu natrag na popis (sortirano po order)
+      const updatedScenes = [...state.scenes, scene].sort((a, b) => a.order - b.order);
+      
+      // Ako je scena bila aktivna, postavi je ponovno kao aktivnu
+      let newActiveSceneId = state.activeSceneId;
+      let newEditorContent = state.editorContent;
+      
+      if (wasActive) {
+        newActiveSceneId = scene.id;
+        newEditorContent = scene.summary || '';
+      }
+      
+      return {
+        scenes: updatedScenes,
+        activeSceneId: newActiveSceneId,
+        editorContent: newEditorContent
+      };
+    });
+  },
+
+  renameSceneInStore: (sceneId: string, newTitle: string) => {
+    set((state) => ({
+      scenes: state.scenes.map(scene =>
+        scene.id === sceneId
+          ? { ...scene, title: newTitle }
+          : scene
+      )
+    }));
+  },
+
+  updateSceneInStore: (sceneId: string, updates: Partial<Scene>) => {
+    set((state) => {
+      const updatedScenes = state.scenes.map(scene =>
+        scene.id === sceneId
+          ? { ...scene, ...updates }
+          : scene
+      );
+      
+      // Ako je ažurirana scena trenutno aktivna, ažuriraj i editorContent
+      let newEditorContent = state.editorContent;
+      if (state.activeSceneId === sceneId && updates.summary !== undefined) {
+        newEditorContent = updates.summary || '';
+      }
+      
+      return {
+        scenes: updatedScenes,
+        editorContent: newEditorContent
+      };
+    });
+  },
+
+  updateSceneSummaryInStore: (sceneId: string, summary: string) => {
+    set((state) => ({
+      scenes: state.scenes.map(scene =>
+        scene.id === sceneId
+          ? { ...scene, summary }
+          : scene
+      )
+    }));
+  },
+
+  saveActiveScene: async () => {
+    const state = get();
+    
+    if (!state.activeSceneId || !state.editorContent) {
+      return; // Nema što spremiti
+    }
+    
+    try {
+      // Pozovi API za ažuriranje scene
+      await api.updateScene(state.activeSceneId, { 
+        summary: state.editorContent 
+      });
+      
+      // Ažuriraj scenu u store-u s novim sadržajem
+      get().updateSceneSummaryInStore(state.activeSceneId, state.editorContent);
+      
+      console.log('Scena uspješno spremljena!');
+    } catch (error) {
+      console.error('Greška pri spremanju scene:', error);
+      throw error; // Re-throw da pozivatelj može handleati grešku
+    }
+  },
+
+  insertTextAtCursor: (text: string) => {
+    const { editor } = get();
+    
+    if (editor) {
+      // Koristi TipTap editor instancu za umetanje teksta
+      editor.chain().focus().insertContent(text).run();
+    } else {
+      // Fallback: ažuriraj samo stanje (za slučaj da editor još nije inicijaliziran)
+      console.warn('Editor instance not available, falling back to state update');
+    }
   },
 }));
