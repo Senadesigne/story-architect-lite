@@ -44,7 +44,9 @@ const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' ||
 if (useEmulator) {
   try {
     const firebaseAuthPort = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT || '9099';
-    const emulatorUrl = `http://localhost:${firebaseAuthPort}`;
+    // Use 127.0.0.1 instead of localhost for better Windows compatibility
+    // Some Windows configurations have issues with localhost resolving to IPv6
+    const emulatorUrl = `http://127.0.0.1:${firebaseAuthPort}`;
     connectAuthEmulator(auth, emulatorUrl, { disableWarnings: true });
     console.log(`🧪 Connected to Firebase Auth emulator at ${emulatorUrl}`);
     console.log(`📋 Emulator data will be persisted locally for testing`);

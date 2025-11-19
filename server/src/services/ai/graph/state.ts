@@ -24,6 +24,13 @@ export interface AgentState {
    */
   storyContext: string;
 
+  /**
+   * Kontekst iz Planner moda - označava tip polja za koje se generira sadržaj
+   * Primjeri: "planner_logline", "planner_character", "planner_location"
+   * Ako je prisutan, koristi se za odabir specifičnog System Prompta
+   */
+  plannerContext?: string;
+
   // === FAZA RAG-A I USMJERAVANJA ===
   
   /**
@@ -95,11 +102,13 @@ export type AgentStateUpdate = Partial<AgentState>;
  */
 export function createInitialState(
   userInput: string, 
-  storyContext: string
+  storyContext: string,
+  plannerContext?: string
 ): AgentState {
   return {
     userInput,
     storyContext,
+    plannerContext,
     draftCount: 0,
     messages: []
   };

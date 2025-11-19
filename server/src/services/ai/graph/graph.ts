@@ -32,6 +32,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
     storyContext: {
       value: null,
     },
+    plannerContext: {
+      value: null,
+    },
     // RAG faza
     transformedQuery: {
       value: null,
@@ -157,18 +160,21 @@ export async function compileStoryArchitectGraph() {
  * Funkcija za pokretanje grafa s korisničkim inputom
  * @param userInput - Originalni korisnički upit
  * @param storyContext - Kontekst priče iz baze podataka
+ * @param plannerContext - Opcijski kontekst iz Planner moda (npr. "planner_logline")
  */
 export async function runStoryArchitectGraph(
   userInput: string, 
-  storyContext: string
+  storyContext: string,
+  plannerContext?: string
 ): Promise<AgentState> {
   
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext);
+  const initialState = createInitialState(userInput, storyContext, plannerContext);
   
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,
     storyContext: initialState.storyContext.substring(0, 100) + "...", // Skraćeni prikaz
+    plannerContext: initialState.plannerContext || "none",
     draftCount: initialState.draftCount
   });
 

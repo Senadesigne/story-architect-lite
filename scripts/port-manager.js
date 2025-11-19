@@ -51,12 +51,25 @@ export function createFirebaseConfig(availablePorts) {
   const tempFirebaseConfig = {
     emulators: {
       auth: {
+        host: "localhost",
         port: availablePorts.firebaseAuth
       },
       ui: {
         enabled: true,
+        host: "localhost",
         port: availablePorts.firebaseUI
+      },
+      hub: {
+        host: "localhost",
+        port: 4401
+      },
+      logging: {
+        host: "localhost",
+        port: 4501
       }
+    },
+    projects: {
+      default: "demo-project"
     }
   };
   

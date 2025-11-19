@@ -24,6 +24,19 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 * **Zadatak 3.13 (BUDUĆNOST - Faza C+):** 🟡 Implementirati "Stop" gumb (AbortController) u Studio UI-ju. Korisnik mora moći prekinuti AI generiranje koje je u tijeku i dobiti natrag svoj originalni prompt.
 * **Zadatak 3.14 (BUDUĆNOST - Faza C+):** 🟢 Implementirati odabir LLM-a (Model Switcher) u Studio UI-ju. Nadograditi 'ai.service.ts' da podržava više providera (Anthropic, Google, OpenAI, Groq) i dopustiti korisniku odabir modela.
 
+### Epic: AI Integracija - Faza D (Planner Assistant) 🟡
+* **Zadatak 5.1 (Backend):** Priprema AI Servisa.
+    - Implementirati `PlannerPromptService` za kontekstualne promptove.
+    - Ažurirati `routeTaskNode` da prepoznaje nove kontekste (character, location, logline).
+* **Zadatak 5.2 (Frontend UI):** Modal Infrastruktura.
+    - Kreirati `AIAssistantModal` komponentu (Floating Card).
+    - Kreirati `MagicIcon` komponentu (Trigger).
+* **Zadatak 5.3 (State):** State Management.
+    - Implementirati Zustand store za upravljanje stanjem modala (otvoren/zatvoren, kontekst, callbackovi).
+* **Zadatak 5.4 (Integracija):** Povezivanje formi.
+    - Integrirati MagicIcon i Modal u sve faze planera (Phase 1-6).
+    - Osigurati "Apply" (zamjena) i "Append" (dodavanje) funkcionalnost.
+
 ### Epic: Tehnički Dug - Faza 3 (Post-AI) 🟢
 * **Zadatak 4.1:** Popraviti preostala 4 neuspjela AI integration testa iz `server/src/__tests__/ai.integration.test.ts`. Testovi su pali zbog problema s mockingom.
 * **Zadatak 4.2:** Popraviti tipizaciju u `api.ts`. Trenutno `getValidatedBody(c)` vraća `{}` umjesto pravilno tipiziranog objekta, što uzrokuje TypeScript greške u testovima.

@@ -244,7 +244,14 @@ export async function generateSceneSynopsis(projectId: string, sceneId: string) 
   return response.json();
 }
 
-export async function chat(projectId: string, data: { userInput: string }) {
+export async function chat(
+  projectId: string, 
+  data: { 
+    userInput: string;
+    plannerContext?: string;
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  }
+) {
   const response = await fetchWithAuth(`/api/projects/${projectId}/chat`, {
     method: 'POST',
     headers: {

@@ -2,6 +2,7 @@ import type { AgentState, AgentStateUpdate } from './state';
 import { getRelevantContext } from '../ai.retriever';
 import { createDefaultAIProvider } from '../../ai.service';
 import type { AIGenerationOptions } from '../../ai.service';
+import { getPlannerSystemPrompt } from '../planner.prompts';
 
 /**
  * RAG Čvorovi (Nodes) za LangGraph Story Architect sustav
@@ -439,8 +440,23 @@ export async function generateDraftNode(state: AgentState): Promise<AgentStateUp
       timeout: 30000    // 30 sekundi za kompleksno generiranje
     };
 
-    // Sistemski prompt za kreativno pisanje
-    const systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča i scenarija.
+    // Odabir System Prompta na temelju plannerContext-a
+    let systemPrompt: string;
+    
+    if (state.plannerContext) {
+      // Koristi planner-specifičan prompt
+      console.log("[GENERATE_DRAFT] Using planner context:", state.plannerContext);
+      systemPrompt = getPlannerSystemPrompt(state.plannerContext);
+      
+      // Dodaj kontekst priče na kraj planner prompta ako postoji
+      if (state.ragContext) {
+        systemPrompt += `\n\nKONTEKST PRIČE:\n${state.ragContext}\n\nKORISNIČKI ZAHTJEV:\n${state.userInput}`;
+      } else {
+        systemPrompt += `\n\nKORISNIČKI ZAHTJEV:\n${state.userInput}`;
+      }
+    } else {
+      // Koristi standardni "Story Writer" prompt
+      systemPrompt = `Ti si AI Pisac, ekspert za kreativno pisanje priča i scenarija.
 
 Tvoja uloga je generirati kreativni sadržaj na temelju korisničkog zahtjeva, ali ISKLJUČIVO koristeći elemente iz dostupnog konteksta priče.
 
@@ -511,6 +527,7 @@ NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
 - "Nadam se da će..."
 
 Generiraj SAMO čisti tekstualni odgovor.`;
+    }
 
     console.log("[GENERATE_DRAFT] Calling AI provider for draft generation");
     

@@ -287,8 +287,9 @@ export function ProjectPage() {
           </Routes>
         </div>
       ) : (
-        <div className="container mx-auto p-6">
-          <div className="space-y-6">
+        <div className="h-full overflow-y-auto">
+          <div className="container mx-auto p-6">
+            <div className="space-y-6 pb-40">
             {/* Header section */}
             <div>
               <h1 className="text-3xl font-bold">{project.title}</h1>
@@ -372,6 +373,7 @@ export function ProjectPage() {
                 } 
               />
             </Routes>
+            </div>
           </div>
         </div>
       )}
