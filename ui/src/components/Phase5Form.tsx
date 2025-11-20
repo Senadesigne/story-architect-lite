@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Plus, Edit, Trash2, Sparkles } from 'lucide-react';
 import { api } from '@/lib/serverComm';
 import { Project, Scene } from '@/lib/types';
+import { MagicIcon } from '@/components/planner/MagicIcon';
+import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface Phase5FormProps {
   project: Project;
@@ -30,6 +33,49 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     order: 0
   });
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Planner AI Store
+  const {
+    isOpen,
+    closeModal,
+    openModal,
+    context,
+    targetField,
+    messages,
+    isLoading: isAILoading,
+    lastResponse,
+  } = usePlannerAIStore();
+
+  // Handler za otvaranje modala za Sinopsis
+  const handleSynopsisMagicClick = () => {
+    openModal('planner_synopsis', 'synopsis', project.id);
+  };
+
+  // Handler za otvaranje modala za Outline Notes
+  const handleOutlineMagicClick = () => {
+    openModal('planner_outline', 'outline_notes', project.id);
+  };
+
+  // Handler za Keep All akciju (zamjenjuje sadržaj polja)
+  const handleKeepAll = (value: string | object) => {
+    if (!targetField) return;
+    // Za tekstualna polja, očekujemo string
+    if (typeof value === 'string') {
+      onFieldChange(targetField as 'synopsis' | 'outline_notes', value);
+    }
+  };
+
+  // Dobivanje trenutne vrijednosti polja za modal
+  const getCurrentFieldValue = (): string => {
+    if (!targetField) return '';
+    return formData[targetField as keyof typeof formData] || '';
+  };
+
+  // Dobivanje prikaznog imena konteksta
+  const getContextDisplayName = (): string => {
+    if (!context) return '';
+    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
+  };
 
   // Dohvaćanje scena
   const fetchScenes = useCallback(async () => {
@@ -134,10 +180,16 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
         <CardContent className="space-y-6">
           {/* Sinopsis */}
           <div className="space-y-2">
-            <Label htmlFor="synopsis" className="flex items-center">
-              Sinopsis
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="synopsis">Sinopsis</Label>
+                <MagicIcon
+                  onClick={handleSynopsisMagicClick}
+                  tooltip="AI Asistent za Sinopsis"
+                />
+              </div>
               {renderSaveIndicator('synopsis')}
-            </Label>
+            </div>
             <Textarea
               id="synopsis"
               placeholder="Napišite kratki sinopsis vaše priče..."
@@ -149,10 +201,16 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
 
           {/* Bilješke o strukturi */}
           <div className="space-y-2">
-            <Label htmlFor="outline_notes" className="flex items-center">
-              Izrada Okvira Radnje (Bilješke)
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="outline_notes">Izrada Okvira Radnje (Bilješke)</Label>
+                <MagicIcon
+                  onClick={handleOutlineMagicClick}
+                  tooltip="AI Asistent za Okvir Radnje"
+                />
+              </div>
               {renderSaveIndicator('outline_notes')}
-            </Label>
+            </div>
             <Textarea
               id="outline_notes"
               placeholder="Bilješke o strukturi (npr. Struktura tri čina, Metoda pahuljice)..."
@@ -294,6 +352,18 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Assistant Modal */}
+      <AIAssistantModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        context={getContextDisplayName()}
+        initialValue={getCurrentFieldValue()}
+        onKeepAll={handleKeepAll}
+        messages={messages}
+        isLoading={isAILoading}
+        lastResponse={lastResponse || undefined}
+      />
     </div>
   );
 }

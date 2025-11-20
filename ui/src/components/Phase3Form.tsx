@@ -34,6 +34,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     closeModal,
     openModal,
     context,
+    targetField,
     messages,
     isLoading,
     lastResponse,
@@ -112,37 +113,60 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     openModal('planner_location', 'location', project.id);
   };
 
-  // Handler za Keep All akciju (parsira JSON i kreira novu lokaciju)
+  // Handler za otvaranje AI modala za Definiranje Pravila
+  const handleRulesMagicClick = () => {
+    openModal('planner_rules', 'rules_definition', project.id);
+  };
+
+  // Handler za otvaranje AI modala za Kultura i Povijest
+  const handleCultureMagicClick = () => {
+    openModal('planner_culture', 'culture_and_history', project.id);
+  };
+
+  // Handler za Keep All akciju
   const handleKeepAll = async (value: string | object) => {
-    // Provjeri je li objekt (JSON parsiran) ili string
-    if (typeof value === 'object' && value !== null) {
-      // JSON objekt - parsiranje uspješno
-      const locationData = value as { name?: string; description?: string; sensoryDetails?: string };
-      
-      if (!locationData.name) {
-        console.error('Location data missing name field');
-        return;
-      }
+    // Provjeri kontekst - ako je lokacija, parsiraj JSON i kreiraj novu lokaciju
+    const normalizedContext = context?.toLowerCase() || '';
+    const isLocationContext = normalizedContext.includes('location') || normalizedContext.includes('lokacij');
+    
+    if (isLocationContext) {
+      // JSON objekt za lokaciju
+      if (typeof value === 'object' && value !== null) {
+        const locationData = value as { name?: string; description?: string; sensoryDetails?: string };
+        
+        if (!locationData.name) {
+          console.error('Location data missing name field');
+          return;
+        }
 
-      try {
-        // Kombiniraj description i sensoryDetails u jedan description string
-        const combinedDescription = [
-          locationData.description,
-          locationData.sensoryDetails
-        ].filter(Boolean).join('\n\n');
+        try {
+          // Kombiniraj description i sensoryDetails u jedan description string
+          const combinedDescription = [
+            locationData.description,
+            locationData.sensoryDetails
+          ].filter(Boolean).join('\n\n');
 
-        const newLocation = await api.createLocation(project.id, {
-          name: locationData.name.trim(),
-          description: combinedDescription.trim() || undefined
-        });
-        setLocations(prev => [...prev, newLocation]);
-      } catch (error) {
-        console.error('Error creating location from AI:', error);
+          const newLocation = await api.createLocation(project.id, {
+            name: locationData.name.trim(),
+            description: combinedDescription.trim() || undefined
+          });
+          setLocations(prev => [...prev, newLocation]);
+        } catch (error) {
+          console.error('Error creating location from AI:', error);
+        }
       }
     } else {
-      // String - fallback (ne bi se trebalo dogoditi za lokacije, ali za svaki slučaj)
-      console.warn('Received string instead of object for location');
+      // Tekstualna polja (rules_definition ili culture_and_history)
+      if (typeof value === 'string' && targetField) {
+        onFieldChange(targetField, value);
+      }
     }
+  };
+
+  // Dobivanje trenutne vrijednosti polja za modal
+  const getCurrentFieldValue = (): string => {
+    if (!targetField) return '';
+    return formData[targetField as keyof typeof formData] || '';
   };
 
   // Dobivanje prikaznog imena konteksta
@@ -160,10 +184,16 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
         <CardContent className="space-y-6">
           {/* Definiranje Pravila */}
           <div className="space-y-2">
-            <Label htmlFor="rules_definition" className="flex items-center">
-              Definiranje Pravila
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="rules_definition">Definiranje Pravila</Label>
+                <MagicIcon
+                  onClick={handleRulesMagicClick}
+                  tooltip="AI Asistent za Definiranje Pravila"
+                />
+              </div>
               {renderSaveIndicator('rules_definition')}
-            </Label>
+            </div>
             <Textarea
               id="rules_definition"
               placeholder="Opišite pravila vašeg svijeta (fizika, magija, tehnologija, zakoni prirode...)..."
@@ -175,10 +205,16 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
 
           {/* Kultura, Društvo i Povijest */}
           <div className="space-y-2">
-            <Label htmlFor="culture_and_history" className="flex items-center">
-              Kultura, Društvo i Povijest
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="culture_and_history">Kultura, Društvo i Povijest</Label>
+                <MagicIcon
+                  onClick={handleCultureMagicClick}
+                  tooltip="AI Asistent za Kulturu i Povijest"
+                />
+              </div>
               {renderSaveIndicator('culture_and_history')}
-            </Label>
+            </div>
             <Textarea
               id="culture_and_history"
               placeholder="Opišite kulturu, društvene odnose, običaje, religiju i povijest vašeg svijeta..."
@@ -301,7 +337,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
         isOpen={isOpen}
         onClose={closeModal}
         context={getContextDisplayName()}
-        initialValue=""
+        initialValue={getCurrentFieldValue()}
         onKeepAll={handleKeepAll}
         messages={messages}
         isLoading={isLoading}
