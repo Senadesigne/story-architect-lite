@@ -42,9 +42,9 @@ interface AIAssistantModalProps {
   initialValue: string;
   
   /**
-   * Handler za Keep All akciju (zamjena vrijednosti s generiranim tekstom)
+   * Handler za Keep All akciju (zamjena vrijednosti s generiranim tekstom ili objektom)
    */
-  onKeepAll: (value: string) => void;
+  onKeepAll: (value: string | object) => void;
   
   /**
    * Povijest poruka u razgovoru (opcionalno)
@@ -101,7 +101,37 @@ export function AIAssistantModal({
 
   const handleKeepAll = () => {
     if (!hasGeneratedText) return;
-    onKeepAll(generatedText);
+    
+    // Provjeri je li kontekst za karakter ili lokaciju (za JSON parsiranje)
+    const normalizedContext = context?.toLowerCase() || '';
+    const isCharacterContext = normalizedContext.includes('character') || normalizedContext.includes('lik');
+    const isLocationContext = normalizedContext.includes('location') || normalizedContext.includes('lokacij');
+    
+    if (isCharacterContext || isLocationContext) {
+      try {
+        // 1. Očisti markdown (```json ... ```) ako ga AI pošalje
+        let jsonString = generatedText.trim();
+        jsonString = jsonString.replace(/^```json\s*/i, ''); // Ukloni početni ```json
+        jsonString = jsonString.replace(/^```\s*/i, ''); // Ukloni početni ``` ako nije json
+        jsonString = jsonString.replace(/\s*```\s*$/i, ''); // Ukloni završni ```
+        jsonString = jsonString.trim();
+        
+        // 2. Parsiraj JSON
+        const data = JSON.parse(jsonString);
+        
+        // 3. Pošalji objekt roditelju (koji očekuje any/objekt, ne string)
+        onKeepAll(data);
+      } catch (e) {
+        console.error("Failed to parse JSON", e);
+        // Fallback: Ako parsiranje ne uspije, pošalji originalni tekst
+        // Korisnik će vidjeti grešku ili može ručno kopirati
+        onKeepAll(generatedText);
+      }
+    } else {
+      // Standardno ponašanje za tekst (Logline, Tema...)
+      onKeepAll(generatedText);
+    }
+    
     onClose();
   };
 

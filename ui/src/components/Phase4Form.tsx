@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { MagicIcon } from '@/components/planner/MagicIcon';
+import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface CharacterFormData {
   name: string;
@@ -41,6 +44,17 @@ export function Phase4Form() {
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [formData, setFormData] = useState<CharacterFormData>(initialFormData);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Planner AI Store
+  const {
+    isOpen,
+    closeModal,
+    openModal,
+    context,
+    messages,
+    isLoading: isAILoading,
+    lastResponse,
+  } = usePlannerAIStore();
 
   // Dohvaćanje likova
   const fetchCharacters = useCallback(async () => {
@@ -127,6 +141,51 @@ export function Phase4Form() {
     }
   };
 
+  // Handler za otvaranje AI modala za generiranje lika
+  const handleCharacterMagicClick = () => {
+    if (!projectId) return;
+    openModal('planner_character', 'character', projectId);
+  };
+
+  // Handler za Keep All akciju (parsira JSON i kreira novog lika)
+  const handleKeepAll = async (value: string | object) => {
+    if (!projectId) return;
+
+    // Provjeri je li objekt (JSON parsiran) ili string
+    if (typeof value === 'object' && value !== null) {
+      // JSON objekt - parsiranje uspješno
+      const characterData = value as { name?: string; role?: string; motivation?: string; description?: string };
+      
+      if (!characterData.name) {
+        console.error('Character data missing name field');
+        return;
+      }
+
+      try {
+        // Kreiraj novog lika s podacima iz JSON-a
+        const newCharacter = await api.createCharacter(projectId, {
+          name: characterData.name.trim(),
+          role: characterData.role?.trim() || undefined,
+          motivation: characterData.motivation?.trim() || undefined,
+          backstory: characterData.description?.trim() || undefined, // description ide u backstory
+        });
+        await fetchCharacters(); // Osvježi listu
+      } catch (error: unknown) {
+        console.error('Error creating character from AI:', error);
+        setError('Greška pri kreiranju lika iz AI odgovora');
+      }
+    } else {
+      // String - fallback (ne bi se trebalo dogoditi za likove, ali za svaki slučaj)
+      console.warn('Received string instead of object for character');
+    }
+  };
+
+  // Dobivanje prikaznog imena konteksta
+  const getContextDisplayName = (): string => {
+    if (!context) return 'Lik';
+    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 text-center">
@@ -152,7 +211,12 @@ export function Phase4Form() {
           )}
 
           {/* Gumb za dodavanje novog lika */}
-          <div className="mb-6">
+          <div className="mb-6 flex items-center gap-2">
+            <MagicIcon
+              onClick={handleCharacterMagicClick}
+              tooltip="AI Asistent za Generiranje Lika"
+              disabled={!projectId}
+            />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={handleAddCharacter} className="w-full sm:w-auto">
@@ -358,6 +422,20 @@ export function Phase4Form() {
           )}
         </CardContent>
       </Card>
+
+      {/* AI Assistant Modal */}
+      {projectId && (
+        <AIAssistantModal
+          isOpen={isOpen}
+          onClose={closeModal}
+          context={getContextDisplayName()}
+          initialValue=""
+          onKeepAll={handleKeepAll}
+          messages={messages}
+          isLoading={isAILoading}
+          lastResponse={lastResponse || undefined}
+        />
+      )}
     </div>
   );
 }

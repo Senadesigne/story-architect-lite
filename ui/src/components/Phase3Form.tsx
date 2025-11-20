@@ -7,6 +7,9 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/serverComm';
 import { Location } from '@/lib/types';
+import { MagicIcon } from '@/components/planner/MagicIcon';
+import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface Phase3FormProps {
   project: { id: string };
@@ -24,6 +27,17 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
   const [showAddForm, setShowAddForm] = useState(false);
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationDescription, setNewLocationDescription] = useState('');
+
+  // Planner AI Store
+  const {
+    isOpen,
+    closeModal,
+    openModal,
+    context,
+    messages,
+    isLoading,
+    lastResponse,
+  } = usePlannerAIStore();
 
   // Dohvaćanje lokacija
   useEffect(() => {
@@ -93,6 +107,50 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     }
   };
 
+  // Handler za otvaranje AI modala za generiranje lokacije
+  const handleLocationMagicClick = () => {
+    openModal('planner_location', 'location', project.id);
+  };
+
+  // Handler za Keep All akciju (parsira JSON i kreira novu lokaciju)
+  const handleKeepAll = async (value: string | object) => {
+    // Provjeri je li objekt (JSON parsiran) ili string
+    if (typeof value === 'object' && value !== null) {
+      // JSON objekt - parsiranje uspješno
+      const locationData = value as { name?: string; description?: string; sensoryDetails?: string };
+      
+      if (!locationData.name) {
+        console.error('Location data missing name field');
+        return;
+      }
+
+      try {
+        // Kombiniraj description i sensoryDetails u jedan description string
+        const combinedDescription = [
+          locationData.description,
+          locationData.sensoryDetails
+        ].filter(Boolean).join('\n\n');
+
+        const newLocation = await api.createLocation(project.id, {
+          name: locationData.name.trim(),
+          description: combinedDescription.trim() || undefined
+        });
+        setLocations(prev => [...prev, newLocation]);
+      } catch (error) {
+        console.error('Error creating location from AI:', error);
+      }
+    } else {
+      // String - fallback (ne bi se trebalo dogoditi za lokacije, ali za svaki slučaj)
+      console.warn('Received string instead of object for location');
+    }
+  };
+
+  // Dobivanje prikaznog imena konteksta
+  const getContextDisplayName = (): string => {
+    if (!context) return 'Lokacija';
+    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -134,14 +192,20 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label className="text-base font-medium">Geografija i Lokacije</Label>
-              <Button
-                onClick={() => setShowAddForm(true)}
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Dodaj Lokaciju
-              </Button>
+              <div className="flex items-center gap-2">
+                <MagicIcon
+                  onClick={handleLocationMagicClick}
+                  tooltip="AI Asistent za Generiranje Lokacije"
+                />
+                <Button
+                  onClick={() => setShowAddForm(true)}
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Dodaj Lokaciju
+                </Button>
+              </div>
             </div>
 
             {/* Forma za dodavanje nove lokacije */}
@@ -231,6 +295,18 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Assistant Modal */}
+      <AIAssistantModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        context={getContextDisplayName()}
+        initialValue=""
+        onKeepAll={handleKeepAll}
+        messages={messages}
+        isLoading={isLoading}
+        lastResponse={lastResponse || undefined}
+      />
     </div>
   );
 }
