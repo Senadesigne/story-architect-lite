@@ -2,7 +2,7 @@
 
 ## Status Deploymenta
 
-- [ ] **Faza 1: Priprema Koda i Git (Branching)**
+- [x] **Faza 1: Priprema Koda i Git (Branching)**
 - [ ] **Faza 2: Baza Podataka (Neon Setup & Migracija)**
 - [ ] **Faza 3: Backend Deployment (Render)**
 - [ ] **Faza 4: Frontend Deployment (Vercel)**
