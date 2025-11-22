@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import app from './api';
 import { getEnv, getDatabaseUrl } from './lib/env';
+import { initializeFirebaseAdmin } from './lib/firebase-admin';
 
 // Parse CLI arguments
 const parseCliArgs = () => {
@@ -32,6 +33,13 @@ const { port } = parseCliArgs();
 
 const startServer = async () => {
   console.log(`🚀 Starting backend server on port ${port}`);
+  
+  // Initialize Firebase Admin SDK (handles FIREBASE_PRIVATE_KEY transformation)
+  try {
+    initializeFirebaseAdmin();
+  } catch (error) {
+    console.error('⚠️  Firebase Admin SDK initialization failed, continuing without it:', error);
+  }
   
   const dbUrl = getDatabaseUrl();
   if (dbUrl) {
