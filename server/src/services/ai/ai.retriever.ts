@@ -98,7 +98,8 @@ async function checkTableExists(tableName: string): Promise<boolean> {
     const db = await getDatabase();
     const result = await db.execute(sql`SELECT to_regclass('public.${sql.raw(tableName)}')`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (result.rows[0] as any)?.to_regclass !== null;
+    const rows = 'rows' in result ? result.rows : (result as any).rows || [];
+    return (rows[0] as any)?.to_regclass !== null;
   } catch (error) {
     console.error(`Error checking if table ${tableName} exists:`, error);
     return false;

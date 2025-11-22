@@ -3,8 +3,14 @@ import { drizzle as createDrizzlePostgres } from 'drizzle-orm/node-postgres';
 import { neon } from '@neondatabase/serverless';
 import { Pool } from 'pg';
 import * as schema from '../schema/schema';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 
-type DatabaseConnection = ReturnType<typeof drizzle> | ReturnType<typeof createDrizzlePostgres>;
+export type DatabaseConnection = 
+  | NeonHttpDatabase<typeof schema>
+  | PostgresJsDatabase<typeof schema>
+  | NodePgDatabase<typeof schema>;
 
 let cachedConnection: DatabaseConnection | null = null;
 let cachedConnectionString: string | null = null;

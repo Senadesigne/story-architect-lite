@@ -51,7 +51,7 @@ export class AnthropicProvider implements AIProvider {
           clearTimeout(timeoutId);
           
           // Provjeri je li greška AbortError (timeout)
-          if (error.name === 'AbortError') {
+          if (error instanceof Error && error.name === 'AbortError') {
             throw new AITimeoutError(this.getProviderName(), timeoutMs);
           }
           
@@ -111,7 +111,7 @@ export class AnthropicProvider implements AIProvider {
         clearTimeout(timeoutId);
         
         // Provjeri je li greška AbortError (timeout)
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           throw new AITimeoutError(this.getProviderName(), timeoutMs);
         }
         

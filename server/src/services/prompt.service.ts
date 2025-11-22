@@ -31,12 +31,9 @@ You are a professional screenwriting assistant. Your task is to generate a conci
 * **Location:** ${location?.name || 'N/A'}
 
 **Scene Data to Summarize:**
-* **Scene Title/Number:** ${scene.title || 'Untitled'}
-* **Scene Goal:** ${scene.goal || 'Not specified'}
-* **Emotional Value (Start):** ${scene.emotionalValueStart || 'N/A'}
-* **Emotional Value (End):** ${scene.emotionalValueEnd || 'N/A'}
-* **Scene Content/Notes:**
-    ${scene.content || 'No content provided.'}
+* **Scene Title:** ${scene.title || 'Untitled'}
+* **Scene Summary:** ${scene.summary || 'Not specified'}
+* **Scene Order:** ${scene.order || 'N/A'}
 
 **Your Task:**
 Based *only* on the data provided above, write a 1-2 sentence synopsis for this scene.

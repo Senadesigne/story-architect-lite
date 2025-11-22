@@ -49,9 +49,10 @@ export interface AgentState {
    * Odluka AI Mentora o vrsti zadatka koji treba izvršiti
    * - simple_retrieval: Jednostavan odgovor iz postojećeg konteksta
    * - creative_generation: Kreativno pisanje koje zahtijeva Cloud LLM
+   * - text_modification: Modifikacija postojećeg teksta (Prepravi, Skrati, Proširi, Promijeni ton)
    * - cannot_answer: Upit nije povezan s pričom ili nema dovoljno konteksta
    */
-  routingDecision?: "simple_retrieval" | "creative_generation" | "cannot_answer";
+  routingDecision?: "simple_retrieval" | "creative_generation" | "text_modification" | "cannot_answer";
 
   // === FAZA REFLEKSIJE (REFLECTION) - ITERATIVNA PETLJA ===
   

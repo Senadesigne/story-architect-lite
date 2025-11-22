@@ -2,6 +2,7 @@
 // Zadatak 3.3.1 - Kreiran prema tehničkom planu
 
 import { getDatabase } from '../lib/db';
+import type { DatabaseConnection } from '../lib/db';
 import * as tables from '../schema/schema';
 import { and, eq } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
@@ -42,7 +43,7 @@ export class ContextBuilder {
    */
   static async buildSceneContext(
     sceneId: string,
-    db: ReturnType<typeof getDatabase> extends Promise<infer T> ? T : never,
+    db: DatabaseConnection,
     projectId: string,
   ): Promise<SceneContext> {
     
@@ -77,7 +78,7 @@ export class ContextBuilder {
    */
   static async buildProjectContext(
     projectId: string, 
-    db: ReturnType<typeof getDatabase> extends Promise<infer T> ? T : never
+    db: DatabaseConnection
   ): Promise<ProjectContext> {
     
     const projectData = await db.query.projects.findFirst({
@@ -107,7 +108,7 @@ export class ContextBuilder {
   static async buildCharacterContext(
     characterId: string, 
     projectId: string, 
-    db: ReturnType<typeof getDatabase> extends Promise<infer T> ? T : never
+    db: DatabaseConnection
   ): Promise<CharacterContext> {
     // TODO: Implementirati u sljedećem koraku
     throw new Error('Not implemented yet');

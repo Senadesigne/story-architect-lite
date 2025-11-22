@@ -27,24 +27,24 @@ const graphConfig: StateGraphArgs<AgentState> = {
   channels: {
     // Ulazni podaci
     userInput: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     storyContext: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     plannerContext: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // RAG faza
     transformedQuery: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     ragContext: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Routing
     routingDecision: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Reflection petlja
     draftCount: {
@@ -52,14 +52,14 @@ const graphConfig: StateGraphArgs<AgentState> = {
       default: () => 0,
     },
     draft: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     critique: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Izlaz
     finalOutput: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Messages za buduću upotrebu
     messages: {
@@ -99,45 +99,45 @@ export function createStoryArchitectGraph() {
   // - Nakon critique_draft: provjera draftCount i stop zastavice za petlju
 
   // ✅ POSTAVLJANJE ULAZNE TOČKE:
-  graph.setEntryPoint("transform_query");
+  graph.setEntryPoint("transform_query" as any);
 
   // ✅ LINEARNI EDGE-OVI (Zadatak 3.8 i 3.9):
-  graph.addEdge("transform_query", "retrieve_context");
-  graph.addEdge("retrieve_context", "route_task"); // Povezuje RAG fazu s usmjeravanjem
-  graph.addEdge("handle_simple_retrieval", END); // Završava tijek za jednostavne upite
+  graph.addEdge("transform_query" as any, "retrieve_context" as any);
+  graph.addEdge("retrieve_context" as any, "route_task" as any); // Povezuje RAG fazu s usmjeravanjem
+  graph.addEdge("handle_simple_retrieval" as any, END); // Završava tijek za jednostavne upite
 
   // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
-  graph.addEdge("generate_draft", "critique_draft"); // Generirani nacrt ide na kritiku
-  graph.addEdge("refine_draft", "critique_draft"); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
+  graph.addEdge("generate_draft" as any, "critique_draft" as any); // Generirani nacrt ide na kritiku
+  graph.addEdge("refine_draft" as any, "critique_draft" as any); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
   
   // ✅ TEXT MODIFICATION EDGE:
-  graph.addEdge("modify_text", END); // Modificirani tekst ide direktno na završetak
+  graph.addEdge("modify_text" as any, END); // Modificirani tekst ide direktno na završetak
   
   // ✅ FINALIZACIJA EDGE:
-  graph.addEdge("final_output", END);
+  graph.addEdge("final_output" as any, END);
 
   // ✅ UVJETNI EDGE-OVI (Zadatak 3.9):
   // Usmjeravanje nakon route_task čvora na temelju routingDecision
   graph.addConditionalEdges(
-    "route_task",
+    "route_task" as any,
     routingCondition, // koristi postojeću funkciju
     {
       "handle_simple_retrieval": "handle_simple_retrieval",
       "generate_draft": "generate_draft", // ✅ Sada vodi na generate_draft čvor
       "modify_text": "modify_text", // ✅ Nova ruta za modifikaciju teksta
       [END]: END
-    }
+    } as any
   );
 
   // ✅ UVJETNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
   // Usmjeravanje nakon critique_draft čvora na temelju draftCount i critique.stop
   graph.addConditionalEdges(
-    "critique_draft",
+    "critique_draft" as any,
     reflectionCondition, // koristi postojeću funkciju na liniji 189
     {
       "refine_draft": "refine_draft", // nastavi petlju
       "final_output": "final_output" // završi petlju kroz finalizaciju
-    }
+    } as any
   );
 
   return graph;
@@ -181,7 +181,7 @@ export async function runStoryArchitectGraph(
   try {
     // Kompajliraj i pokreni graf
     const compiledGraph = await compileStoryArchitectGraph();
-    const result = await compiledGraph.invoke(initialState);
+    const result = await compiledGraph.invoke(initialState) as AgentState;
     
     console.log("✅ Graph execution completed successfully");
     return result;

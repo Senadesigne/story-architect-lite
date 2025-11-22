@@ -17,21 +17,21 @@ const graphConfig: StateGraphArgs<AgentState> = {
   channels: {
     // Ulazni podaci
     userInput: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     storyContext: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // RAG faza
     transformedQuery: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     ragContext: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Routing
     routingDecision: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Reflection petlja
     draftCount: {
@@ -39,14 +39,14 @@ const graphConfig: StateGraphArgs<AgentState> = {
       default: () => 0,
     },
     draft: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     critique: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Izlaz
     finalOutput: {
-      value: null,
+      value: (x, y) => y ?? x,
     },
     // Messages za buduću upotrebu
     messages: {
@@ -77,15 +77,15 @@ workflow.addNode("finalize_output", async (state: AgentState) => {
 });
 
 // 3. Postavi ulaznu točku
-workflow.setEntryPoint("transform_query");
+workflow.setEntryPoint("transform_query" as any);
 
 // 4. Dodaj osnovne rubove (edges)
-workflow.addEdge("transform_query", "retrieve_context");
-workflow.addEdge("retrieve_context", "route_task");
+workflow.addEdge("transform_query" as any, "retrieve_context" as any);
+workflow.addEdge("retrieve_context" as any, "route_task" as any);
 
 // 5. Dodaj uvjetne rubove za routing
 workflow.addConditionalEdges(
-  "route_task",
+  "route_task" as any,
   // Funkcija koja odlučuje koji čvor slijedi
   (state: AgentState) => {
     const decision = state.routingDecision;
@@ -105,21 +105,21 @@ workflow.addConditionalEdges(
     handle_simple_retrieval: "handle_simple_retrieval",
     generate_draft: "generate_draft",
     [END]: END,
-  }
+  } as any
 );
 
 // 6. Povežemo handle_simple_retrieval s krajem
-workflow.addEdge("handle_simple_retrieval", END);
+workflow.addEdge("handle_simple_retrieval" as any, END);
 
 // 7. Dodaj rubove za Reflection petlju
-workflow.addEdge("generate_draft", "critique_draft");
-workflow.addEdge("refine_draft", "critique_draft");
+workflow.addEdge("generate_draft" as any, "critique_draft" as any);
+workflow.addEdge("refine_draft" as any, "critique_draft" as any);
 
 // 8. Dodaj uvjetne rubove za critique - srce Reflection petlje
 const MAX_RETRIES = 3;
 
 workflow.addConditionalEdges(
-  "critique_draft",
+  "critique_draft" as any,
   // Funkcija koja odlučuje nastavlja li se petlja
   (state: AgentState) => {
     try {
@@ -144,11 +144,11 @@ workflow.addConditionalEdges(
   {
     refine_draft: "refine_draft",
     finalize_output: "finalize_output",
-  }
+  } as any
 );
 
 // 9. Poveži finalizaciju s krajem
-workflow.addEdge("finalize_output", END);
+workflow.addEdge("finalize_output" as any, END);
 
 // 10. Kompajliraj graf
 export const appGraph = workflow.compile();

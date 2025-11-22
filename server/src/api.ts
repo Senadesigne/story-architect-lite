@@ -30,6 +30,19 @@ import {
   GenerateSceneSynopsisBodySchema,
   ChatRequestBodySchema
 } from './schemas/validation';
+import type {
+  UpdateUserBody,
+  CreateProjectBody,
+  UpdateProjectBody,
+  CreateLocationBody,
+  UpdateLocationBody,
+  CreateCharacterBody,
+  UpdateCharacterBody,
+  CreateSceneBody,
+  UpdateSceneBody,
+  GenerateSceneSynopsisBody,
+  ChatRequestBody
+} from './schemas/validation';
 import { createDefaultAIProvider } from './services/ai.service';
 import { ContextBuilder } from './services/context.builder';
 import { PromptService } from './services/prompt.service';
@@ -80,10 +93,11 @@ app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
       response: aiResponse,
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('AI /test endpoint error:', error);
     // Ovdje još ne koristimo globalni error handler, ali bismo trebali
-    return c.json({ error: error.message || 'Internal server error' }, 500);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    return c.json({ error: errorMessage }, 500);
   }
 });
 
@@ -221,7 +235,7 @@ app.get('/api/user', (c) => {
 // Update user profile
 app.put('/api/user', validateBody(UpdateUserBodySchema), async (c) => {
   const user = c.get('user');
-  const { displayName, avatarUrl } = getValidatedBody(c);
+  const { displayName, avatarUrl } = getValidatedBody<UpdateUserBody>(c);
   
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
@@ -276,7 +290,7 @@ app.get('/api/projects', async (c) => {
 // Projects endpoint - Nova ruta za kreiranje novog projekta
 app.post('/api/projects', validateBody(CreateProjectBodySchema), async (c) => {
   const user = c.get('user');
-  const { name } = getValidatedBody(c);
+  const { name } = getValidatedBody<CreateProjectBody>(c);
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
   
@@ -331,7 +345,7 @@ app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody(c);
+  const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody<UpdateProjectBody>(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -431,7 +445,7 @@ app.post('/api/projects/:projectId/locations', validateBody(CreateLocationBodySc
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { name, description } = getValidatedBody(c);
+  const { name, description } = getValidatedBody<CreateLocationBody>(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -462,7 +476,7 @@ app.put('/api/locations/:locationId', validateBody(UpdateLocationBodySchema), as
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { name, description } = getValidatedBody(c);
+  const { name, description } = getValidatedBody<UpdateLocationBody>(c);
   
   await requireResourceOwnership(db, locations, locationId, user.id);
   
@@ -540,7 +554,7 @@ app.post('/api/projects/:projectId/characters', validateBody(CreateCharacterBody
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody(c);
+  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody<CreateCharacterBody>(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -577,7 +591,7 @@ app.put('/api/characters/:characterId', validateBody(UpdateCharacterBodySchema),
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody(c);
+  const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody<UpdateCharacterBody>(c);
   
   await requireResourceOwnership(db, characters, characterId, user.id);
   
@@ -662,7 +676,7 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId } = getValidatedBody(c);
+  const { title, summary, order, locationId } = getValidatedBody<CreateSceneBody>(c);
   
   await requireProjectOwnership(db, projectId, user.id);
   
@@ -695,7 +709,7 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
   const db = await getDatabase(databaseUrl);
   
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId } = getValidatedBody(c);
+  const { title, summary, order, locationId } = getValidatedBody<UpdateSceneBody>(c);
   
   await requireResourceOwnership(db, scenes, sceneId, user.id);
   
@@ -750,7 +764,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { sceneId } = getValidatedBody(c);
+    const { sceneId } = getValidatedBody<GenerateSceneSynopsisBody>(c);
     
     requireValidUUID(projectId, 'project ID');
     requireValidUUID(sceneId, 'scene ID');
@@ -795,7 +809,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { userInput, plannerContext, messages } = getValidatedBody(c);
+    const { userInput, plannerContext, messages } = getValidatedBody<ChatRequestBody>(c);
     
     requireValidUUID(projectId, 'project ID');
     

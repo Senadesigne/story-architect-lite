@@ -57,11 +57,16 @@ console.log(`📊 DATABASE_URL: ${connectionString.replace(/password@/, '***@')}
 // --- Kraj .env logike ---
 
 async function checkMigrationState() {
+  // TypeScript type guard - connectionString je garantovano string nakon provjere gore
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is not defined');
+  }
+  
   let client;
   let db;
   
   try {
-    client = postgres(connectionString);
+    client = postgres(connectionString, { max: 1 });
     db = drizzle(client);
 
     console.log('🔧 Connecting to database to check migration state...');
