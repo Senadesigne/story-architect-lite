@@ -16,9 +16,13 @@ export function initializeFirebaseAdmin(): void {
   const clientEmail = getEnv('FIREBASE_CLIENT_EMAIL');
   const rawPrivateKey = getEnv('FIREBASE_PRIVATE_KEY');
 
-  if (!projectId || !clientEmail || !rawPrivateKey) {
-    console.warn('⚠️  Firebase Admin SDK not initialized: Missing environment variables');
-    console.warn('   Required: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+  if (!projectId || !clientEmail) {
+    console.warn('⚠️  Firebase Admin SDK not initialized: Missing FIREBASE_PROJECT_ID or FIREBASE_CLIENT_EMAIL');
+    return;
+  }
+
+  if (!rawPrivateKey || rawPrivateKey.length < 100) {
+    console.error("CRITICAL ERROR: FIREBASE_PRIVATE_KEY is missing. Admin SDK not initialized.");
     return;
   }
 
