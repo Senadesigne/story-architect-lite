@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -36,10 +36,6 @@ interface AIAssistantModalProps {
    */
   context: string;
   
-  /**
-   * Početna vrijednost polja (trenutna vrijednost)
-   */
-  initialValue: string;
   
   /**
    * Handler za Keep All akciju (zamjena vrijednosti s generiranim tekstom ili objektom)
@@ -74,7 +70,6 @@ export function AIAssistantModal({
   isOpen,
   onClose,
   context,
-  initialValue,
   onKeepAll,
   messages = [],
   isLoading = false,

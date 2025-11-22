@@ -62,16 +62,12 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
   };
 
   // Handler za Keep All akciju (zamjenjuje sadržaj polja)
-  const handleKeepAll = (value: string) => {
+  const handleKeepAll = (value: string | object) => {
     if (!targetField) return;
-    onFieldChange(targetField as ProjectField, value);
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    onFieldChange(targetField as ProjectField, stringValue);
   };
 
-  // Dobivanje trenutne vrijednosti polja za modal
-  const getCurrentFieldValue = (): string => {
-    if (!targetField) return '';
-    return formData[targetField as keyof typeof formData] || '';
-  };
 
   // Dobivanje prikaznog imena konteksta
   const getContextDisplayName = (): string => {
@@ -208,7 +204,6 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           isOpen={isOpen}
           onClose={closeModal}
           context={getContextDisplayName()}
-          initialValue={getCurrentFieldValue()}
           onKeepAll={handleKeepAll}
           messages={messages}
           isLoading={isLoading}

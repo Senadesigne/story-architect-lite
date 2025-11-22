@@ -65,11 +65,6 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     }
   };
 
-  // Dobivanje trenutne vrijednosti polja za modal
-  const getCurrentFieldValue = (): string => {
-    if (!targetField) return '';
-    return formData[targetField as keyof typeof formData] || '';
-  };
 
   // Dobivanje prikaznog imena konteksta
   const getContextDisplayName = (): string => {
@@ -358,7 +353,6 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
         isOpen={isOpen}
         onClose={closeModal}
         context={getContextDisplayName()}
-        initialValue={getCurrentFieldValue()}
         onKeepAll={handleKeepAll}
         messages={messages}
         isLoading={isAILoading}

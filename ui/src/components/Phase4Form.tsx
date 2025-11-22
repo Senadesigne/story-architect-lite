@@ -163,7 +163,7 @@ export function Phase4Form() {
 
       try {
         // Kreiraj novog lika s podacima iz JSON-a
-        const newCharacter = await api.createCharacter(projectId, {
+        await api.createCharacter(projectId, {
           name: characterData.name.trim(),
           role: characterData.role?.trim() || undefined,
           motivation: characterData.motivation?.trim() || undefined,
@@ -429,7 +429,6 @@ export function Phase4Form() {
           isOpen={isOpen}
           onClose={closeModal}
           context={getContextDisplayName()}
-          initialValue=""
           onKeepAll={handleKeepAll}
           messages={messages}
           isLoading={isAILoading}

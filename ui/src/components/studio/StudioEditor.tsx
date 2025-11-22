@@ -2,9 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { FloatingMenu } from '@tiptap/extension-floating-menu';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import type { Editor } from '@tiptap/core';
 import { FloatingMenuUI } from './FloatingMenuUI';
-import { useEffect } from 'react';
 import { useStudioStore } from '@/stores/studioStore';
 
 interface StudioEditorProps {
@@ -19,9 +17,6 @@ const extensions = [
     placeholder: 'Započnite pisati svoju priču...',
   }),
   FloatingMenu.configure({
-    tippyOptions: {
-      duration: 100,
-    },
     shouldShow: ({ editor }) => {
       // Pokaži floating menu samo kada je tekst selektiran
       return !editor.state.selection.empty;

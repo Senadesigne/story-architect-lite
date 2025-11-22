@@ -50,10 +50,6 @@ export function Phase6Form({ onFieldChange, renderSaveIndicator, formData }: Pha
     }
   };
 
-  // Dobivanje trenutne vrijednosti polja za modal
-  const getCurrentFieldValue = (): string => {
-    return formData.point_of_view || '';
-  };
 
   // Dobivanje prikaznog imena konteksta
   const getContextDisplayName = (): string => {
@@ -80,7 +76,7 @@ export function Phase6Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                       <span>Odabir Pripovjedača (Point of View - POV)</span>
                       <MagicIcon
                         onClick={(e) => {
-                          e.stopPropagation();
+                          if (e) e.stopPropagation();
                           handlePOVMagicClick();
                         }}
                         tooltip="AI Asistent za Point of View"
@@ -152,7 +148,6 @@ export function Phase6Form({ onFieldChange, renderSaveIndicator, formData }: Pha
           isOpen={isOpen}
           onClose={closeModal}
           context={getContextDisplayName()}
-          initialValue={getCurrentFieldValue()}
           onKeepAll={handleKeepAll}
           messages={messages}
           isLoading={isLoading}

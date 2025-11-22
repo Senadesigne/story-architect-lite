@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { api } from '@/lib/serverComm';
 import { useStudioStore } from '@/stores/studioStore';
 import { Button } from '@/components/ui/button';

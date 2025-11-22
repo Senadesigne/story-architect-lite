@@ -1,4 +1,3 @@
-import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -7,7 +6,7 @@ interface MagicIconProps {
   /**
    * Handler za klik na ikonu
    */
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   
   /**
    * Dodatne CSS klase za pozicioniranje i stiliziranje

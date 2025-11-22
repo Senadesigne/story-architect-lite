@@ -14,7 +14,7 @@ import { clearTokenCache } from '@/lib/serverComm';
 
 export function UserProfileForm() {
   const { user } = useAuth();
-  const { profile, setProfile, updateProfile } = useUserStore();
+  const { setProfile, updateProfile } = useUserStore();
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);

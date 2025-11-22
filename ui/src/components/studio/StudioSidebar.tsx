@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { api } from '@/lib/serverComm';
-import { Scene } from '@/lib/types';
 import { useStudioStore } from '@/stores/studioStore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -142,7 +140,6 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     // Spremi staru scenu i aktivnu scenu za rollback
     const oldScene = scenes.find(scene => scene.id === selectedSceneId);
     const wasActiveScene = activeSceneId === selectedSceneId;
-    const oldActiveSceneId = activeSceneId;
     
     if (!oldScene) return;
     

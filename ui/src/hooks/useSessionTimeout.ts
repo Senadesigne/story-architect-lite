@@ -9,8 +9,8 @@ const WARNING_TIME = 5 * 60 * 1000; // 5 minuta prije isteka
 
 export function useSessionTimeout() {
   const { user } = useAuth();
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const warningRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const warningRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
   useEffect(() => {

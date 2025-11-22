@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Provjeri da li je korisnik stvarno autentificiran s valjanim tokenom
       if (user) {
-        user.getIdToken().then((token) => {
+        user.getIdToken().then(() => {
           console.log('✅ Token uspješno dohvaćen, korisnik je autentificiran');
           setUser(user);
           setLoading(false);
