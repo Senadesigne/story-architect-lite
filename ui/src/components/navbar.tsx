@@ -8,13 +8,13 @@ export function Navbar() {
   const { user } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 flex items-center h-12 px-2 border-b shrink-0 bg-background">
+    <header className="sticky top-0 z-50 flex items-center h-12 px-2 border-b border-border/50 shrink-0 bg-background/80 backdrop-blur-sm">
       <div className="flex items-center">
         <span className="font-semibold ml-3">My App</span>
       </div>
       <div className="flex items-center gap-3 ml-auto">
         {user && (
-          <span className="text-sm">
+          <span className="text-sm text-muted-foreground">
             Welcome, {user.displayName || user.email}
           </span>
         )}

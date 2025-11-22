@@ -86,7 +86,7 @@ export function LoginForm() {
                 disabled={isLoading}
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
@@ -104,7 +104,7 @@ export function LoginForm() {
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full bg-white hover:bg-gray-50 text-gray-900 hover:text-gray-900 dark:bg-white dark:hover:bg-gray-50 dark:text-gray-900 dark:hover:text-gray-900 flex gap-2 items-center justify-center"
+            className="w-full bg-background hover:bg-muted text-foreground hover:text-foreground flex gap-2 items-center justify-center"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
           >

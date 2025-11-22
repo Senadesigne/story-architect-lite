@@ -211,9 +211,9 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
   }
 
   return (
-    <div className="w-64 h-full bg-background border-r border-border flex flex-col overflow-hidden">
+    <div className="w-64 h-full bg-sidebar-background/95 backdrop-blur-sm border-r border-border/50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-muted-foreground">Scene</h3>
           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleCreateScene}>
@@ -227,8 +227,8 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
         <div className="p-2">
           {/* Error Display */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="text-sm text-destructive">{error}</p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -287,12 +287,12 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                 <span className="text-xs text-muted-foreground">
                                   {index + 1}.
                                 </span>
-                                <span className="font-medium text-sm truncate">
+                                <span className="font-medium text-sm truncate font-serif">
                                   {scene.title}
                                 </span>
                               </div>
                               {scene.summary && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 font-serif">
                                   {scene.summary}
                                 </p>
                               )}
@@ -334,7 +334,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                   handleDeleteClick(scene.id);
                                   setOpenDropdownId(null);
                                 }}
-                                className="cursor-pointer text-red-600 focus:text-red-600"
+                                className="cursor-pointer text-destructive focus:text-destructive"
                                 disabled={isOperationLoading}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -427,7 +427,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
               disabled={isOperationLoading}
             >
               {isOperationLoading ? 'Brišem...' : 'Izbriši'}

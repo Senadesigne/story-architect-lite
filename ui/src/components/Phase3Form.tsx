@@ -318,7 +318,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                           onClick={() => handleDeleteLocation(location.id)}
                           size="sm"
                           variant="ghost"
-                          className="text-red-600 hover:text-red-700"
+                          className="text-destructive hover:text-destructive/90"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -46,13 +46,17 @@ export function MagicIcon({
         "inline-flex items-center gap-1.5",
         "px-3 py-1.5",
         "text-xs font-medium",
-        "bg-primary/10 text-primary",
-        "rounded-full",
-        "hover:bg-primary/20",
-        "transition-colors",
+        "bg-gradient-to-br from-primary/25 via-primary/18 to-primary/12",
+        "text-primary",
+        "rounded-md",
+        "border border-primary/30",
+        "hover:from-primary/35 hover:via-primary/28 hover:to-primary/22 hover:border-primary/40",
+        "transition-all duration-300 ease-out",
         "cursor-pointer",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary/10",
+        "shadow-sm shadow-primary/10",
+        "backdrop-blur-[0.5px]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
+        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-primary/25 disabled:hover:via-primary/18 disabled:hover:to-primary/12",
         className
       )}
       aria-label={tooltip}

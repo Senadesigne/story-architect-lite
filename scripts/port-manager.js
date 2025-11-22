@@ -17,7 +17,7 @@ export async function getAvailablePorts() {
   
   // Default ports for other services
   const defaultPorts = {
-    backend: 5500,
+    backend: 8787,
     frontend: 5501,
     firebaseAuth: 5503,
     firebaseUI: 5504

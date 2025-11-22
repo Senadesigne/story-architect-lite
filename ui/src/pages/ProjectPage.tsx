@@ -208,7 +208,7 @@ export function ProjectPage() {
     
     if (status === 'saved') {
       return (
-        <span className={`${baseClasses} text-gray-500`}>
+        <span className={`${baseClasses} text-muted-foreground`}>
           Spremljeno ✓
         </span>
       );
@@ -237,7 +237,7 @@ export function ProjectPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
           <p className="text-muted-foreground">Učitavam projekt...</p>
         </div>
@@ -247,9 +247,9 @@ export function ProjectPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
-          <p className="text-red-500 mb-4">{error}</p>
+          <p className="text-destructive mb-4">{error}</p>
           <Button 
             variant="outline" 
             onClick={fetchProject}
@@ -270,7 +270,7 @@ export function ProjectPage() {
 
   if (!project) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
           <p className="text-muted-foreground">Projekt nije pronađen.</p>
         </div>
@@ -287,12 +287,12 @@ export function ProjectPage() {
           </Routes>
         </div>
       ) : (
-        <div className="h-full overflow-y-auto">
-          <div className="container mx-auto p-6">
+        <div className="h-full overflow-y-auto bg-muted/50">
+          <div className="container mx-auto py-8 px-4 md:px-8 bg-transparent">
             <div className="space-y-6 pb-40">
             {/* Header section */}
-            <div>
-              <h1 className="text-3xl font-bold">{project.title}</h1>
+            <div className="max-w-3xl mx-auto">
+              <h1 className="text-3xl font-bold font-serif">{project.title}</h1>
               <p className="text-muted-foreground mt-2">
                 Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} | 
                 Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
@@ -305,8 +305,9 @@ export function ProjectPage() {
               <Route 
                 path="ideation" 
                 element={
-                  <IdeationForm 
-                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                  <div className="max-w-3xl mx-auto">
+                    <IdeationForm 
+                      onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                     renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                     formData={{
                       logline: formData.logline ?? '',
@@ -316,12 +317,14 @@ export function ProjectPage() {
                       audience: formData.audience ?? ''
                     }}
                   />
+                  </div>
                 } 
               />
               <Route 
                 path="planning" 
                 element={
-                  <Phase2Form 
+                  <div className="max-w-3xl mx-auto">
+                    <Phase2Form 
                     onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                     renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                     formData={{
@@ -329,12 +332,14 @@ export function ProjectPage() {
                       research: formData.research ?? ''
                     }}
                   />
+                  </div>
                 } 
               />
               <Route 
                 path="worldbuilding" 
                 element={
-                  <Phase3Form 
+                  <div className="max-w-3xl mx-auto">
+                    <Phase3Form 
                     project={project} 
                     onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                     renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
@@ -343,13 +348,15 @@ export function ProjectPage() {
                       culture_and_history: formData.culture_and_history ?? ''
                     }}
                   />
+                  </div>
                 } 
               />
-              <Route path="characters" element={<Phase4Form />} />
+              <Route path="characters" element={<div className="max-w-3xl mx-auto"><Phase4Form /></div>} />
               <Route 
                 path="structure" 
                 element={
-                  <Phase5Form 
+                  <div className="max-w-3xl mx-auto">
+                    <Phase5Form 
                     project={project} 
                     onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                     renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
@@ -358,18 +365,21 @@ export function ProjectPage() {
                       outline_notes: formData.outline_notes ?? ''
                     }}
                   />
+                  </div>
                 } 
               />
               <Route 
                 path="finalization" 
                 element={
-                  <Phase6Form 
+                  <div className="max-w-3xl mx-auto">
+                    <Phase6Form 
                     onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                     renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                     formData={{
                       point_of_view: formData.point_of_view ?? ''
                     }}
                   />
+                  </div>
                 } 
               />
             </Routes>

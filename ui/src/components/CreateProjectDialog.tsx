@@ -118,7 +118,7 @@ export function CreateProjectDialog({ open, onOpenChange, onSuccess }: CreatePro
             </div>
             
             {error && (
-              <div className="col-span-4 text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+              <div className="col-span-4 text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
                 {error}
               </div>
             )}

@@ -63,7 +63,7 @@ export function StudioEditor({
       {/* Outer wrapper - scroll container s pozadinom */}
       <div className="flex-1 overflow-y-auto bg-muted/50 py-8 px-4 md:px-8">
         {/* Paper container - centriran "papir" s vizualnim identitetom */}
-        <div className="mx-auto w-full max-w-3xl min-h-[calc(100%-4rem)] bg-background rounded-lg shadow-lg border border-border/50">
+        <div className="mx-auto w-full max-w-3xl min-h-[calc(100%-4rem)] bg-background rounded-lg shadow-card border border-border/50">
           {/* Content area - editor s prose stilovima */}
           <div className="p-12 md:p-16">
             <EditorContent 

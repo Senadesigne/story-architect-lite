@@ -164,8 +164,8 @@ export function UserProfileForm() {
           </form>
 
           {message && (
-            <Alert className={`mt-4 ${message.type === 'error' ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}`}>
-              <AlertDescription className={message.type === 'error' ? 'text-red-800' : 'text-green-800'}>
+            <Alert className={`mt-4 ${message.type === 'error' ? 'border-destructive/20 bg-destructive/10' : 'border-green-200 bg-green-50'}`}>
+              <AlertDescription className={message.type === 'error' ? 'text-destructive' : 'text-green-800'}>
                 {message.text}
               </AlertDescription>
             </Alert>
@@ -173,9 +173,9 @@ export function UserProfileForm() {
         </CardContent>
       </Card>
 
-      <Card className="border-red-200">
+      <Card className="border-destructive/20">
         <CardHeader>
-          <CardTitle className="text-red-600">Opasna zona</CardTitle>
+          <CardTitle className="text-destructive">Opasna zona</CardTitle>
           <CardDescription>
             Brisanje računa je nepovratno i obrisat će sve vaše projekte
           </CardDescription>

@@ -9,11 +9,13 @@ import { Settings } from '@/pages/Settings';
 import { Page1 } from '@/pages/Page1';
 import { Page2 } from '@/pages/Page2';
 import { ProjectPage } from '@/pages/ProjectPage';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 function AppContent() {
   const { user, loading, isReady } = useAuth();
+  const location = useLocation();
+  const isProjectRoute = location.pathname.startsWith('/project');
   
   // Aktiviraj session timeout za prijavljene korisnike
   useSessionTimeout();
@@ -31,7 +33,7 @@ function AppContent() {
 
   return (
     <div className="flex flex-col w-full h-full bg-background">
-      <Navbar />
+      {!isProjectRoute && <Navbar />}
       {!user ? (
         <main className="flex flex-col items-center justify-center flex-1 p-4">
           <LoginForm />

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/run-dev.js",
+    "db": "firebase emulators:start --import=./firebase-data --export-on-exit=./firebase-data --project demo-story-architect-lite",
     "firebase:emulator": "firebase emulators:start --only auth --project demo-project --export-on-exit=./data/firebase-emulator --import=./data/firebase-emulator",
     "emu": "firebase emulators:start --import=./firebase-data --export-on-exit=./firebase-data --project=story-architect-lite-dev",
     "post-setup": "node scripts/post-setup.js",

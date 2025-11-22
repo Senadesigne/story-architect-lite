@@ -203,8 +203,8 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           {error && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertDescription className="text-red-800">
+            <Alert className="border-destructive/20 bg-destructive/10">
+              <AlertDescription className="text-destructive">
                 {error}
               </AlertDescription>
             </Alert>
