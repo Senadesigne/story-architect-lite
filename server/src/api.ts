@@ -274,7 +274,6 @@ app.delete('/api/user', async (c) => {
 // Projects endpoint - Nova ruta za dohvaćanje korisnikovih projekata
 app.get('/api/projects', async (c) => {
   const user = c.get('user');
-  console.log(`[GET /api/projects] Request received for user: ${user?.id}`);
 
   try {
     const databaseUrl = getDatabaseUrl();
@@ -288,17 +287,13 @@ app.get('/api/projects', async (c) => {
       return result;
     });
 
-    console.log(`[GET /api/projects] Successfully fetched ${userProjects?.length || 0} projects`);
-
     // Ensure we always return an array
     return c.json(userProjects || []);
 
   } catch (error) {
-    console.error('[GET /api/projects] CRITICAL ERROR:', error);
+    console.error('[GET /api/projects] Error fetching projects:', error);
 
-    // In case of error, for now we return an empty array to prevent UI crash for new users,
-    // assuming it might be a transient issue or empty state misinterpretation.
-    // Ideally we should differentiate, but this fulfills the request to "not crash".
+    // In case of error, return empty array to prevent UI crash
     return c.json([], 200);
   }
 });

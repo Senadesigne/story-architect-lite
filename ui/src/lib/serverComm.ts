@@ -49,12 +49,8 @@ async function fetchWithAuth(
   const token = await getAuthToken();
   const headers = new Headers(options.headers);
 
-  console.log(`[API] Fetching ${endpoint} | Token present: ${!!token}`);
-
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
-  } else {
-    console.warn(`[API] No token available for ${endpoint}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -63,7 +59,6 @@ async function fetchWithAuth(
   });
 
   if (!response.ok) {
-    console.error(`[API] Request failed: ${response.status} ${response.statusText} for ${endpoint}`);
     throw new APIError(
       response.status,
       `API request failed: ${response.statusText}`

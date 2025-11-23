@@ -14,23 +14,18 @@ declare module 'hono' {
 export const authMiddleware: MiddlewareHandler = async (c, next) => {
   try {
     const authHeader = c.req.header('Authorization');
-    console.log(`[AuthMiddleware] Processing request: ${c.req.method} ${c.req.url}`);
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.warn('[AuthMiddleware] Missing or invalid Authorization header');
       return c.json({ error: 'Unauthorized', message: 'Authorization header is required' }, 401);
     }
 
     const token = authHeader.split('Bearer ')[1];
-    console.log(`[AuthMiddleware] Token received (length: ${token.length}, prefix: ${token.substring(0, 10)}...)`);
 
     const firebaseProjectId = getFirebaseProjectId();
-    console.log(`[AuthMiddleware] Using Firebase Project ID: ${firebaseProjectId}`);
 
     let firebaseUser;
     try {
       firebaseUser = await verifyFirebaseToken(token, firebaseProjectId);
-      console.log(`[AuthMiddleware] Token verified for user: ${firebaseUser.email} (${firebaseUser.id})`);
     } catch (tokenError) {
       console.error('[AuthMiddleware] Token verification failed:', tokenError);
       throw new Error(`Token verification failed: ${tokenError instanceof Error ? tokenError.message : 'Unknown error'}`);
@@ -47,7 +42,6 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 
     // Ako korisnik ne postoji, stvori ga
     if (!user) {
-      console.log(`[AuthMiddleware] User not found in DB, creating: ${firebaseUser.email}`);
       const insertResult = await db.insert(users)
         .values({
           id: firebaseUser.id,
@@ -70,5 +64,5 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     const message = error instanceof Error ? error.message : 'Authentication failed';
     return c.json({ error: 'Unauthorized', message }, 401);
   }
+}
 };
-
