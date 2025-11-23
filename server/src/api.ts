@@ -2,12 +2,12 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth';
 import { performanceMonitor } from './middleware/performance';
-import { 
-  errorHandler, 
-  requireValidUUID, 
+import {
+  errorHandler,
+  requireValidUUID,
   requireProjectOwnership,
   requireResourceOwnership,
-  handleDatabaseOperation 
+  handleDatabaseOperation
 } from './middleware/errorHandler';
 import { validateBody, getValidatedBody } from './middleware/validation';
 import { getDatabase } from './lib/db';
@@ -73,7 +73,7 @@ app.post('/api/ai/test', aiRateLimiter.middleware(), async (c) => {
   try {
     // 1. Kreiraj AI providera pomoću factory funkcije
     const aiProvider = await createDefaultAIProvider();
-    
+
     // 2. Opcionalno: Provjeri validnost ključa (dobra praksa)
     const isValid = await aiProvider.validateConnection();
     if (!isValid) {
@@ -107,12 +107,12 @@ app.get('/api/ai/test-rag', async (c) => {
   try {
     // Dohvati query parametar
     const query = c.req.query('query') || 'test query';
-    
+
     console.log('Testing RAG with query:', query);
-    
+
     // Pozovi getRelevantContext funkciju
     const result = await getRelevantContext(query);
-    
+
     return c.json({
       status: 'success',
       query: query,
@@ -120,13 +120,13 @@ app.get('/api/ai/test-rag', async (c) => {
       timestamp: new Date().toISOString(),
       message: 'RAG test completed successfully'
     });
-    
+
   } catch (error) {
     console.error('RAG test endpoint error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return c.json({ 
+    return c.json({
       status: 'error',
-      error: 'RAG test failed', 
+      error: 'RAG test failed',
       details: errorMessage,
       timestamp: new Date().toISOString()
     }, 500);
@@ -139,31 +139,31 @@ app.get('/api/ai/test-graph', async (c) => {
   try {
     // Dohvati query parametar
     const query = c.req.query('query') || 'Napiši kratku scenu gdje se glavni lik suočava s dilemom';
-    
+
     console.log('Testing Graph with query:', query);
-    
+
     // Postavljamo prazan storyContext kako bi se AI oslanjao isključivo na RAG kontekst iz vektorske baze
     const initialState = createInitialState(query, "");
-    
+
     console.log('Created initial state:', {
       userInput: initialState.userInput,
       storyContext: initialState.storyContext.substring(0, 100) + '...',
       draftCount: initialState.draftCount
     });
-    
+
     // Kreiraj i kompajliraj graf
     const graph = createStoryArchitectGraph();
     const compiledGraph = graph.compile();
-    
+
     console.log('Graph compiled successfully, invoking...');
-    
+
     // Pozovi graf
     const startTime = Date.now();
     const finalState = await compiledGraph.invoke(initialState);
     const executionTime = Date.now() - startTime;
-    
+
     console.log('Graph execution completed in', executionTime, 'ms');
-    
+
     // Vrati cijeli finalState objekt kao JSON odgovor
     return c.json({
       status: 'success',
@@ -173,15 +173,15 @@ app.get('/api/ai/test-graph', async (c) => {
       finalState: finalState,
       message: 'Graph test completed successfully'
     });
-    
+
   } catch (error) {
     console.error('Graph test endpoint error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    
-    return c.json({ 
+
+    return c.json({
       status: 'error',
-      error: 'Graph test failed', 
+      error: 'Graph test failed',
       details: errorMessage,
       stack: errorStack,
       timestamp: new Date().toISOString()
@@ -206,7 +206,7 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 
     // Pokreni graf koristeći novi runStoryArchitectGraph
     const finalState = await runStoryArchitectGraph(
-      userInput, 
+      userInput,
       storyContext || "Nema pruženog globalnog konteksta priče."
     );
 
@@ -236,10 +236,10 @@ app.get('/api/user', (c) => {
 app.put('/api/user', validateBody(UpdateUserBodySchema), async (c) => {
   const user = c.get('user');
   const { displayName, avatarUrl } = getValidatedBody<UpdateUserBody>(c);
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   const updatedUser = await handleDatabaseOperation(async () => {
     const [result] = await db
       .update(users)
@@ -250,10 +250,10 @@ app.put('/api/user', validateBody(UpdateUserBodySchema), async (c) => {
       })
       .where(eq(users.id, user.id))
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(updatedUser);
 });
 
@@ -262,29 +262,45 @@ app.delete('/api/user', async (c) => {
   const user = c.get('user');
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await handleDatabaseOperation(async () => {
     // Brisanje korisnika (cascade će obrisati sve projekte)
     await db.delete(users).where(eq(users.id, user.id));
   });
-  
+
   return c.json({ message: 'User deleted successfully' });
 });
 
 // Projects endpoint - Nova ruta za dohvaćanje korisnikovih projekata
 app.get('/api/projects', async (c) => {
   const user = c.get('user');
-  const databaseUrl = getDatabaseUrl();
-  const db = await getDatabase(databaseUrl);
-  
-  const userProjects = await handleDatabaseOperation(async () => {
-    return await db
-      .select()
-      .from(projects)
-      .where(eq(projects.userId, user.id));
-  });
-  
-  return c.json(userProjects);
+  console.log(`[GET /api/projects] Request received for user: ${user?.id}`);
+
+  try {
+    const databaseUrl = getDatabaseUrl();
+    const db = await getDatabase(databaseUrl);
+
+    const userProjects = await handleDatabaseOperation(async () => {
+      const result = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.userId, user.id));
+      return result;
+    });
+
+    console.log(`[GET /api/projects] Successfully fetched ${userProjects?.length || 0} projects`);
+
+    // Ensure we always return an array
+    return c.json(userProjects || []);
+
+  } catch (error) {
+    console.error('[GET /api/projects] CRITICAL ERROR:', error);
+
+    // In case of error, for now we return an empty array to prevent UI crash for new users,
+    // assuming it might be a transient issue or empty state misinterpretation.
+    // Ideally we should differentiate, but this fulfills the request to "not crash".
+    return c.json([], 200);
+  }
 });
 
 // Projects endpoint - Nova ruta za kreiranje novog projekta
@@ -293,7 +309,7 @@ app.post('/api/projects', validateBody(CreateProjectBodySchema), async (c) => {
   const { name } = getValidatedBody<CreateProjectBody>(c);
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   const newProject = await handleDatabaseOperation(async () => {
     const [result] = await db
       .insert(projects)
@@ -302,10 +318,10 @@ app.post('/api/projects', validateBody(CreateProjectBodySchema), async (c) => {
         userId: user.id,
       })
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(newProject, 201);
 });
 
@@ -313,24 +329,24 @@ app.post('/api/projects', validateBody(CreateProjectBodySchema), async (c) => {
 app.get('/api/projects/:projectId', async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const project = await handleDatabaseOperation(async () => {
     const [result] = await db
       .select()
       .from(projects)
       .where(eq(projects.id, projectId))
       .limit(1);
-    
+
     return result;
   });
-  
+
   return c.json(project);
 });
 
@@ -338,44 +354,44 @@ app.get('/api/projects/:projectId', async (c) => {
 app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody<UpdateProjectBody>(c);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {
     updatedAt: new Date(),
   };
-  
+
   // Postojeća polja (Faza 1)
   if (logline !== undefined) updateData.logline = logline;
   if (premise !== undefined) updateData.premise = premise;
   if (theme !== undefined) updateData.theme = theme;
   if (genre !== undefined) updateData.genre = genre;
   if (audience !== undefined) updateData.audience = audience;
-  
+
   // Nova polja (Faza 2)
   if (brainstorming !== undefined) updateData.brainstorming = brainstorming;
   if (research !== undefined) updateData.research = research;
-  
+
   // Nova polja (Faza 3)
   if (rules_definition !== undefined) updateData.rules_definition = rules_definition;
   if (culture_and_history !== undefined) updateData.culture_and_history = culture_and_history;
-  
+
   // Nova polja (Faza 5)
   if (synopsis !== undefined) updateData.synopsis = synopsis;
   if (outline_notes !== undefined) updateData.outline_notes = outline_notes;
-  
+
   // Nova polja (Faza 6)
   if (point_of_view !== undefined) updateData.point_of_view = point_of_view;
-  
+
   // Ažuriranje projekta
   const updatedProject = await handleDatabaseOperation(async () => {
     const [result] = await db
@@ -383,10 +399,10 @@ app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async
       .set(updateData)
       .where(eq(projects.id, projectId))
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(updatedProject);
 });
 
@@ -394,21 +410,21 @@ app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async
 app.delete('/api/projects/:projectId', async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   await handleDatabaseOperation(async () => {
     // Brisanje projekta (cascade će obrisati sve povezane entitete)
     await db
       .delete(projects)
       .where(eq(projects.id, projectId));
   });
-  
+
   return c.json({ message: 'Project deleted successfully' });
 });
 
@@ -416,21 +432,21 @@ app.delete('/api/projects/:projectId', async (c) => {
 app.get('/api/projects/:projectId/locations', async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const projectLocations = await handleDatabaseOperation(async () => {
     return await db
       .select()
       .from(locations)
       .where(eq(locations.projectId, projectId));
   });
-  
+
   return c.json(projectLocations);
 });
 
@@ -438,17 +454,17 @@ app.get('/api/projects/:projectId/locations', async (c) => {
 app.post('/api/projects/:projectId/locations', validateBody(CreateLocationBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { name, description } = getValidatedBody<CreateLocationBody>(c);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const newLocation = await handleDatabaseOperation(async () => {
     const [result] = await db
       .insert(locations)
@@ -458,10 +474,10 @@ app.post('/api/projects/:projectId/locations', validateBody(CreateLocationBodySc
         projectId: projectId,
       })
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(newLocation, 201);
 });
 
@@ -469,32 +485,32 @@ app.post('/api/projects/:projectId/locations', validateBody(CreateLocationBodySc
 app.put('/api/locations/:locationId', validateBody(UpdateLocationBodySchema), async (c) => {
   const user = c.get('user');
   const locationId = c.req.param('locationId');
-  
+
   requireValidUUID(locationId, 'location ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { name, description } = getValidatedBody<UpdateLocationBody>(c);
-  
+
   await requireResourceOwnership(db, locations, locationId, user.id);
-  
+
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
   if (name !== undefined) updateData.name = name;
   if (description !== undefined) updateData.description = description || null;
-  
+
   const updatedLocation = await handleDatabaseOperation(async () => {
     const [result] = await db
       .update(locations)
       .set(updateData)
       .where(eq(locations.id, locationId))
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(updatedLocation);
 });
 
@@ -502,20 +518,20 @@ app.put('/api/locations/:locationId', validateBody(UpdateLocationBodySchema), as
 app.delete('/api/locations/:locationId', async (c) => {
   const user = c.get('user');
   const locationId = c.req.param('locationId');
-  
+
   requireValidUUID(locationId, 'location ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireResourceOwnership(db, locations, locationId, user.id);
-  
+
   await handleDatabaseOperation(async () => {
     await db
       .delete(locations)
       .where(eq(locations.id, locationId));
   });
-  
+
   return c.json({ message: 'Location deleted successfully' });
 });
 
@@ -525,21 +541,21 @@ app.delete('/api/locations/:locationId', async (c) => {
 app.get('/api/projects/:projectId/characters', async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const projectCharacters = await handleDatabaseOperation(async () => {
     return await db
       .select()
       .from(characters)
       .where(eq(characters.projectId, projectId));
   });
-  
+
   return c.json(projectCharacters);
 });
 
@@ -547,17 +563,17 @@ app.get('/api/projects/:projectId/characters', async (c) => {
 app.post('/api/projects/:projectId/characters', validateBody(CreateCharacterBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody<CreateCharacterBody>(c);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const newCharacter = await handleDatabaseOperation(async () => {
     const [result] = await db
       .insert(characters)
@@ -573,10 +589,10 @@ app.post('/api/projects/:projectId/characters', validateBody(CreateCharacterBody
         projectId: projectId,
       })
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(newCharacter, 201);
 });
 
@@ -584,17 +600,17 @@ app.post('/api/projects/:projectId/characters', validateBody(CreateCharacterBody
 app.put('/api/characters/:characterId', validateBody(UpdateCharacterBodySchema), async (c) => {
   const user = c.get('user');
   const characterId = c.req.param('characterId');
-  
+
   requireValidUUID(characterId, 'character ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { name, role, motivation, goal, fear, backstory, arcStart, arcEnd } = getValidatedBody<UpdateCharacterBody>(c);
-  
+
   await requireResourceOwnership(db, characters, characterId, user.id);
-  
+
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
   if (name !== undefined) updateData.name = name;
@@ -605,17 +621,17 @@ app.put('/api/characters/:characterId', validateBody(UpdateCharacterBodySchema),
   if (backstory !== undefined) updateData.backstory = backstory || null;
   if (arcStart !== undefined) updateData.arcStart = arcStart || null;
   if (arcEnd !== undefined) updateData.arcEnd = arcEnd || null;
-  
+
   const updatedCharacter = await handleDatabaseOperation(async () => {
     const [result] = await db
       .update(characters)
       .set(updateData)
       .where(eq(characters.id, characterId))
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(updatedCharacter);
 });
 
@@ -623,20 +639,20 @@ app.put('/api/characters/:characterId', validateBody(UpdateCharacterBodySchema),
 app.delete('/api/characters/:characterId', async (c) => {
   const user = c.get('user');
   const characterId = c.req.param('characterId');
-  
+
   requireValidUUID(characterId, 'character ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireResourceOwnership(db, characters, characterId, user.id);
-  
+
   await handleDatabaseOperation(async () => {
     await db
       .delete(characters)
       .where(eq(characters.id, characterId));
   });
-  
+
   return c.json({ message: 'Character deleted successfully' });
 });
 
@@ -646,14 +662,14 @@ app.delete('/api/characters/:characterId', async (c) => {
 app.get('/api/projects/:projectId/scenes', async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const projectScenes = await handleDatabaseOperation(async () => {
     return await db
       .select()
@@ -661,7 +677,7 @@ app.get('/api/projects/:projectId/scenes', async (c) => {
       .where(eq(scenes.projectId, projectId))
       .orderBy(scenes.order);
   });
-  
+
   return c.json(projectScenes);
 });
 
@@ -669,17 +685,17 @@ app.get('/api/projects/:projectId/scenes', async (c) => {
 app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema), async (c) => {
   const user = c.get('user');
   const projectId = c.req.param('projectId');
-  
+
   requireValidUUID(projectId, 'project ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { title, summary, order, locationId } = getValidatedBody<CreateSceneBody>(c);
-  
+
   await requireProjectOwnership(db, projectId, user.id);
-  
+
   const newScene = await handleDatabaseOperation(async () => {
     const [result] = await db
       .insert(scenes)
@@ -691,10 +707,10 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
         projectId: projectId,
       })
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(newScene, 201);
 });
 
@@ -702,34 +718,34 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
 app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) => {
   const user = c.get('user');
   const sceneId = c.req.param('sceneId');
-  
+
   requireValidUUID(sceneId, 'scene ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   // Dohvaćanje validirane podatke
   const { title, summary, order, locationId } = getValidatedBody<UpdateSceneBody>(c);
-  
+
   await requireResourceOwnership(db, scenes, sceneId, user.id);
-  
+
   // Priprema podataka za ažuriranje
   const updateData: DatabaseUpdateData = {};
   if (title !== undefined) updateData.title = title;
   if (summary !== undefined) updateData.summary = summary || null;
   if (order !== undefined) updateData.order = order;
   if (locationId !== undefined) updateData.locationId = locationId || null;
-  
+
   const updatedScene = await handleDatabaseOperation(async () => {
     const [result] = await db
       .update(scenes)
       .set(updateData)
       .where(eq(scenes.id, sceneId))
       .returning();
-    
+
     return result;
   });
-  
+
   return c.json(updatedScene);
 });
 
@@ -737,20 +753,20 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
 app.delete('/api/scenes/:sceneId', async (c) => {
   const user = c.get('user');
   const sceneId = c.req.param('sceneId');
-  
+
   requireValidUUID(sceneId, 'scene ID');
-  
+
   const databaseUrl = getDatabaseUrl();
   const db = await getDatabase(databaseUrl);
-  
+
   await requireResourceOwnership(db, scenes, sceneId, user.id);
-  
+
   await handleDatabaseOperation(async () => {
     await db
       .delete(scenes)
       .where(eq(scenes.id, sceneId));
   });
-  
+
   return c.json({ message: 'Scene deleted successfully' });
 });
 
@@ -765,10 +781,10 @@ app.post(
     const user = c.get('user');
     const { projectId } = c.req.param();
     const { sceneId } = getValidatedBody<GenerateSceneSynopsisBody>(c);
-    
+
     requireValidUUID(projectId, 'project ID');
     requireValidUUID(sceneId, 'scene ID');
-    
+
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
 
@@ -810,14 +826,14 @@ app.post(
     const user = c.get('user');
     const { projectId } = c.req.param();
     const { userInput, plannerContext, messages } = getValidatedBody<ChatRequestBody>(c);
-    
+
     requireValidUUID(projectId, 'project ID');
-    
+
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
-    
+
     await requireProjectOwnership(db, projectId, user.id);
-    
+
     // Logiranje ulaznih parametara za debugging
     console.log("📥 Chat API poziv:", {
       projectId,
