@@ -18,22 +18,22 @@ async function getAuthToken(): Promise<string | null> {
   if (tokenCache && Date.now() < tokenCache.expiry) {
     return tokenCache.token;
   }
-  
+
   const auth = getAuth(app);
   const user = auth.currentUser;
   if (!user) {
     tokenCache = null;
     return null;
   }
-  
+
   const token = await user.getIdToken();
-  
+
   // Cachirati token na 5 minuta
   tokenCache = {
     token,
     expiry: Date.now() + 5 * 60 * 1000,
   };
-  
+
   return token;
 }
 
@@ -48,9 +48,13 @@ async function fetchWithAuth(
 ): Promise<Response> {
   const token = await getAuthToken();
   const headers = new Headers(options.headers);
-  
+
+  console.log(`[API] Fetching ${endpoint} | Token present: ${!!token}`);
+
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
+  } else {
+    console.warn(`[API] No token available for ${endpoint}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -59,6 +63,7 @@ async function fetchWithAuth(
   });
 
   if (!response.ok) {
+    console.error(`[API] Request failed: ${response.status} ${response.statusText} for ${endpoint}`);
     throw new APIError(
       response.status,
       `API request failed: ${response.statusText}`
@@ -154,15 +159,15 @@ export async function getCharacters(projectId: string) {
   return response.json();
 }
 
-export async function createCharacter(projectId: string, data: { 
-  name: string; 
-  role?: string; 
-  motivation?: string; 
-  goal?: string; 
-  fear?: string; 
-  backstory?: string; 
-  arcStart?: string; 
-  arcEnd?: string; 
+export async function createCharacter(projectId: string, data: {
+  name: string;
+  role?: string;
+  motivation?: string;
+  goal?: string;
+  fear?: string;
+  backstory?: string;
+  arcStart?: string;
+  arcEnd?: string;
 }) {
   const response = await fetchWithAuth(`/api/projects/${projectId}/characters`, {
     method: 'POST',
@@ -174,15 +179,15 @@ export async function createCharacter(projectId: string, data: {
   return response.json();
 }
 
-export async function updateCharacter(characterId: string, data: { 
-  name?: string; 
-  role?: string; 
-  motivation?: string; 
-  goal?: string; 
-  fear?: string; 
-  backstory?: string; 
-  arcStart?: string; 
-  arcEnd?: string; 
+export async function updateCharacter(characterId: string, data: {
+  name?: string;
+  role?: string;
+  motivation?: string;
+  goal?: string;
+  fear?: string;
+  backstory?: string;
+  arcStart?: string;
+  arcEnd?: string;
 }) {
   const response = await fetchWithAuth(`/api/characters/${characterId}`, {
     method: 'PUT',
@@ -245,8 +250,8 @@ export async function generateSceneSynopsis(projectId: string, sceneId: string) 
 }
 
 export async function chat(
-  projectId: string, 
-  data: { 
+  projectId: string,
+  data: {
     userInput: string;
     plannerContext?: string;
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
