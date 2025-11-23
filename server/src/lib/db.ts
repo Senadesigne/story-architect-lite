@@ -7,7 +7,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
 
-export type DatabaseConnection = 
+export type DatabaseConnection =
   | NeonHttpDatabase<typeof schema>
   | PostgresJsDatabase<typeof schema>
   | NodePgDatabase<typeof schema>;
@@ -32,7 +32,7 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
     if (globalPool) {
       await globalPool.end();
     }
-    
+
     // Kreiraj novi Pool s optimiziranim postavkama
     globalPool = new Pool({
       connectionString,
@@ -40,6 +40,12 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
       idleTimeoutMillis: 30000, // 30 sekundi timeout za idle konekcije
       connectionTimeoutMillis: 2000, // 2 sekunde timeout za nove konekcije
       maxUses: 7500, // Maksimalno korištenje po konekciji prije zatvaranja
+    });
+
+    // CRITICAL: Handle idle client errors to prevent Node process crash
+    globalPool.on('error', (err, client) => {
+      console.error('❌ Unexpected error on idle database client', err);
+      // Don't exit process, just log. The pool will discard the client.
     });
   }
 

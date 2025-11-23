@@ -10,7 +10,7 @@ import { initializeFirebaseAdmin } from './lib/firebase-admin';
 const parseCliArgs = () => {
   const args = process.argv.slice(2);
   const portIndex = args.indexOf('--port');
-  
+
   return {
     port: portIndex !== -1 ? parseInt(args[portIndex + 1]) : parseInt(getEnv('PORT', '8787')!),
   };
@@ -33,14 +33,14 @@ const { port } = parseCliArgs();
 
 const startServer = async () => {
   console.log(`🚀 Starting backend server on port ${port}`);
-  
+
   // Initialize Firebase Admin SDK (handles FIREBASE_PRIVATE_KEY transformation)
   try {
     initializeFirebaseAdmin();
   } catch (error) {
     console.error('⚠️  Firebase Admin SDK initialization failed, continuing without it:', error);
   }
-  
+
   const dbUrl = getDatabaseUrl();
   if (dbUrl) {
     // Mask password for security in logs
@@ -69,4 +69,16 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-startServer(); 
+startServer();
+
+// Global error handlers to prevent crash on unhandled async errors
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Do not exit the process, just log the error
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Optional: graceful shutdown if critical, but for now keep running if possible
+  // shutdown(); 
+}); 
