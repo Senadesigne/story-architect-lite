@@ -65,4 +65,4 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     return c.json({ error: 'Unauthorized', message }, 401);
   }
 }
-};
+

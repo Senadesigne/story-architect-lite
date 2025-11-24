@@ -16,6 +16,21 @@ export function initializeFirebaseAdmin(): void {
   }
 
   const projectId = getEnv('FIREBASE_PROJECT_ID');
+
+  // CHECK FOR EMULATOR MODE FIRST
+  const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  if (emulatorHost) {
+    console.log(`🧪 Detected FIREBASE_AUTH_EMULATOR_HOST=${emulatorHost}. Initializing in Emulator Mode.`);
+
+    // In emulator mode, we don't need real credentials
+    firebase.initializeApp({
+      projectId: projectId || 'demo-project',
+    });
+
+    console.log('✅ Firebase Admin SDK initialized in EMULATOR mode');
+    return;
+  }
+
   const clientEmail = getEnv('FIREBASE_CLIENT_EMAIL');
   const rawPrivateKey = getEnv('FIREBASE_PRIVATE_KEY');
 
@@ -78,7 +93,7 @@ export function initializeFirebaseAdmin(): void {
  */
 export function getFirebaseAdmin(): admin.app.App {
   const firebase = (admin as any).default || admin;
-  
+
   if (firebase.apps.length === 0) {
     initializeFirebaseAdmin();
   }
