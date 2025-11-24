@@ -11,13 +11,13 @@ import { MessagesAnnotation, Annotation } from "@langchain/langgraph";
  */
 export interface AgentState {
   // === ULAZ I GLOBALNI KONTEKST ===
-  
+
   /**
    * Originalni upit korisnika - nepromjenjiv kroz cijeli tijek
    * Primjer: "Napiši scenu gdje se Ana i Marko svađaju oko nasljedstva"
    */
   userInput: string;
-  
+
   /**
    * Statički sažetak cijele priče dohvaćen iz schema.ts
    * Uključuje osnovne informacije o projektu, likovima, lokacijama
@@ -31,20 +31,25 @@ export interface AgentState {
    */
   plannerContext?: string;
 
+  /**
+   * Mod rada: 'planner' (fokus na polja) ili 'brainstorming' (slobodni chat)
+   */
+  mode?: 'planner' | 'brainstorming';
+
   // === FAZA RAG-A I USMJERAVANJA ===
-  
+
   /**
    * Upit rafiniran od strane AI Mentora za optimalno RAG pretraživanje
    * Transformira se iz korisničkog upita u specifične upite za vektorsku bazu
    */
   transformedQuery?: string;
-  
+
   /**
    * Dohvaćeni relevantni dijelovi (chunks) iz vektorske baze
    * Rezultat RAG pretraživanja koji služi kao kontekst za generiranje
    */
   ragContext?: string;
-  
+
   /**
    * Odluka AI Mentora o vrsti zadatka koji treba izvršiti
    * - simple_retrieval: Jednostavan odgovor iz postojećeg konteksta
@@ -55,19 +60,19 @@ export interface AgentState {
   routingDecision?: "simple_retrieval" | "creative_generation" | "text_modification" | "cannot_answer";
 
   // === FAZA REFLEKSIJE (REFLECTION) - ITERATIVNA PETLJA ===
-  
+
   /**
    * Brojač iteracija petlje poboljšanja (za prekid beskonačnih petlji)
    * Maksimalno 3 iteracije prema specifikaciji
    */
   draftCount: number;
-  
+
   /**
    * Trenutni nacrt kreativnog teksta od Pisca (Cloud LLM)
    * Ažurira se kroz iteracije poboljšanja
    */
   draft?: string;
-  
+
   /**
    * Posljednja kritika od AI Mentora u JSON formatu
    * Sadrži: issues[], plan, score (0-100), stop (boolean)
@@ -75,7 +80,7 @@ export interface AgentState {
   critique?: string;
 
   // === IZLAZ ===
-  
+
   /**
    * Konačni odgovor za slanje korisniku
    * Može biti rezultat simple_retrieval ili finalizirani draft
@@ -83,7 +88,7 @@ export interface AgentState {
   finalOutput?: string;
 
   // === MEMORIJA RAZGOVORA ===
-  
+
   /**
    * Povijest razgovora za stateful interakcije
    * Koristi MessagesAnnotation za automatsko dodavanje poruka na listu
@@ -102,14 +107,16 @@ export type AgentStateUpdate = Partial<AgentState>;
  * Helper funkcija za kreiranje početnog stanja
  */
 export function createInitialState(
-  userInput: string, 
+  userInput: string,
   storyContext: string,
-  plannerContext?: string
+  plannerContext?: string,
+  mode?: 'planner' | 'brainstorming'
 ): AgentState {
   return {
     userInput,
     storyContext,
     plannerContext,
+    mode,
     draftCount: 0,
     messages: []
   };

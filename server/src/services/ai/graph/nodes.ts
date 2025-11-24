@@ -29,7 +29,7 @@ export async function retrieveContextNode(state: AgentState): Promise<AgentState
   try {
     // Koristi transformedQuery ako je dostupan, inače fallback na userInput
     const query = state.transformedQuery || state.userInput;
-    
+
     if (!query) {
       console.error("[RETRIEVE_CONTEXT] Error: No query available (neither transformedQuery nor userInput)");
       return {
@@ -46,14 +46,14 @@ export async function retrieveContextNode(state: AgentState): Promise<AgentState
     console.log("[RETRIEVE_CONTEXT] Context preview:", ragContext.substring(0, 200) + "...");
 
     console.log("[RETRIEVE_CONTEXT] Completed successfully");
-    
+
     return {
       ragContext
     };
 
   } catch (error) {
     console.error("[RETRIEVE_CONTEXT] Error during context retrieval:", error);
-    
+
     // Graceful degradation - vraćamo korisnu poruku greške
     return {
       ragContext: `Greška prilikom dohvaćanja konteksta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
@@ -86,7 +86,7 @@ export async function transformQueryNode(state: AgentState): Promise<AgentStateU
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za query transformation (brži, jeftiniji model)
     const options: AIGenerationOptions = {
       temperature: 0.3, // Niža temperatura za konzistentniju transformaciju
@@ -122,9 +122,9 @@ lokacija gdje se odvija svađa
 odnos Ana Marko povijest konflikta`;
 
     console.log("[TRANSFORM_QUERY] Calling AI provider for query transformation");
-    
+
     const transformedQuery = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[TRANSFORM_QUERY] AI response received, length:", transformedQuery.length);
     console.log("[TRANSFORM_QUERY] Transformed query preview:", transformedQuery.substring(0, 200) + "...");
 
@@ -136,10 +136,10 @@ odnos Ana Marko povijest konflikta`;
 
   } catch (error) {
     console.error("[TRANSFORM_QUERY] Error during query transformation:", error);
-    
+
     // Fallback strategija - koristi originalni upit
     console.log("[TRANSFORM_QUERY] Falling back to original user input");
-    
+
     return {
       transformedQuery: state.userInput
     };
@@ -169,9 +169,18 @@ export async function routeTaskNode(state: AgentState): Promise<AgentStateUpdate
       };
     }
 
+    // --- BRAINSTORMING MOD ---
+    // Ako je mod 'brainstorming', preskačemo klasifikaciju i odmah idemo na generiranje
+    if (state.mode === 'brainstorming') {
+      console.log("[ROUTE_TASK] Brainstorming mode detected - routing directly to creative_generation");
+      return {
+        routingDecision: "creative_generation"
+      };
+    }
+
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za routing klasifikaciju (brži, jeftiniji model)
     const options: AIGenerationOptions = {
       temperature: 0.1, // Vrlo niska temperatura za konzistentnu klasifikaciju
@@ -246,9 +255,9 @@ KRITIČNO:
 - Za ostale upite: Ako postoji sumnja, odaberi "simple_retrieval" umjesto "creative_generation"`;
 
     console.log("[ROUTE_TASK] Calling AI provider for task routing");
-    
+
     const aiResponse = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[ROUTE_TASK] AI response received:", aiResponse);
 
     // Normalizacija i validacija odgovora
@@ -279,10 +288,10 @@ KRITIČNO:
 
   } catch (error) {
     console.error("[ROUTE_TASK] Error during task routing:", error);
-    
+
     // Graceful degradation - defaultiraj na cannot_answer
     console.log("[ROUTE_TASK] Falling back to cannot_answer due to error");
-    
+
     return {
       routingDecision: "cannot_answer"
     };
@@ -321,7 +330,7 @@ export async function handleSimpleRetrievalNode(state: AgentState): Promise<Agen
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za simple retrieval (umjerena kreativnost)
     const options: AIGenerationOptions = {
       temperature: 0.4, // Umjerena kreativnost za prirodan odgovor
@@ -378,9 +387,9 @@ NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
 Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[HANDLE_SIMPLE_RETRIEVAL] Calling AI provider for response generation");
-    
+
     const finalOutput = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[HANDLE_SIMPLE_RETRIEVAL] AI response received, length:", finalOutput.length);
     console.log("[HANDLE_SIMPLE_RETRIEVAL] Response preview:", finalOutput.substring(0, 150) + "...");
 
@@ -392,7 +401,7 @@ Generiraj SAMO čisti tekstualni odgovor.`;
 
   } catch (error) {
     console.error("[HANDLE_SIMPLE_RETRIEVAL] Error during response generation:", error);
-    
+
     // Graceful degradation
     return {
       finalOutput: `Greška prilikom generiranja odgovora: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
@@ -423,7 +432,8 @@ export async function generateDraftNode(state: AgentState): Promise<AgentStateUp
       };
     }
 
-    if (!state.ragContext) {
+    // U Brainstorming modu RAG kontekst nije obavezan
+    if (!state.ragContext && state.mode !== 'brainstorming') {
       console.warn("[GENERATE_DRAFT] Warning: No RAG context available");
       return {
         draft: "Greška: Nema dostupnog konteksta priče za generiranje kreativnog sadržaja."
@@ -432,7 +442,7 @@ export async function generateDraftNode(state: AgentState): Promise<AgentStateUp
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za kreativno generiranje (visoka kreativnost)
     const options: AIGenerationOptions = {
       temperature: 0.7, // Visoka kreativnost za pisanje
@@ -442,12 +452,28 @@ export async function generateDraftNode(state: AgentState): Promise<AgentStateUp
 
     // Odabir System Prompta na temelju plannerContext-a
     let systemPrompt: string;
-    
-    if (state.plannerContext) {
+
+    if (state.mode === 'brainstorming') {
+      // --- BRAINSTORMING PROMPT ---
+      console.log("[GENERATE_DRAFT] Using brainstorming prompt");
+      systemPrompt = `Ti si AI Kreativni Partner za brainstorming.
+       
+Tvoja uloga je pomoći korisniku u razvoju ideja, rješavanju blokada i istraživanju mogućnosti za njihovu priču.
+Budi otvoren, kreativan i poticajan. Ne moraš se strogo držati postojećeg konteksta ako korisnik želi istraživati nove ideje.
+
+KORISNIČKI UPIT:
+${state.userInput}
+
+${state.ragContext ? `POSTOJEĆI KONTEKST (kao referenca):\n${state.ragContext}` : ''}
+
+CILJ:
+Ponudi kreativne ideje, alternative ili rješenja na temelju upita. Potiči korisnika na daljnje razmišljanje.`;
+
+    } else if (state.plannerContext) {
       // Koristi planner-specifičan prompt
       console.log("[GENERATE_DRAFT] Using planner context:", state.plannerContext);
       systemPrompt = getPlannerSystemPrompt(state.plannerContext);
-      
+
       // Dodaj kontekst priče na kraj planner prompta ako postoji
       if (state.ragContext) {
         systemPrompt += `\n\nKONTEKST PRIČE:\n${state.ragContext}\n\nKORISNIČKI ZAHTJEV:\n${state.userInput}`;
@@ -530,9 +556,9 @@ Generiraj SAMO čisti tekstualni odgovor.`;
     }
 
     console.log("[GENERATE_DRAFT] Calling AI provider for draft generation");
-    
+
     const draft = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[GENERATE_DRAFT] AI response received, length:", draft.length);
     console.log("[GENERATE_DRAFT] Draft preview:", draft.substring(0, 200) + "...");
 
@@ -544,7 +570,7 @@ Generiraj SAMO čisti tekstualni odgovor.`;
 
   } catch (error) {
     console.error("[GENERATE_DRAFT] Error during draft generation:", error);
-    
+
     // Graceful degradation
     return {
       draft: `Greška prilikom generiranja nacrta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
@@ -588,7 +614,7 @@ export async function critiqueDraftNode(state: AgentState): Promise<AgentStateUp
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za kritiku (niska temperatura za konzistentnost)
     const options: AIGenerationOptions = {
       temperature: 0.2, // Niska temperatura za konzistentnu kritiku
@@ -658,9 +684,9 @@ Provjeri SVAKI element u nacrtu:
 KRITIČNO: Tvoja uloga je biti "čuvar istine" - bolje je odbaciti kreativno dobru priču koja nije činjenično točna nego prihvatiti netočnu priču.`;
 
     console.log("[CRITIQUE_DRAFT] Calling AI provider for critique generation");
-    
+
     const aiResponse = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[CRITIQUE_DRAFT] AI response received:", aiResponse);
 
     // Pokušaj parsirati JSON odgovor
@@ -689,7 +715,7 @@ KRITIČNO: Tvoja uloga je biti "čuvar istine" - bolje je odbaciti kreativno dob
 
   } catch (error) {
     console.error("[CRITIQUE_DRAFT] Error during critique generation:", error);
-    
+
     // Graceful degradation
     const fallbackCritique = JSON.stringify({
       issues: [`Greška prilikom kritike: ${error instanceof Error ? error.message : 'Nepoznata greška'}`],
@@ -738,7 +764,7 @@ export async function refineDraftNode(state: AgentState): Promise<AgentStateUpda
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
+
     // Konfiguracija za poboljšanje (umjerena kreativnost)
     const options: AIGenerationOptions = {
       temperature: 0.6, // Umjerena kreativnost za poboljšanje
@@ -812,9 +838,9 @@ NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
 Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[REFINE_DRAFT] Calling AI provider for draft refinement");
-    
+
     const refinedDraft = await aiProvider.generateText(systemPrompt, options);
-    
+
     console.log("[REFINE_DRAFT] AI response received, length:", refinedDraft.length);
     console.log("[REFINE_DRAFT] Refined draft preview:", refinedDraft.substring(0, 200) + "...");
 
@@ -826,10 +852,10 @@ Generiraj SAMO čisti tekstualni odgovor.`;
 
   } catch (error) {
     console.error("[REFINE_DRAFT] Error during draft refinement:", error);
-    
+
     // Graceful degradation - vrati postojeći draft
     console.log("[REFINE_DRAFT] Falling back to original draft due to error");
-    
+
     return {
       draft: state.draft || `Greška prilikom poboljšanja nacrta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
     };
@@ -837,19 +863,12 @@ Generiraj SAMO čisti tekstualni odgovor.`;
 }
 
 /**
- * Čvor za modificiranje postojećeg teksta
+ * Čvor za modifikaciju postojećeg teksta
  * 
- * Ovaj čvor je dizajniran za jednostavne modifikacije teksta poput:
- * - Prepravljanje
- * - Skraćivanje 
- * - Proširivanje
- * - Promjena tona
- * - Poboljšanje
- * 
- * Ne koristi RAG kontekst i ne prolazi kroz critique/refine petlju.
+ * Koristi Anthropic Haiku model za direktnu modifikaciju teksta bez RAG konteksta
  * 
  * @param state - Trenutno stanje agenta
- * @returns Ažuriranje stanja s finalOutput poljem
+ * @returns Ažuriranje stanja s draft poljem
  */
 export async function modifyTextNode(state: AgentState): Promise<AgentStateUpdate> {
   console.log("[MODIFY_TEXT] Starting with input:", {
@@ -860,60 +879,70 @@ export async function modifyTextNode(state: AgentState): Promise<AgentStateUpdat
     if (!state.userInput) {
       console.error("[MODIFY_TEXT] Error: No userInput available");
       return {
-        finalOutput: "Greška: Nema dostupnog teksta za modifikaciju."
+        draft: "Greška: Nema dostupnog korisničkog upita za modifikaciju teksta."
       };
     }
 
     // Kreiranje AI providera s Anthropic Haiku konfigurацijom
     const aiProvider = await createDefaultAIProvider();
-    
-    // Konfiguracija za modifikaciju teksta (umjerena kreativnost)
+
+    // Konfiguracija za modifikaciju (niska temperatura za preciznost)
     const options: AIGenerationOptions = {
-      temperature: 0.3, // Niska temperatura za konzistentne modifikacije
-      maxTokens: 800,   // Dovoljno za modificirani tekst
-      timeout: 15000    // 15 sekundi timeout
+      temperature: 0.3, // Niska temperatura za preciznu modifikaciju
+      maxTokens: 1000,  // Dovoljno za modificirani tekst
+      timeout: 30000    // 30 sekundi
     };
 
     // Sistemski prompt za modifikaciju teksta
-    const systemPrompt = `Ti si AI Editor, ekspert za modifikaciju i poboljšanje teksta.
+    const systemPrompt = `Ti si AI Urednik, ekspert za stilsku i sadržajnu modifikaciju teksta.
 
-Tvoja uloga je modificirati postojeći tekst prema korisničkom zahtjevu.
+Tvoja uloga je modificirati tekst prema uputama korisnika.
 
-KORISNIČKI ZAHTJEV:
+KORISNIČKI UPIT (sadrži upute i tekst):
 ${state.userInput}
 
-PRAVILA MODIFIKACIJE:
+ZADATAK:
+1. Identificiraj tekst koji treba modificirati (obično je u navodnicima ili nakon dvotočke)
+2. Identificiraj upute za modifikaciju (npr. "skrati", "proširi", "promijeni ton")
+3. Izvrši modifikaciju prema uputama
+4. Zadrži ključno značenje originalnog teksta (osim ako uputa nije da se promijeni značenje)
 
-1. **ZADRŽI ZNAČENJE**: Osnovno značenje i poruka teksta moraju ostati isti
-2. **SLIJEDI INSTRUKCIJU**: Točno izvršiti što korisnik traži (skratiti, proširiti, promijeniti ton, itd.)
-3. **ZADRŽI KONTEKST**: Ne dodavati nove likove, lokacije ili događaje koji nisu u originalnom tekstu
-4. **VRATI SAMO MODIFICIRANI TEKST**: Bez objašnjenja ili komentara
+FORMAT ODGOVORA:
+Vrati SAMO modificirani tekst. Bez uvoda, bez objašnjenja, bez meta-komentara.
 
-PRIMJERI MODIFIKACIJA:
-- Skrati: Zadrži ključne informacije, ukloni suvišne detalje
-- Proširi: Dodaj opise, emocije, atmosferu, ali ne nove događaje
-- Promijeni ton: Prilagodi stil (formalni/neformalni/poetski/dramatični)
-- Prepravi: Poboljšaj jasnoću i čitljivost zadržavajući značenje
+PRIMJER:
+Upit: "Promijeni ton u formalni: Bok, kak si?"
+Odgovor: Poštovani, kako ste?
 
-ODGOVORI SAMO S MODIFICIRANIM TEKSTOM, bez dodatnih objašnjenja.`;
+KRITIČNO PRAVILO ZA ODGOVOR:
+Tvoj odgovor mora sadržavati **ISKLJUČIVO I SAMO** modificirani tekst.
+NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
+- "Evo modificirane verzije..."
+- "Razumijem zahtjev..."
+
+Generiraj SAMO čisti tekstualni odgovor.`;
 
     console.log("[MODIFY_TEXT] Calling AI provider for text modification");
-    
+
     const modifiedText = await aiProvider.generateText(systemPrompt, options);
 
-    console.log("[MODIFY_TEXT] Text successfully modified");
-    console.log("[MODIFY_TEXT] Modified text preview:", modifiedText.substring(0, 100) + "...");
-    
+    console.log("[MODIFY_TEXT] AI response received, length:", modifiedText.length);
+    console.log("[MODIFY_TEXT] Modified text preview:", modifiedText.substring(0, 200) + "...");
+
+    console.log("[MODIFY_TEXT] Completed successfully");
+
     return {
+      draft: modifiedText.trim(),
+      // Postavljamo finalOutput odmah jer modify_text ide direktno na kraj
       finalOutput: modifiedText.trim()
     };
 
   } catch (error) {
     console.error("[MODIFY_TEXT] Error during text modification:", error);
-    
-    // Graceful degradation - vrati korisnu poruku greške
+
+    // Graceful degradation
     return {
-      finalOutput: `Greška prilikom modificiranja teksta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
+      draft: `Greška prilikom modifikacije teksta: ${error instanceof Error ? error.message : 'Nepoznata greška'}`
     };
   }
 }

@@ -2,10 +2,10 @@ import { StateGraph, START, END, StateGraphArgs } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
 import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state";
 import type { AgentState } from "./state";
-import { 
-  retrieveContextNode, 
-  transformQueryNode, 
-  routeTaskNode, 
+import {
+  retrieveContextNode,
+  transformQueryNode,
+  routeTaskNode,
   handleSimpleRetrievalNode,
   generateDraftNode,
   critiqueDraftNode,
@@ -33,6 +33,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
       value: (x, y) => y ?? x,
     },
     plannerContext: {
+      value: (x, y) => y ?? x,
+    },
+    mode: {
       value: (x, y) => y ?? x,
     },
     // RAG faza
@@ -81,15 +84,15 @@ export function createStoryArchitectGraph() {
   graph.addNode("retrieve_context", retrieveContextNode);
   graph.addNode("route_task", routeTaskNode);
   graph.addNode("handle_simple_retrieval", handleSimpleRetrievalNode);
-  
+
   // ✅ REFLECTION ČVOROVI (Zadatak 3.10):
   graph.addNode("generate_draft", generateDraftNode);
   graph.addNode("critique_draft", critiqueDraftNode);
   graph.addNode("refine_draft", refineDraftNode);
-  
+
   // ✅ TEXT MODIFICATION ČVOR:
   graph.addNode("modify_text", modifyTextNode);
-  
+
   // ✅ FINALIZACIJA ČVOR:
   graph.addNode("final_output", finalOutputNode);
 
@@ -109,10 +112,10 @@ export function createStoryArchitectGraph() {
   // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
   graph.addEdge("generate_draft" as any, "critique_draft" as any); // Generirani nacrt ide na kritiku
   graph.addEdge("refine_draft" as any, "critique_draft" as any); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
-  
+
   // ✅ TEXT MODIFICATION EDGE:
   graph.addEdge("modify_text" as any, END); // Modificirani tekst ide direktno na završetak
-  
+
   // ✅ FINALIZACIJA EDGE:
   graph.addEdge("final_output" as any, END);
 
@@ -148,11 +151,11 @@ export function createStoryArchitectGraph() {
  */
 export async function compileStoryArchitectGraph() {
   const graph = createStoryArchitectGraph();
-  
+
   // Kompajliraj graf - sada je spreman za izvršavanje
   const compiledGraph = graph.compile();
   console.log("✅ Story Architect Graph successfully compiled and ready for execution");
-  
+
   return compiledGraph;
 }
 
@@ -163,18 +166,20 @@ export async function compileStoryArchitectGraph() {
  * @param plannerContext - Opcijski kontekst iz Planner moda (npr. "planner_logline")
  */
 export async function runStoryArchitectGraph(
-  userInput: string, 
+  userInput: string,
   storyContext: string,
-  plannerContext?: string
+  plannerContext?: string,
+  mode?: 'planner' | 'brainstorming'
 ): Promise<AgentState> {
-  
+
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext);
-  
+  const initialState = createInitialState(userInput, storyContext, plannerContext, mode);
+
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,
     storyContext: initialState.storyContext.substring(0, 100) + "...", // Skraćeni prikaz
     plannerContext: initialState.plannerContext || "none",
+    mode: initialState.mode || "planner (default)",
     draftCount: initialState.draftCount
   });
 
@@ -182,13 +187,13 @@ export async function runStoryArchitectGraph(
     // Kompajliraj i pokreni graf
     const compiledGraph = await compileStoryArchitectGraph();
     const result = await compiledGraph.invoke(initialState) as AgentState;
-    
+
     console.log("✅ Graph execution completed successfully");
     return result;
-    
+
   } catch (error) {
     console.error("❌ Error during graph execution:", error);
-    
+
     // Graceful degradation - vrati početno stanje s greškom
     return {
       ...initialState,
@@ -203,9 +208,9 @@ export async function runStoryArchitectGraph(
  */
 export function routingCondition(state: AgentState): string {
   const decision = state.routingDecision;
-  
+
   console.log("[ROUTING_CONDITION] Processing decision:", decision);
-  
+
   switch (decision) {
     case "simple_retrieval":
       console.log("[ROUTING_CONDITION] Routing to handle_simple_retrieval");
@@ -235,7 +240,7 @@ const finalOutputNode = (state: AgentState): Partial<AgentState> => {
  */
 export function reflectionCondition(state: AgentState): string {
   console.log(`[REFLECTION_CONDITION] Evaluating state: draftCount=${state.draftCount}, hasCritique=${!!state.critique}`);
-  
+
   // Provjeri je li postignuto maksimalno iteracija
   if (state.draftCount >= MAX_DRAFT_ITERATIONS) {
     console.log(`[REFLECTION_CONDITION] Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, ending reflection loop`);
@@ -247,7 +252,7 @@ export function reflectionCondition(state: AgentState): string {
     try {
       const critiqueData = JSON.parse(state.critique);
       console.log(`[REFLECTION_CONDITION] Parsed critique: score=${critiqueData.score}, stop=${critiqueData.stop}`);
-      
+
       if (critiqueData.stop === true) {
         console.log("[REFLECTION_CONDITION] Critique indicates draft is satisfactory, ending reflection loop");
         return "final_output";

@@ -820,7 +820,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { userInput, plannerContext, messages } = getValidatedBody<ChatRequestBody>(c);
+    const { userInput, plannerContext, messages, mode } = getValidatedBody<ChatRequestBody>(c);
 
     requireValidUUID(projectId, 'project ID');
 
@@ -834,6 +834,7 @@ app.post(
       projectId,
       hasPlannerContext: !!plannerContext,
       plannerContext: plannerContext || "none",
+      mode: mode || "planner (default)",
       hasMessages: !!messages,
       messagesCount: messages?.length || 0,
       userInputLength: userInput.length,
@@ -843,7 +844,7 @@ app.post(
     const finalState = await handleDatabaseOperation(async () => {
       const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
       const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext);
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode);
       return state;
     });
 

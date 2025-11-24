@@ -9,49 +9,40 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { usePlannerAIStore } from '@/stores/plannerAIStore';
-
-/**
- * Tip poruke u chat historiji
- */
-export interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp?: Date;
-}
+import { usePlannerAIStore, ChatMessage } from '@/stores/plannerAIStore';
 
 interface AIAssistantModalProps {
   /**
    * Kontrolira da li je modal otvoren
    */
   isOpen: boolean;
-  
+
   /**
    * Handler za zatvaranje modala
    */
   onClose: () => void;
-  
+
   /**
    * Kontekst polja (npr. "Logline", "Character", "Location")
    */
   context: string;
-  
-  
+
+
   /**
    * Handler za Keep All akciju (zamjena vrijednosti s generiranim tekstom ili objektom)
    */
   onKeepAll: (value: string | object) => void;
-  
+
   /**
    * Povijest poruka u razgovoru (opcionalno)
    */
   messages?: ChatMessage[];
-  
+
   /**
    * Da li se trenutno generira odgovor (loading stanje)
    */
   isLoading?: boolean;
-  
+
   /**
    * Zadnji generirani odgovor (za Keep All)
    */
@@ -96,12 +87,12 @@ export function AIAssistantModal({
 
   const handleKeepAll = () => {
     if (!hasGeneratedText) return;
-    
+
     // Provjeri je li kontekst za karakter ili lokaciju (za JSON parsiranje)
     const normalizedContext = context?.toLowerCase() || '';
     const isCharacterContext = normalizedContext.includes('character') || normalizedContext.includes('lik');
     const isLocationContext = normalizedContext.includes('location') || normalizedContext.includes('lokacij');
-    
+
     if (isCharacterContext || isLocationContext) {
       try {
         // 1. Očisti markdown (```json ... ```) ako ga AI pošalje
@@ -110,10 +101,10 @@ export function AIAssistantModal({
         jsonString = jsonString.replace(/^```\s*/i, ''); // Ukloni početni ``` ako nije json
         jsonString = jsonString.replace(/\s*```\s*$/i, ''); // Ukloni završni ```
         jsonString = jsonString.trim();
-        
+
         // 2. Parsiraj JSON
         const data = JSON.parse(jsonString);
-        
+
         // 3. Pošalji objekt roditelju (koji očekuje any/objekt, ne string)
         onKeepAll(data);
       } catch (e) {
@@ -126,13 +117,13 @@ export function AIAssistantModal({
       // Standardno ponašanje za tekst (Logline, Tema...)
       onKeepAll(generatedText);
     }
-    
+
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className="max-w-3xl h-[85vh] flex flex-col p-0"
         showCloseButton={true}
       >
@@ -175,7 +166,7 @@ export function AIAssistantModal({
                 </div>
               ))
             )}
-            
+
             {/* Loading indikator */}
             {isLoading && (
               <div className="flex justify-start">
@@ -189,58 +180,58 @@ export function AIAssistantModal({
 
         {/* Footer - Sticky (Input + Actions) */}
         <div className="flex-shrink-0 px-6 py-4 space-y-3 border-t bg-background">
-            {/* Input sekcija */}
-            <div className="flex gap-2">
-              <Textarea
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Napišite poruku za AI asistenta... (Enter za slanje, Shift+Enter za novi red)"
-                disabled={isLoading}
-                className={cn(
-                  "min-h-[80px] resize-none",
-                  isLoading ? "disabled:!cursor-wait" : "cursor-text"
-                )}
-                onKeyDown={(e) => {
-                  // Enter (bez Shift) -> Pošalji poruku
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                  // Cmd/Ctrl + Enter -> Također pošalji poruku (zadržano za kompatibilnost)
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                  // Shift + Enter -> Novi red (default ponašanje, ne treba handler)
-                }}
-              />
+          {/* Input sekcija */}
+          <div className="flex gap-2">
+            <Textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Napišite poruku za AI asistenta... (Enter za slanje, Shift+Enter za novi red)"
+              disabled={isLoading}
+              className={cn(
+                "min-h-[80px] resize-none",
+                isLoading ? "disabled:!cursor-wait" : "cursor-text"
+              )}
+              onKeyDown={(e) => {
+                // Enter (bez Shift) -> Pošalji poruku
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+                // Cmd/Ctrl + Enter -> Također pošalji poruku (zadržano za kompatibilnost)
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSend();
+                }
+                // Shift + Enter -> Novi red (default ponašanje, ne treba handler)
+              }}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={isLoading || !inputValue.trim()}
+              size="icon"
+              className="self-end"
+            >
+              {isLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Send className="size-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Keep All gumb */}
+          {hasGeneratedText && (
+            <div className="flex justify-end">
               <Button
-                onClick={handleSend}
-                disabled={isLoading || !inputValue.trim()}
-                size="icon"
-                className="self-end"
+                variant="default"
+                onClick={handleKeepAll}
+                disabled={isLoading}
+                size="sm"
               >
-                {isLoading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Send className="size-4" />
-                )}
+                Keep All
               </Button>
             </div>
-
-            {/* Keep All gumb */}
-            {hasGeneratedText && (
-              <div className="flex justify-end">
-                <Button
-                  variant="default"
-                  onClick={handleKeepAll}
-                  disabled={isLoading}
-                  size="sm"
-                >
-                  Keep All
-                </Button>
-              </div>
-            )}
+          )}
         </div>
       </DialogContent>
     </Dialog>

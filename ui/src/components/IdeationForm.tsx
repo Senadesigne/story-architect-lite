@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { MagicIcon } from '@/components/planner/MagicIcon';
-import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
+import { Sparkles, Check, X } from 'lucide-react';
 
 // Type definition for project fields that can be edited
 type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
@@ -24,17 +25,13 @@ interface IdeationFormProps {
 
 export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: IdeationFormProps) {
   const { projectId } = useParams<{ projectId: string }>();
-  
+
   // Planner AI Store
   const {
-    isOpen,
-    closeModal,
     openModal,
-    context,
     targetField,
-    messages,
-    isLoading,
-    lastResponse,
+    pendingApplication,
+    setPendingApplication,
   } = usePlannerAIStore();
 
   // Handler za otvaranje modala za Logline
@@ -61,19 +58,55 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
     openModal('planner_audience', 'audience', projectId);
   };
 
-  // Handler za Keep All akciju (zamjenjuje sadržaj polja)
-  const handleKeepAll = (value: string | object) => {
-    if (!targetField) return;
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    onFieldChange(targetField as ProjectField, stringValue);
+  // Handler za prihvaćanje AI prijedloga
+  const handleAcceptAI = (field: ProjectField) => {
+    if (pendingApplication) {
+      onFieldChange(field, pendingApplication);
+      setPendingApplication(null);
+    }
   };
 
+  // Handler za odbacivanje AI prijedloga
+  const handleDiscardAI = () => {
+    setPendingApplication(null);
+  };
 
-  // Dobivanje prikaznog imena konteksta
-  const getContextDisplayName = (): string => {
-    if (!context) return '';
-    // Ukloni "planner_" prefix i kapitaliziraj prvo slovo
-    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
+  // Helper za prikaz AI prijedloga
+  const renderAIProposal = (field: ProjectField) => {
+    if (targetField === field && pendingApplication) {
+      return (
+        <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-md animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs font-medium text-primary flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> AI Prijedlog
+            </div>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDiscardAI}
+                className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                title="Odbaci"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleAcceptAI(field)}
+                className="h-6 px-2 text-xs gap-1"
+                title="Prihvati"
+              >
+                <Check className="w-3 h-3" /> Prihvati
+              </Button>
+            </div>
+          </div>
+          <div className="text-sm text-muted-foreground italic bg-background/50 p-2 rounded border border-border/50 max-h-32 overflow-y-auto whitespace-pre-wrap">
+            {pendingApplication}
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -98,38 +131,40 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 {renderSaveIndicator('logline')}
               </div>
             </div>
-          <Textarea
-            id="logline"
-            placeholder="Sažmite svoju priču u jednu uzbudljivu rečenicu..."
-            value={formData.logline}
-            onChange={(e) => onFieldChange('logline' as ProjectField, e.target.value)}
-            className="min-h-[80px]"
-          />
-        </div>
-
-        {/* Tema */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="theme">Tema</Label>
-              <MagicIcon
-                onClick={handleThemeMagicClick}
-                tooltip="AI ko-autor za Temu"
-                disabled={!projectId}
-              />
-            </div>
-            <div className="min-h-[1.5rem] flex items-center">
-              {renderSaveIndicator('theme')}
-            </div>
+            {renderAIProposal('logline')}
+            <Textarea
+              id="logline"
+              placeholder="Sažmite svoju priču u jednu uzbudljivu rečenicu..."
+              value={formData.logline}
+              onChange={(e) => onFieldChange('logline' as ProjectField, e.target.value)}
+              className="min-h-[80px]"
+            />
           </div>
-          <Textarea
-            id="theme"
-            placeholder="Koja je glavna tema vaše priče?"
-            value={formData.theme}
-            onChange={(e) => onFieldChange('theme' as ProjectField, e.target.value)}
-            className="min-h-[80px]"
-          />
-        </div>
+
+          {/* Tema */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="theme">Tema</Label>
+                <MagicIcon
+                  onClick={handleThemeMagicClick}
+                  tooltip="AI ko-autor za Temu"
+                  disabled={!projectId}
+                />
+              </div>
+              <div className="min-h-[1.5rem] flex items-center">
+                {renderSaveIndicator('theme')}
+              </div>
+            </div>
+            {renderAIProposal('theme')}
+            <Textarea
+              id="theme"
+              placeholder="Koja je glavna tema vaše priče?"
+              value={formData.theme}
+              onChange={(e) => onFieldChange('theme' as ProjectField, e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
 
           {/* Premisa */}
           <div className="space-y-2">
@@ -146,70 +181,59 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 {renderSaveIndicator('premise')}
               </div>
             </div>
-          <Textarea
-            id="premise"
-            placeholder="Opišite osnovnu premisu vaše priče..."
-            value={formData.premise}
-            onChange={(e) => onFieldChange('premise' as ProjectField, e.target.value)}
-            className="min-h-[120px]"
-          />
-        </div>
-
-        {/* Žanr */}
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <Label htmlFor="genre">Žanr</Label>
-            <div className="min-h-[1.5rem] flex items-center">
-              {renderSaveIndicator('genre')}
-            </div>
+            {renderAIProposal('premise')}
+            <Textarea
+              id="premise"
+              placeholder="Opišite osnovnu premisu vaše priče..."
+              value={formData.premise}
+              onChange={(e) => onFieldChange('premise' as ProjectField, e.target.value)}
+              className="min-h-[120px]"
+            />
           </div>
-          <Textarea
-            id="genre"
-            placeholder="Koji je žanr vaše priče? (npr. drama, komedija, triler...)"
-            value={formData.genre}
-            onChange={(e) => onFieldChange('genre' as ProjectField, e.target.value)}
-            className="min-h-[80px]"
-          />
-        </div>
 
-        {/* Ciljana Publika */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="audience">Ciljana Publika</Label>
-              <MagicIcon
-                onClick={handleAudienceMagicClick}
-                tooltip="AI ko-autor za Ciljanu Publiku"
-                disabled={!projectId}
-              />
+          {/* Žanr */}
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <Label htmlFor="genre">Žanr</Label>
+              <div className="min-h-[1.5rem] flex items-center">
+                {renderSaveIndicator('genre')}
+              </div>
             </div>
-            <div className="min-h-[1.5rem] flex items-center">
-              {renderSaveIndicator('audience')}
-            </div>
+            <Textarea
+              id="genre"
+              placeholder="Koji je žanr vaše priče? (npr. drama, komedija, triler...)"
+              value={formData.genre}
+              onChange={(e) => onFieldChange('genre' as ProjectField, e.target.value)}
+              className="min-h-[80px]"
+            />
           </div>
-          <Textarea
-            id="audience"
-            placeholder="Tko je vaša ciljna publika? (npr. tinejdžeri, odrasli, obitelji...)"
-            value={formData.audience}
-            onChange={(e) => onFieldChange('audience' as ProjectField, e.target.value)}
-            className="min-h-[80px]"
-          />
+
+          {/* Ciljana Publika */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="audience">Ciljana Publika</Label>
+                <MagicIcon
+                  onClick={handleAudienceMagicClick}
+                  tooltip="AI ko-autor za Ciljanu Publiku"
+                  disabled={!projectId}
+                />
+              </div>
+              <div className="min-h-[1.5rem] flex items-center">
+                {renderSaveIndicator('audience')}
+              </div>
+            </div>
+            {renderAIProposal('audience')}
+            <Textarea
+              id="audience"
+              placeholder="Tko je vaša ciljna publika? (npr. tinejdžeri, odrasli, obitelji...)"
+              value={formData.audience}
+              onChange={(e) => onFieldChange('audience' as ProjectField, e.target.value)}
+              className="min-h-[80px]"
+            />
           </div>
         </CardContent>
       </Card>
-
-      {/* AI Assistant Modal */}
-      {projectId && (
-        <AIAssistantModal
-          isOpen={isOpen}
-          onClose={closeModal}
-          context={getContextDisplayName()}
-          onKeepAll={handleKeepAll}
-          messages={messages}
-          isLoading={isLoading}
-          lastResponse={lastResponse || undefined}
-        />
-      )}
     </>
   );
 }

@@ -249,6 +249,7 @@ export async function chat(
   data: {
     userInput: string;
     plannerContext?: string;
+    mode?: 'planner' | 'brainstorming';
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
   }
 ) {
@@ -304,4 +305,4 @@ export const api = {
   deleteScene,
   generateSceneSynopsis,
   chat,
-}; 
+};

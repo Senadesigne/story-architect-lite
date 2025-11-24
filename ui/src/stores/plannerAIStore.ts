@@ -1,19 +1,26 @@
 import { create } from 'zustand';
 import { api } from '@/lib/serverComm';
-import type { ChatMessage } from '@/components/planner/AIAssistantModal';
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 interface PlannerAIState {
-  // Modal stanje
+  // Modal/Sidebar stanje
   isOpen: boolean;
   context: string | null; // npr. "planner_logline"
   targetField: string | null; // npr. "logline" (ime polja u formi)
   projectId: string | null;
-  
+  mode: 'planner' | 'brainstorming'; // Novi mod rada
+  pendingApplication: string | null; // Sadržaj koji čeka na "Keep All"
+
   // Chat stanje
   messages: ChatMessage[];
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
-  
+
   // Akcije
   openModal: (
     context: string,
@@ -22,6 +29,8 @@ interface PlannerAIState {
     initialPrompt?: string
   ) => void;
   closeModal: () => void;
+  setMode: (mode: 'planner' | 'brainstorming') => void;
+  setPendingApplication: (content: string | null) => void;
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
   reset: () => void;
@@ -38,13 +47,14 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   context: null,
   targetField: null,
   projectId: null,
+  mode: 'planner', // Default mode
+  pendingApplication: null,
   messages: [],
   isLoading: false,
   lastResponse: null,
 
   /**
-   * Otvara modal i resetira poruke
-   * Ako je proslijeđen initialPrompt, odmah ga šalje
+   * Otvara sidebar (bivši modal) i postavlja kontekst
    */
   openModal: (context, targetField, projectId, initialPrompt) => {
     set({
@@ -52,53 +62,58 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       context,
       targetField,
       projectId,
-      messages: [],
+      // Ne resetiramo poruke ako je isti kontekst/projekt da sačuvamo historiju? 
+      // Za sada resetiramo kao i prije, ali to možemo promijeniti za perzistentnost.
+      // messages: [], // TODO: Razmisliti o perzistentnosti
       lastResponse: null,
       isLoading: false,
+      pendingApplication: null,
     });
 
     // Ako postoji initialPrompt, odmah ga pošalji
     if (initialPrompt) {
-      // Koristimo setTimeout da osiguramo da je modal otvoren prije slanja poruke
       setTimeout(() => {
         get().sendMessage(initialPrompt);
       }, 100);
     }
   },
 
-  /**
-   * Zatvara modal i čisti stanje
-   */
   closeModal: () => {
     set({
       isOpen: false,
-      context: null,
-      targetField: null,
-      projectId: null,
-      messages: [],
-      isLoading: false,
-      lastResponse: null,
+      // Ne čistimo ostalo stanje da bi ostalo u sidebaru kad se ponovno otvori?
+      // Za sada čistimo da bude kao modal, ali za sidebar možda želimo sačuvati stanje.
+      // context: null,
+      // targetField: null,
+      // projectId: null,
+      // messages: [],
+      // isLoading: false,
+      // lastResponse: null,
+      pendingApplication: null,
     });
   },
 
-  /**
-   * Šalje poruku backendu i ažurira chat historiju
-   */
+  setMode: (mode) => {
+    set({ mode });
+  },
+
+  setPendingApplication: (content) => {
+    set({ pendingApplication: content });
+  },
+
   sendMessage: async (content: string) => {
     const state = get();
-    
+
     if (!state.projectId || !state.context || state.isLoading) {
       return;
     }
 
-    // Dodaj korisničku poruku u state
     const userMessage: ChatMessage = {
       role: 'user',
       content: content.trim(),
       timestamp: new Date(),
     };
 
-    // Spremi trenutne poruke prije dodavanja nove
     const currentMessages = state.messages;
 
     set((prevState) => ({
@@ -107,17 +122,17 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     }));
 
     try {
-      // Pozovi API s plannerContext i messages (uključujući novu korisničku poruku)
+      // Pozovi API s plannerContext, messages i MODE parametrom
       const finalState = await api.chat(state.projectId, {
         userInput: content.trim(),
         plannerContext: state.context,
+        mode: state.mode, // Šaljemo odabrani mod
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content,
         })),
       });
 
-      // Dodaj assistant poruku u state
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: finalState.finalOutput || 'Greška: Nema odgovora od AI-a.',
@@ -128,12 +143,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         messages: [...prevState.messages, assistantMessage],
         isLoading: false,
         lastResponse: finalState.finalOutput || null,
+        // Automatski postavi pendingApplication ako je uspješan odgovor
+        pendingApplication: finalState.finalOutput || null
       }));
 
     } catch (error) {
       console.error('❌ Greška prilikom slanja poruke:', error);
-      
-      // Dodaj error poruku kao assistant poruku
+
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: `Greška: ${error instanceof Error ? error.message : 'Nepoznata greška prilikom komunikacije s AI asistentom.'}`,
@@ -144,33 +160,30 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         messages: [...prevState.messages, errorMessage],
         isLoading: false,
         lastResponse: null,
+        pendingApplication: null
       }));
     }
   },
 
-  /**
-   * Briše sve poruke iz chat historije
-   */
   clearMessages: () => {
     set({
       messages: [],
       lastResponse: null,
+      pendingApplication: null,
     });
   },
 
-  /**
-   * Potpuno resetira store na početno stanje
-   */
   reset: () => {
     set({
       isOpen: false,
       context: null,
       targetField: null,
       projectId: null,
+      mode: 'planner',
+      pendingApplication: null,
       messages: [],
       isLoading: false,
       lastResponse: null,
     });
   },
 }));
-
