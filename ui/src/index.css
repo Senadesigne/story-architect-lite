@@ -14,96 +14,123 @@
   -moz-osx-font-smoothing: grayscale;
   --radius: 0.75rem;
   
-  /* Warm parchment background */
-  --background: 40 30% 97%;
-  --foreground: 25 25% 15%;
+  /* Light Mode - Polished Warm/Book Theme */
+  /* Background: Cleaner, subtle warm white (less yellow than before) */
+  --background: 35 30% 98%;
+  /* Foreground: Soft charcoal for comfortable reading */
+  --foreground: 240 10% 3.9%;
   
-  /* Cards */
-  --card: 40 25% 98%;
-  --card-foreground: 25 25% 15%;
-  --popover: 40 25% 98%;
-  --popover-foreground: 25 25% 15%;
+  /* Cards: Slightly warmer than pure white to maintain theme */
+  --card: 35 30% 99%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 35 30% 99%;
+  --popover-foreground: 240 10% 3.9%;
   
-  /* Deep forest green */
-  --primary: 155 35% 25%;
-  --primary-foreground: 40 30% 97%;
+  /* Primary: Deep Forest Green - Professional & Calming */
+  --primary: 155 40% 25%;
+  --primary-foreground: 35 30% 98%;
   
-  /* Warm sepia accent */
-  --secondary: 35 40% 88%;
-  --secondary-foreground: 25 35% 20%;
+  /* Secondary: Warm Sepia - Subtle accent */
+  --secondary: 35 25% 90%;
+  --secondary-foreground: 240 5.9% 10%;
   
-  /* Muted */
-  --muted: 35 25% 92%;
-  --muted-foreground: 25 15% 45%;
+  /* Muted: For backgrounds/disabled states */
+  --muted: 35 20% 94%;
+  --muted-foreground: 25 10% 45%;
   
-  /* Accent */
-  --accent: 0 40% 45%;
-  --accent-foreground: 40 30% 97%;
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 40 30% 97%;
+  /* Accent: For hover states and highlights */
+  --accent: 35 25% 90%;
+  --accent-foreground: 240 5.9% 10%;
   
-  /* Borders & Ring */
-  --border: 35 20% 85%;
-  --input: 35 20% 90%;
-  --ring: 155 35% 25%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
   
-  /* Chart colors - prilagođene literary temi */
-  --chart-1: 155 35% 45%;
-  --chart-2: 35 40% 60%;
-  --chart-3: 0 40% 55%;
-  --chart-4: 25 30% 50%;
-  --chart-5: 155 30% 40%;
+  /* Borders: Subtle but visible */
+  --border: 35 15% 85%;
+  --input: 35 15% 85%;
+  --ring: 155 40% 25%;
+  
+  /* Chart colors - Literary palette */
+  --chart-1: 155 40% 35%;
+  --chart-2: 35 50% 50%;
+  --chart-3: 190 40% 40%;
+  --chart-4: 25 40% 50%;
+  --chart-5: 280 30% 45%;
   
   /* Sidebar specific */
-  --sidebar-background: 0 0% 98%;
+  --sidebar-background: 35 25% 97%;
   --sidebar-foreground: 240 5.3% 26.1%;
-  --sidebar-primary: 240 5.9% 10%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-primary: 155 40% 25%;
+  --sidebar-primary-foreground: 35 30% 98%;
+  --sidebar-accent: 35 20% 92%;
   --sidebar-accent-foreground: 240 5.9% 10%;
-  --sidebar-border: 220 13% 91%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-border: 35 15% 88%;
+  --sidebar-ring: 155 40% 25%;
   
   /* Texture & Shadows */
   --paper-texture: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="400" height="400" filter="url(%23noise)" opacity="0.03"/></svg>');
-  --shadow-card: 0 2px 8px -2px hsl(25 25% 15% / 0.08), 0 4px 16px -4px hsl(25 25% 15% / 0.06);
-  --shadow-elevated: 0 4px 12px -2px hsl(25 25% 15% / 0.12), 0 8px 24px -4px hsl(25 25% 15% / 0.08);
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.02);
+  --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.04);
 }
 
 .dark {
-  /* Dark theme - converted to HSL format to match light theme structure */
-  --background: 240 10% 14%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 21%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 21%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 240 5% 92%;
-  --primary-foreground: 240 10% 21%;
-  --secondary: 240 6% 27%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 6% 27%;
-  --muted-foreground: 240 5% 70%;
-  --accent: 240 6% 27%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 70% 50%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 100% / 10%;
-  --input: 0 0% 100% / 15%;
-  --ring: 240 5% 55%;
-  --chart-1: 264 50% 48%;
-  --chart-2: 162 50% 69%;
-  --chart-3: 70 50% 76%;
-  --chart-4: 303 50% 62%;
-  --chart-5: 16 50% 64%;
-  --sidebar-background: 240 10% 21%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-primary: 264 50% 48%;
-  --sidebar-primary-foreground: 0 0% 98%;
-  --sidebar-accent: 240 6% 27%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-border: 0 0% 100% / 10%;
-  --sidebar-ring: 240 5% 55%;
+  /* Dark Mode - Modern Deep Slate/Blue-Black Theme */
+  /* Background: Rich, deep blue-black (not pure black) */
+  --background: 222 47% 11%;
+  /* Foreground: Soft white/grey for high contrast without eye strain */
+  --foreground: 210 40% 98%;
+  
+  /* Cards: Slightly lighter slate for depth */
+  --card: 222 47% 13%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 13%;
+  --popover-foreground: 210 40% 98%;
+  
+  /* Primary: Vibrant Emerald/Teal - Pops against the dark background */
+  --primary: 160 84% 39%;
+  --primary-foreground: 222 47% 11%;
+  
+  /* Secondary: Deep slate accent */
+  --secondary: 217 32% 17%;
+  --secondary-foreground: 210 40% 98%;
+  
+  /* Muted: Subtle slate */
+  --muted: 217 32% 17%;
+  --muted-foreground: 215 20% 65%;
+  
+  /* Accent: For hover states */
+  --accent: 217 32% 17%;
+  --accent-foreground: 210 40% 98%;
+  
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  
+  /* Borders: Very subtle slate */
+  --border: 217 32% 17%;
+  --input: 217 32% 17%;
+  --ring: 160 84% 39%;
+  
+  /* Chart colors - Neon/Vibrant for Dark Mode */
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 30 80% 55%;
+  --chart-4: 280 65% 60%;
+  --chart-5: 340 75% 55%;
+  
+  /* Sidebar specific */
+  --sidebar-background: 222 47% 10%; /* Slightly darker than main bg */
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 160 84% 39%;
+  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-accent: 217 32% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 32% 17%;
+  --sidebar-ring: 160 84% 39%;
+  
+  /* Disable paper texture in dark mode for cleaner look */
+  --paper-texture: none;
+  --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.3), 0 4px 16px -4px rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 4px 12px -2px rgba(0, 0, 0, 0.4), 0 8px 24px -4px rgba(0, 0, 0, 0.3);
 }
 
 /* Chain of Height: Root level - osigurava da aplikacija zauzima točno 100% visine viewporta */
