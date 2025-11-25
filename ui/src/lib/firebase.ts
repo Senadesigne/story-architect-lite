@@ -44,25 +44,16 @@ const initializePersistence = async () => {
 // Inicijaliziraj persistence
 initializePersistence();
 
-// Connect to Firebase Auth emulator in development mode or when explicitly enabled
-const isDevelopment = import.meta.env.DEV;
-const useEmulator = import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' || 
-                   (isDevelopment && (firebaseConfig.projectId === 'demo-project' || firebaseConfig.projectId === 'story-architect-lite-dev'));
+// OPCIJA A: Koristimo isključivo production Firebase Auth
+// Emulator logika je onemogućena za stabilnost login funkcionalnosti
+console.log(`🏭 Using production Firebase Auth (Project: ${firebaseConfig.projectId})`);
+console.log(`🔐 Auth domain: ${firebaseConfig.authDomain}`);
 
-if (useEmulator) {
-  try {
-    const firebaseAuthPort = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_PORT || '9099';
-    // Use 127.0.0.1 instead of localhost for better Windows compatibility
-    // Some Windows configurations have issues with localhost resolving to IPv6
-    const emulatorUrl = `http://127.0.0.1:${firebaseAuthPort}`;
-    connectAuthEmulator(auth, emulatorUrl, { disableWarnings: true });
-    console.log(`🧪 Connected to Firebase Auth emulator at ${emulatorUrl}`);
-    console.log(`📋 Emulator data will be persisted locally for testing`);
-  } catch (error) {
-    // Emulator already connected or not available
-    console.warn('⚠️ Firebase Auth emulator connection failed:', error);
-    console.log('🔄 Falling back to production Firebase Auth');
-  }
-} else {
-  console.log(`🏭 Using production Firebase Auth (Project: ${firebaseConfig.projectId})`);
+// Provjeri da li je Firebase pravilno konfiguriran
+if (!firebaseConfig.projectId || !firebaseConfig.authDomain) {
+  console.error('❌ Firebase konfiguracija nije potpuna!');
+  console.error('Missing:', {
+    projectId: !firebaseConfig.projectId,
+    authDomain: !firebaseConfig.authDomain
+  });
 } 

@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 import { X, Send, Sparkles, BrainCircuit, BookOpen, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router-dom';
 
 export const AIChatSidebar: React.FC = () => {
     const {
@@ -13,13 +14,14 @@ export const AIChatSidebar: React.FC = () => {
         mode,
         setMode,
         pendingApplication,
-        setPendingApplication,
         context
     } = usePlannerAIStore();
 
     const [input, setInput] = React.useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const location = useLocation();
+    const isStudioMode = location.pathname.includes('/studio');
 
     // Auto-scroll na dno poruka
     useEffect(() => {
@@ -50,46 +52,14 @@ export const AIChatSidebar: React.FC = () => {
         }
     };
 
-    const handleApply = () => {
-        // Ova funkcija će biti implementirana u IdeationForm kroz useEffect koji sluša pendingApplication
-        // Ovdje samo možemo zatvoriti sidebar ili dati vizualnu povratnu informaciju
-        // Zapravo, IdeationForm treba znati da je korisnik kliknuo "Keep All"
-        // Ali budući da pendingApplication već sadrži tekst, IdeationForm ga može preuzeti
-        // Možda nam treba dodatna akcija "applyPending" u store-u?
-        // Za sada, pretpostavimo da IdeationForm sluša promjene i mi samo trebamo signalizirati
-        // Ali čekaj, IdeationForm ne zna KADA primijeniti.
-        // Dodat ćemo "applyPending" flag ili akciju u store.
-
-        // Zbog jednostavnosti, ovdje ne radimo ništa osim što zatvaramo sidebar, 
-        // a stvarna logika primjene će biti u IdeationForm koja će čitati pendingApplication
-        // kad se sidebar zatvori ili na neki drugi trigger.
-        // Zapravo, bolje je da imamo callback ili event.
-        // Ali kako je store globalan, IdeationForm može reagirati na gumb ovdje.
-
-        // RJEŠENJE: IdeationForm će imati gumb "Primijeni" koji se pojavljuje kad je pendingApplication != null
-        // ILI, ovaj gumb ovdje poziva funkciju koja je proslijeđena... ali ovo je globalni store.
-
-        // Privremeno rješenje: Korisnik mora ručno kopirati ili ćemo implementirati "apply" logiku kasnije.
-        // Zapravo, u originalnom modalu, "Keep All" je pozivao onKeepAll prop.
-        // Ovdje nemamo propse jer je globalna komponenta.
-
-        // Najbolje rješenje: Dodati `applyCallback` u store koji se registrira kad se otvori modal?
-        // Ne, to nije serijalizabilno.
-
-        // Alternativa: IdeationForm prati `pendingApplication` i nudi UI za primjenu unutar forme,
-        // A sidebar služi samo za chat.
-        // ALI, korisnik očekuje "Keep All" u sidebaru.
-
-        // Za sada, ostavimo "Keep All" gumb koji samo zatvara sidebar, 
-        // a IdeationForm će provjeriti `pendingApplication` pri zatvaranju?
-        // To je riskantno.
-
-        // Idemo s jednostavnim pristupom: Sidebar je za chat. Ako korisnik želi primijeniti,
-        // može kopirati tekst. "Keep All" funkcionalnost ćemo dodati u Fazi 5 (Povezivanje).
-        closeModal();
-    };
-
     if (!isOpen) return null;
+
+    // Helper funkcija za prikazno ime konteksta
+    const getContextDisplayName = (): string => {
+        if (!context) return '';
+        // Ukloni "planner_" prefix i kapitaliziraj prvo slovo
+        return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
+    };
 
     return (
         <div className="fixed inset-y-0 right-0 w-96 bg-background border-l border-border shadow-2xl z-50 flex flex-col transform transition-transform duration-300 ease-in-out">
@@ -97,7 +67,9 @@ export const AIChatSidebar: React.FC = () => {
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/30">
                 <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    <h2 className="font-semibold text-lg">AI Asistent</h2>
+                    <h2 className="font-semibold text-lg">
+                        AI Asistent{context && mode === 'planner' ? ` - ${getContextDisplayName()}` : ''}
+                    </h2>
                 </div>
                 <button
                     onClick={closeModal}
@@ -107,33 +79,35 @@ export const AIChatSidebar: React.FC = () => {
                 </button>
             </div>
 
-            {/* Mode Selector */}
-            <div className="p-2 border-b border-border bg-muted/10 flex gap-1">
-                <button
-                    onClick={() => setMode('planner')}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                        mode === 'planner'
-                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                >
-                    <BookOpen className="w-4 h-4" />
-                    Planner
-                </button>
-                <button
-                    onClick={() => setMode('brainstorming')}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                        mode === 'brainstorming'
-                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                >
-                    <BrainCircuit className="w-4 h-4" />
-                    Brainstorming
-                </button>
-            </div>
+            {/* Mode Selector - sakriveno u Studio modu */}
+            {!isStudioMode && (
+                <div className="p-2 border-b border-border bg-muted/10 flex gap-1">
+                    <button
+                        onClick={() => setMode('planner')}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                            mode === 'planner'
+                                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                    >
+                        <BookOpen className="w-4 h-4" />
+                        Planner
+                    </button>
+                    <button
+                        onClick={() => setMode('brainstorming')}
+                        className={cn(
+                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                            mode === 'brainstorming'
+                                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                    >
+                        <BrainCircuit className="w-4 h-4" />
+                        Brainstorming
+                    </button>
+                </div>
+            )}
 
             {/* Context Info (Planner Mode only) */}
             {mode === 'planner' && context && (

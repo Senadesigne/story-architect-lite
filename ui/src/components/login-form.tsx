@@ -8,10 +8,10 @@ import { RegisterForm } from "./RegisterForm"
 
 const GoogleIcon = () => (
   <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
   </svg>
 )
 
@@ -30,12 +30,50 @@ export function LoginForm() {
     e.preventDefault()
     setError("")
     setIsLoading(true)
-    
+
+    // Debug informacije
+    console.log('🔍 Login pokušaj:', {
+      email: email.trim(),
+      passwordLength: password.length,
+      authConfig: {
+        projectId: auth.app.options.projectId,
+        authDomain: auth.app.options.authDomain
+      }
+    });
+
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-    } catch (err: unknown) {
-      console.error("Firebase Login Error:", err);
-      setError("Neispravan email ili lozinka. Molimo pokušajte ponovo.");
+      // Trimuj email i password da ukloniš prazne znakove
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password.trim())
+      console.log('✅ Login uspješan:', {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: userCredential.user.displayName
+      });
+    } catch (err: any) {
+      console.error("🚨 Firebase Login Error:", err);
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      
+      // Detaljnije error handling
+      switch (err.code) {
+        case 'auth/user-not-found':
+          setError("Korisnik s ovim emailom ne postoji. Molimo registrirajte se.");
+          break;
+        case 'auth/wrong-password':
+          setError("Neispravna lozinka. Molimo pokušajte ponovo.");
+          break;
+        case 'auth/invalid-email':
+          setError("Neispravna email adresa.");
+          break;
+        case 'auth/network-request-failed':
+          setError("Greška mreže. Provjerite internetsku vezu i pokušajte ponovo.");
+          break;
+        case 'auth/too-many-requests':
+          setError("Previše neuspješnih pokušaja. Molimo pričekajte i pokušajte ponovo.");
+          break;
+        default:
+          setError(`Greška pri prijavi: ${err.message || 'Nepoznata greška'}`);
+      }
     } finally {
       setIsLoading(false)
     }
@@ -44,7 +82,7 @@ export function LoginForm() {
   const handleGoogleSignIn = async () => {
     setError("")
     setIsLoading(true)
-    
+
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (err) {
@@ -101,9 +139,9 @@ export function LoginForm() {
               <span className="bg-background px-2 text-muted-foreground">Ili nastavi s</span>
             </div>
           </div>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             className="w-full bg-background hover:bg-muted text-foreground hover:text-foreground flex gap-2 items-center justify-center"
             onClick={handleGoogleSignIn}
             disabled={isLoading}
@@ -114,8 +152,8 @@ export function LoginForm() {
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Nemate račun?{' '}
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className="p-0 h-auto font-normal"
                 onClick={() => setShowRegister(true)}
                 disabled={isLoading}

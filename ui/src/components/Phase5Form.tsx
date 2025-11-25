@@ -9,7 +9,7 @@ import { Plus, Edit, Trash2, Sparkles } from 'lucide-react';
 import { api } from '@/lib/serverComm';
 import { Project, Scene } from '@/lib/types';
 import { MagicIcon } from '@/components/planner/MagicIcon';
-import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface Phase5FormProps {
@@ -36,14 +36,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
 
   // Planner AI Store
   const {
-    isOpen,
-    closeModal,
     openModal,
-    context,
-    targetField,
-    messages,
-    isLoading: isAILoading,
-    lastResponse,
   } = usePlannerAIStore();
 
   // Handler za otvaranje modala za Sinopsis
@@ -56,21 +49,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     openModal('planner_outline', 'outline_notes', project.id);
   };
 
-  // Handler za Keep All akciju (zamjenjuje sadržaj polja)
-  const handleKeepAll = (value: string | object) => {
-    if (!targetField) return;
-    // Za tekstualna polja, očekujemo string
-    if (typeof value === 'string') {
-      onFieldChange(targetField as 'synopsis' | 'outline_notes', value);
-    }
-  };
 
-
-  // Dobivanje prikaznog imena konteksta
-  const getContextDisplayName = (): string => {
-    if (!context) return '';
-    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
-  };
 
   // Dohvaćanje scena
   const fetchScenes = useCallback(async () => {
@@ -117,7 +96,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
       if (editingScene) {
         // Ažuriranje postojeće scene
         const updatedScene = await api.updateScene(editingScene.id, sceneForm);
-        setScenes(prev => prev.map(scene => 
+        setScenes(prev => prev.map(scene =>
           scene.id === editingScene.id ? updatedScene : scene
         ));
       } else {
@@ -134,7 +113,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
   // Brisanje scene
   const handleDeleteScene = async (sceneId: string) => {
     if (!confirm('Jeste li sigurni da želite obrisati ovu scenu?')) return;
-    
+
     try {
       await api.deleteScene(sceneId);
       setScenes(prev => prev.filter(scene => scene.id !== sceneId));
@@ -146,7 +125,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
   // Generiranje sažetka scene pomoću AI-ja
   const handleGenerateSynopsis = async () => {
     if (!editingScene) return;
-    
+
     setIsGenerating(true);
     try {
       const response = await api.generateSceneSynopsis(project.id, editingScene.id);
@@ -266,8 +245,8 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           <div className="space-y-2">
             <Label className="text-base font-semibold">Vizualizacija Strukture Tri Čina</Label>
             <div className="border rounded-lg p-4 bg-muted/50">
-              <img 
-                src="/images/three-act-structure.png" 
+              <img
+                src="/images/three-act-structure.png"
                 alt="Vizualizacija Strukture Tri Čina"
                 className="w-full max-w-2xl mx-auto"
                 onError={(e) => {
@@ -348,16 +327,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
         </DialogContent>
       </Dialog>
 
-      {/* AI Assistant Modal */}
-      <AIAssistantModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        context={getContextDisplayName()}
-        onKeepAll={handleKeepAll}
-        messages={messages}
-        isLoading={isAILoading}
-        lastResponse={lastResponse || undefined}
-      />
+
     </div>
   );
 }

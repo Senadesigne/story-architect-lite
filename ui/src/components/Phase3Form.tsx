@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/serverComm';
 import { Location } from '@/lib/types';
 import { MagicIcon } from '@/components/planner/MagicIcon';
-import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface Phase3FormProps {
@@ -30,14 +30,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
 
   // Planner AI Store
   const {
-    isOpen,
-    closeModal,
     openModal,
-    context,
-    targetField,
-    messages,
-    isLoading,
-    lastResponse,
   } = usePlannerAIStore();
 
   // Dohvaćanje lokacija
@@ -91,7 +84,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
   const handleEditLocation = async (location: Location) => {
     const newName = prompt('Unesite novi naziv lokacije:', location.name);
     if (newName === null) return; // Korisnik je otkazao
-    
+
     const newDescription = prompt('Unesite novi opis lokacije:', location.description || '');
     if (newDescription === null) return; // Korisnik je otkazao
 
@@ -100,7 +93,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
         name: newName.trim(),
         description: newDescription.trim() || undefined
       });
-      setLocations(prev => prev.map(loc => 
+      setLocations(prev => prev.map(loc =>
         loc.id === location.id ? updatedLocation : loc
       ));
     } catch (error) {
@@ -123,52 +116,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     openModal('planner_culture', 'culture_and_history', project.id);
   };
 
-  // Handler za Keep All akciju
-  const handleKeepAll = async (value: string | object) => {
-    // Provjeri kontekst - ako je lokacija, parsiraj JSON i kreiraj novu lokaciju
-    const normalizedContext = context?.toLowerCase() || '';
-    const isLocationContext = normalizedContext.includes('location') || normalizedContext.includes('lokacij');
-    
-    if (isLocationContext) {
-      // JSON objekt za lokaciju
-      if (typeof value === 'object' && value !== null) {
-        const locationData = value as { name?: string; description?: string; sensoryDetails?: string };
-        
-        if (!locationData.name) {
-          console.error('Location data missing name field');
-          return;
-        }
 
-        try {
-          // Kombiniraj description i sensoryDetails u jedan description string
-          const combinedDescription = [
-            locationData.description,
-            locationData.sensoryDetails
-          ].filter(Boolean).join('\n\n');
-
-          const newLocation = await api.createLocation(project.id, {
-            name: locationData.name.trim(),
-            description: combinedDescription.trim() || undefined
-          });
-          setLocations(prev => [...prev, newLocation]);
-        } catch (error) {
-          console.error('Error creating location from AI:', error);
-        }
-      }
-    } else {
-      // Tekstualna polja (rules_definition ili culture_and_history)
-      if (typeof value === 'string' && targetField) {
-        onFieldChange(targetField, value);
-      }
-    }
-  };
-
-
-  // Dobivanje prikaznog imena konteksta
-  const getContextDisplayName = (): string => {
-    if (!context) return 'Lokacija';
-    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
-  };
 
   return (
     <div className="space-y-6">
@@ -267,13 +215,13 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                     <Button onClick={handleAddLocation} size="sm">
                       Spremi
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => {
                         setShowAddForm(false);
                         setNewLocationName('');
                         setNewLocationDescription('');
-                      }} 
-                      variant="outline" 
+                      }}
+                      variant="outline"
                       size="sm"
                     >
                       Odustani
@@ -327,16 +275,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
         </CardContent>
       </Card>
 
-      {/* AI Assistant Modal */}
-      <AIAssistantModal
-        isOpen={isOpen}
-        onClose={closeModal}
-        context={getContextDisplayName()}
-        onKeepAll={handleKeepAll}
-        messages={messages}
-        isLoading={isLoading}
-        lastResponse={lastResponse || undefined}
-      />
+
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MagicIcon } from '@/components/planner/MagicIcon';
-import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 // Type definition for project fields that can be edited
@@ -21,17 +21,10 @@ interface Phase2FormProps {
 
 export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Phase2FormProps) {
   const { projectId } = useParams<{ projectId: string }>();
-  
+
   // Planner AI Store
   const {
-    isOpen,
-    closeModal,
     openModal,
-    context,
-    targetField,
-    messages,
-    isLoading,
-    lastResponse,
   } = usePlannerAIStore();
 
   // Handler za otvaranje modala za Brainstorming
@@ -46,21 +39,7 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
     openModal('planner_research', 'research', projectId);
   };
 
-  // Handler za Keep All akciju (zamjenjuje sadržaj polja)
-  const handleKeepAll = (value: string | object) => {
-    if (!targetField) return;
-    // Za tekstualna polja, očekujemo string
-    if (typeof value === 'string') {
-      onFieldChange(targetField as ProjectField, value);
-    }
-  };
 
-
-  // Dobivanje prikaznog imena konteksta
-  const getContextDisplayName = (): string => {
-    if (!context) return '';
-    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
-  };
 
   return (
     <>
@@ -119,18 +98,7 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
         </CardContent>
       </Card>
 
-      {/* AI Assistant Modal */}
-      {projectId && (
-        <AIAssistantModal
-          isOpen={isOpen}
-          onClose={closeModal}
-          context={getContextDisplayName()}
-          onKeepAll={handleKeepAll}
-          messages={messages}
-          isLoading={isLoading}
-          lastResponse={lastResponse || undefined}
-        />
-      )}
+
     </>
   );
 }

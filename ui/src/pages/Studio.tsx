@@ -1,20 +1,30 @@
 import { useParams } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useStudioStore } from '@/stores/studioStore';
 import { StudioSidebar } from '@/components/studio/StudioSidebar';
 import { StudioEditor } from '@/components/studio/StudioEditor';
-import { CommandBar } from '@/components/studio/CommandBar';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 export function Studio() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { 
-    isSidebarOpen, 
-    editorContent, 
+  const {
+    isSidebarOpen,
+    editorContent,
     activeSceneId,
-    updateContent, 
-    setSelectedText, 
-    setCursorPosition 
+    updateContent,
+    setSelectedText,
+    setCursorPosition
   } = useStudioStore();
+
+  const { openModal, setMode, isOpen } = usePlannerAIStore();
+
+  // Auto-open AI sidebar u brainstorming modu kad se uđe u Studio
+  useEffect(() => {
+    if (!isOpen && projectId) {
+      setMode('brainstorming');
+      openModal('studio_brainstorming', '', projectId); // Studio kontekst, bez targetField-a
+    }
+  }, []); // Prazan dependency array - izvršava se samo pri mountu
 
   // Callback handleri za editor - memoizirani s useCallback kako bi se spriječili nepotrebni re-renderi
   // content je HTML string koji dolazi iz editor.getHTML()
@@ -26,7 +36,7 @@ export function Studio() {
     setSelectedText(selection.text);
     setCursorPosition(selection.to);
   }, [setSelectedText, setCursorPosition]);
-  
+
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -40,7 +50,6 @@ export function Studio() {
             onSelectionChange={handleSelectionChange}
           />
         </div>
-        <CommandBar projectId={projectId!} />
       </div>
     </div>
   );

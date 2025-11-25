@@ -7,17 +7,17 @@ interface MagicIconProps {
    * Handler za klik na ikonu
    */
   onClick: (e?: React.MouseEvent<HTMLButtonElement>) => void;
-  
+
   /**
    * Dodatne CSS klase za pozicioniranje i stiliziranje
    */
   className?: string;
-  
+
   /**
    * Opcionalni tooltip tekst koji se prikazuje na hover
    */
   tooltip?: string;
-  
+
   /**
    * Da li je ikona onemogućena
    */
@@ -27,14 +27,14 @@ interface MagicIconProps {
 /**
  * MagicIcon - Komponenta za otvaranje AI asistenta
  * 
- * Badge/Button stil s ikonom i tekstom "AI ko-autor" koji se prikazuje pored input polja u Planner modu.
+ * Badge/Button stil s ikonom i tekstom "AI koautor" koji se prikazuje pored input polja u Planner modu.
  * Koristi Sparkles ikonu iz Lucide React biblioteke.
  */
-export function MagicIcon({ 
-  onClick, 
-  className, 
-  tooltip = "AI ko-autor",
-  disabled = false 
+export function MagicIcon({
+  onClick,
+  className,
+  tooltip = "AI koautor",
+  disabled = false
 }: MagicIconProps) {
   const iconButton = (
     <button
@@ -61,7 +61,7 @@ export function MagicIcon({
       aria-label={tooltip}
     >
       <Sparkles className="size-3.5" />
-      <span>AI ko-autor</span>
+      <span>AI koautor</span>
     </button>
   );
 
@@ -81,4 +81,3 @@ export function MagicIcon({
 
   return iconButton;
 }
-

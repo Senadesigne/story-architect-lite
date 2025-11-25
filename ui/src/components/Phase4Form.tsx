@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { MagicIcon } from '@/components/planner/MagicIcon';
-import { AIAssistantModal } from '@/components/planner/AIAssistantModal';
+
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface CharacterFormData {
@@ -47,22 +47,16 @@ export function Phase4Form() {
 
   // Planner AI Store
   const {
-    isOpen,
-    closeModal,
     openModal,
-    context,
-    messages,
-    isLoading: isAILoading,
-    lastResponse,
   } = usePlannerAIStore();
 
   // Dohvaćanje likova
   const fetchCharacters = useCallback(async () => {
     if (!projectId) return;
-    
+
     setIsLoading(true);
     setError('');
-    
+
     try {
       const data = await api.getCharacters(projectId);
       setCharacters(data);
@@ -104,9 +98,9 @@ export function Phase4Form() {
   // Spremanje lika (novi ili ažuriranje)
   const handleSaveCharacter = async () => {
     if (!projectId || !formData.name.trim()) return;
-    
+
     setIsSaving(true);
-    
+
     try {
       if (editingCharacter) {
         // Ažuriranje postojećeg lika
@@ -115,7 +109,7 @@ export function Phase4Form() {
         // Kreiranje novog lika
         await api.createCharacter(projectId, formData);
       }
-      
+
       setIsDialogOpen(false);
       await fetchCharacters(); // Osvježi listu
     } catch (error: unknown) {
@@ -131,7 +125,7 @@ export function Phase4Form() {
     if (!confirm(`Jeste li sigurni da želite obrisati lika "${character.name}"?`)) {
       return;
     }
-    
+
     try {
       await api.deleteCharacter(character.id);
       await fetchCharacters(); // Osvježi listu
@@ -145,45 +139,6 @@ export function Phase4Form() {
   const handleCharacterMagicClick = () => {
     if (!projectId) return;
     openModal('planner_character', 'character', projectId);
-  };
-
-  // Handler za Keep All akciju (parsira JSON i kreira novog lika)
-  const handleKeepAll = async (value: string | object) => {
-    if (!projectId) return;
-
-    // Provjeri je li objekt (JSON parsiran) ili string
-    if (typeof value === 'object' && value !== null) {
-      // JSON objekt - parsiranje uspješno
-      const characterData = value as { name?: string; role?: string; motivation?: string; description?: string };
-      
-      if (!characterData.name) {
-        console.error('Character data missing name field');
-        return;
-      }
-
-      try {
-        // Kreiraj novog lika s podacima iz JSON-a
-        await api.createCharacter(projectId, {
-          name: characterData.name.trim(),
-          role: characterData.role?.trim() || undefined,
-          motivation: characterData.motivation?.trim() || undefined,
-          backstory: characterData.description?.trim() || undefined, // description ide u backstory
-        });
-        await fetchCharacters(); // Osvježi listu
-      } catch (error: unknown) {
-        console.error('Error creating character from AI:', error);
-        setError('Greška pri kreiranju lika iz AI odgovora');
-      }
-    } else {
-      // String - fallback (ne bi se trebalo dogoditi za likove, ali za svaki slučaj)
-      console.warn('Received string instead of object for character');
-    }
-  };
-
-  // Dobivanje prikaznog imena konteksta
-  const getContextDisplayName = (): string => {
-    if (!context) return 'Lik';
-    return context.replace('planner_', '').charAt(0).toUpperCase() + context.replace('planner_', '').slice(1);
   };
 
   if (isLoading) {
@@ -233,7 +188,7 @@ export function Phase4Form() {
                     Unesite detalje o liku. Ime je obavezno polje.
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="space-y-4">
                   {/* Ime */}
                   <div>
@@ -331,14 +286,14 @@ export function Phase4Form() {
 
                   {/* Gumbovi */}
                   <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setIsDialogOpen(false)}
                       disabled={isSaving}
                     >
                       Odustani
                     </Button>
-                    <Button 
+                    <Button
                       onClick={handleSaveCharacter}
                       disabled={isSaving || !formData.name.trim()}
                     >
@@ -422,19 +377,6 @@ export function Phase4Form() {
           )}
         </CardContent>
       </Card>
-
-      {/* AI Assistant Modal */}
-      {projectId && (
-        <AIAssistantModal
-          isOpen={isOpen}
-          onClose={closeModal}
-          context={getContextDisplayName()}
-          onKeepAll={handleKeepAll}
-          messages={messages}
-          isLoading={isAILoading}
-          lastResponse={lastResponse || undefined}
-        />
-      )}
     </div>
   );
 }

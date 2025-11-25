@@ -148,7 +148,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 <Label htmlFor="theme">Tema</Label>
                 <MagicIcon
                   onClick={handleThemeMagicClick}
-                  tooltip="AI ko-autor za Temu"
+                  tooltip="AI koautor za Temu"
                   disabled={!projectId}
                 />
               </div>
@@ -215,7 +215,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 <Label htmlFor="audience">Ciljana Publika</Label>
                 <MagicIcon
                   onClick={handleAudienceMagicClick}
-                  tooltip="AI ko-autor za Ciljanu Publiku"
+                  tooltip="AI koautor za Ciljanu Publiku"
                   disabled={!projectId}
                 />
               </div>
