@@ -12,8 +12,8 @@ import {
 import { validateBody, getValidatedBody } from './middleware/validation';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
-import { users, projects, locations, characters, scenes } from './schema/schema';
-import { eq } from 'drizzle-orm';
+import { users, projects, locations, characters, scenes, storyArchitectEmbeddings } from './schema/schema';
+import { eq, sql } from 'drizzle-orm';
 import type {
   DatabaseUpdateData
 } from './types/api';
@@ -414,7 +414,13 @@ app.delete('/api/projects/:projectId', async (c) => {
   await requireProjectOwnership(db, projectId, user.id);
 
   await handleDatabaseOperation(async () => {
-    // Brisanje projekta (cascade će obrisati sve povezane entitete)
+    // 1. Obriši embeddings povezane s projektom (Manual Cleanup jer nema FK)
+    // Koristimo SQL operator za pristup JSONB polju
+    await db
+      .delete(storyArchitectEmbeddings)
+      .where(sql`${storyArchitectEmbeddings.metadata}->>'projectId' = ${projectId}`);
+
+    // 2. Brisanje projekta (cascade će obrisati sve ostale povezane entitete: characters, scenes, locations)
     await db
       .delete(projects)
       .where(eq(projects.id, projectId));

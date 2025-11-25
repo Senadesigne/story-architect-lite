@@ -6,23 +6,38 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Project } from '@/lib/types';
 import { Link } from 'react-router-dom';
 import { CreateProjectDialog } from '@/components/CreateProjectDialog';
+import { RenameProjectDialog } from '@/components/RenameProjectDialog';
+import { DeleteProjectDialog } from '@/components/DeleteProjectDialog';
 import { debugAuthState } from '@/lib/auth-utils';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Home() {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
   const [projectsError, setProjectsError] = useState('');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Dialog states
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState<Project | null>(null);
+
   const [createProjectResult, setCreateProjectResult] = useState<{ success: boolean; project?: Project; error?: string } | null>(null);
 
   // Funkcija za dohvaćanje projekata
   const fetchProjects = useCallback(async () => {
     if (!user) return;
-    
+
     setIsLoadingProjects(true);
     setProjectsError('');
-    
+
     try {
       const data = await api.getProjects();
       setProjects(data);
@@ -37,7 +52,7 @@ export function Home() {
   // Učitavanje projekata kada se komponenta učita
   useEffect(() => {
     fetchProjects();
-    
+
     // Debug: Provjeri auth stanje kada se Home učita
     if (user) {
       console.log('🏠 Home komponenta učitana za korisnika:', user.email);
@@ -45,14 +60,32 @@ export function Home() {
     }
   }, [user, fetchProjects]);
 
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true);
+  const handleOpenCreateDialog = () => {
+    setIsCreateDialogOpen(true);
   };
 
   const handleProjectCreated = async (project: Project) => {
     setCreateProjectResult({ success: true, project });
-    // Automatski osvježi listu projekata nakon kreiranja
     await fetchProjects();
+  };
+
+  const handleRenameClick = (e: React.MouseEvent, project: Project) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+    setProjectToEdit(project);
+    setIsRenameDialogOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, project: Project) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+    setProjectToEdit(project);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleActionSuccess = async () => {
+    await fetchProjects();
+    setProjectToEdit(null);
   };
 
   return (
@@ -66,8 +99,8 @@ export function Home() {
               Upravljajte svojim pričama i projektima na jednom mjestu.
             </p>
           </div>
-          <Button 
-            onClick={handleOpenDialog} 
+          <Button
+            onClick={handleOpenCreateDialog}
             disabled={!user}
             size="lg"
           >
@@ -95,8 +128,8 @@ export function Home() {
           {projectsError && (
             <div className="text-center py-8">
               <p className="text-red-500">{projectsError}</p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={fetchProjects}
                 className="mt-4"
               >
@@ -121,47 +154,98 @@ export function Home() {
           {!isLoadingProjects && !projectsError && projects.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
-                <Link 
-                  key={project.id} 
-                  to={`/project/${project.id}/ideation`}
-                  className="block hover:shadow-md transition-shadow"
+                <div
+                  key={project.id}
+                  className="group relative h-full"
                 >
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="text-xl">{project.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <p>
-                          <strong>Kreiran:</strong>{' '}
-                          {new Date(project.createdAt).toLocaleDateString('hr-HR')}
-                        </p>
-                        {project.logline && (
+                  <Link
+                    to={`/project/${project.id}/ideation`}
+                    className="block h-full hover:shadow-md transition-shadow"
+                  >
+                    <Card className="h-full">
+                      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                        <CardTitle className="text-xl pr-8 line-clamp-1" title={project.title}>
+                          {project.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2 text-sm text-muted-foreground">
                           <p>
-                            <strong>Logline:</strong> {project.logline}
+                            <strong>Kreiran:</strong>{' '}
+                            {new Date(project.createdAt).toLocaleDateString('hr-HR')}
                           </p>
-                        )}
-                        {project.premise && (
-                          <p>
-                            <strong>Premisa:</strong> {project.premise.substring(0, 100)}
-                            {project.premise.length > 100 ? '...' : ''}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                          {project.logline && (
+                            <p className="line-clamp-2">
+                              <strong>Logline:</strong> {project.logline}
+                            </p>
+                          )}
+                          {project.premise && (
+                            <p className="line-clamp-3">
+                              <strong>Premisa:</strong> {project.premise}
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  {/* Dropdown Menu - Outside Link */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 data-[state=open]:opacity-100 bg-background/50 hover:bg-background"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                        >
+                          <span className="sr-only">Open menu</span>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => handleRenameClick(e, project)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Preimenuj
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => handleDeleteClick(e, project)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Obriši
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Create Project Dialog */}
+      {/* Dialogs */}
       <CreateProjectDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
         onSuccess={handleProjectCreated}
+      />
+
+      <RenameProjectDialog
+        open={isRenameDialogOpen}
+        onOpenChange={setIsRenameDialogOpen}
+        project={projectToEdit}
+        onSuccess={handleActionSuccess}
+      />
+
+      <DeleteProjectDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        project={projectToEdit}
+        onSuccess={handleActionSuccess}
       />
     </div>
   );
