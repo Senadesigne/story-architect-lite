@@ -2,19 +2,16 @@
   "users": [
     {
       "id": "JEM7PWyIvrc4Tpv9xbLrvKpb9Aj2",
-      "email": "test@test.com"
+      "email": "test@test.com",
+      "displayName": null
     },
     {
       "id": "VgXWFbNNpMSu5lZ6bTLtYvnInmI3",
-      "email": "senad.dupljak@gmail.com"
+      "email": "senad.dupljak@gmail.com",
+      "displayName": null
     }
   ],
   "projects": [
-    {
-      "id": "ee762b53-e3c7-4c70-a05d-44d908dc3c77",
-      "title": "lutajuci planet",
-      "ownerId": "VgXWFbNNpMSu5lZ6bTLtYvnInmI3"
-    },
     {
       "id": "35726ce3-835e-487f-b5b0-e0a790d5faa3",
       "title": "lutajuci planet",
