@@ -24,7 +24,11 @@ interface PlannerAIState {
   // Chat stanje - RAZDVOJENO PO MODOVIMA
   plannerMessages: ChatMessage[];
   writerMessages: ChatMessage[];
-  brainstormingMessages: ChatMessage[];
+  plannerBrainstormingMessages: ChatMessage[]; // Brainstorming u Planneru
+  studioBrainstormingMessages: ChatMessage[];  // Brainstorming u Studiju
+
+  // UI Stanje
+  activeView: 'planner' | 'studio'; // Prati gdje se korisnik nalazi
 
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
@@ -38,6 +42,7 @@ interface PlannerAIState {
   ) => void;
   closeModal: () => void;
   setMode: (mode: 'planner' | 'brainstorming' | 'writer') => void;
+  setActiveView: (view: 'planner' | 'studio') => void;
   setPendingApplication: (content: string | null) => void;
   setEditorContent: (content: string | null) => void;
   setPendingGhostText: (content: string | null) => void;
@@ -59,6 +64,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   targetField: null,
   projectId: null,
   mode: 'planner', // Default mode
+  activeView: 'planner',
   pendingApplication: null,
   editorContent: null,
   pendingGhostText: null,
@@ -67,7 +73,8 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   // Inicijalno prazni nizovi poruka
   plannerMessages: [],
   writerMessages: [],
-  brainstormingMessages: [],
+  plannerBrainstormingMessages: [],
+  studioBrainstormingMessages: [],
 
   isLoading: false,
   lastResponse: null,
@@ -110,6 +117,10 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     set({ mode });
   },
 
+  setActiveView: (view) => {
+    set({ activeView: view });
+  },
+
   setPendingApplication: (content) => {
     set({ pendingApplication: content });
   },
@@ -145,7 +156,14 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
     if (currentMode === 'planner') currentMessages = state.plannerMessages;
     else if (currentMode === 'writer') currentMessages = state.writerMessages;
-    else if (currentMode === 'brainstorming') currentMessages = state.brainstormingMessages;
+    else if (currentMode === 'brainstorming') {
+      // Odaberi pravi brainstorming niz ovisno o view-u
+      if (state.activeView === 'studio') {
+        currentMessages = state.studioBrainstormingMessages;
+      } else {
+        currentMessages = state.plannerBrainstormingMessages;
+      }
+    }
 
     // Optimistično ažuriranje UI-a
     set((prevState) => {
@@ -153,7 +171,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
       if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, userMessage];
       else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, userMessage];
-      else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, userMessage];
+      else if (currentMode === 'brainstorming') {
+        if (prevState.activeView === 'studio') {
+          updates.studioBrainstormingMessages = [...prevState.studioBrainstormingMessages, userMessage];
+        } else {
+          updates.plannerBrainstormingMessages = [...prevState.plannerBrainstormingMessages, userMessage];
+        }
+      }
 
       return updates as PlannerAIState;
     });
@@ -188,7 +212,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
         if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, assistantMessage];
         else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, assistantMessage];
-        else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, assistantMessage];
+        else if (currentMode === 'brainstorming') {
+          if (prevState.activeView === 'studio') {
+            updates.studioBrainstormingMessages = [...prevState.studioBrainstormingMessages, assistantMessage];
+          } else {
+            updates.plannerBrainstormingMessages = [...prevState.plannerBrainstormingMessages, assistantMessage];
+          }
+        }
 
         return updates as PlannerAIState;
       });
@@ -213,7 +243,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
         if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, errorMessage];
         else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, errorMessage];
-        else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, errorMessage];
+        else if (currentMode === 'brainstorming') {
+          if (prevState.activeView === 'studio') {
+            updates.studioBrainstormingMessages = [...prevState.studioBrainstormingMessages, errorMessage];
+          } else {
+            updates.plannerBrainstormingMessages = [...prevState.plannerBrainstormingMessages, errorMessage];
+          }
+        }
 
         return updates as PlannerAIState;
       });
@@ -234,7 +270,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
       if (currentMode === 'planner') updates.plannerMessages = [];
       else if (currentMode === 'writer') updates.writerMessages = [];
-      else if (currentMode === 'brainstorming') updates.brainstormingMessages = [];
+      else if (currentMode === 'brainstorming') {
+        if (prevState.activeView === 'studio') {
+          updates.studioBrainstormingMessages = [];
+        } else {
+          updates.plannerBrainstormingMessages = [];
+        }
+      }
 
       return updates as PlannerAIState;
     });
@@ -247,13 +289,15 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       targetField: null,
       projectId: null,
       mode: 'planner',
+      activeView: 'planner',
       pendingApplication: null,
       editorContent: null,
       pendingGhostText: null,
       ghostTextAction: 'idle',
       plannerMessages: [],
       writerMessages: [],
-      brainstormingMessages: [],
+      plannerBrainstormingMessages: [],
+      studioBrainstormingMessages: [],
       isLoading: false,
       lastResponse: null,
     });

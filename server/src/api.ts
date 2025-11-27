@@ -49,6 +49,7 @@ import { PromptService } from './services/prompt.service';
 import { aiRateLimiter } from './middleware/rateLimiter';
 import { getRelevantContext } from './services/ai/ai.retriever';
 import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const app = new Hono();
 
@@ -851,7 +852,13 @@ app.post(
     const finalState = await handleDatabaseOperation(async () => {
       const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
       const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent);
+
+      // Mapiranje poruka u LangChain format
+      const langChainMessages = messages?.map(m =>
+        m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
+      ) || [];
+
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent, langChainMessages);
       return state;
     });
 

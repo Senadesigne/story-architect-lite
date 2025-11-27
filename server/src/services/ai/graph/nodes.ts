@@ -1,6 +1,6 @@
 import type { AgentState, AgentStateUpdate } from './state';
 import { getRelevantContext } from '../ai.retriever';
-import { createPreferredAIProvider } from '../../ai.factory';
+import { createPreferredAIProvider, createManagerProvider, createWorkerProvider } from '../../ai.factory';
 import type { AIGenerationOptions } from '../../ai.service';
 import { getPlannerSystemPrompt } from '../planner.prompts';
 
@@ -186,84 +186,139 @@ ODGOVOR:`;
 }
 
 /**
- * Čvor za generiranje nacrta (Draft)
+ * Čvor za pripremu konteksta i prompta (Manager)
  */
-export async function generateDraftNode(state: AgentState): Promise<AgentStateUpdate> {
-  console.log("[GENERATE_DRAFT] Starting with mode:", state.mode);
+export async function managerContextNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[MANAGER_CONTEXT] Starting with mode:", state.mode);
 
   try {
+    const aiProvider = await createManagerProvider();
+    const options: AIGenerationOptions = {
+      temperature: 0.4,
+      maxTokens: 1000,
+      timeout: 30000
+    };
+
+    let workerPrompt = "";
+    let analysis = "";
+
+    if (state.mode === 'brainstorming') {
+      // Brainstorming logika
+      const history = state.messages && state.messages.length > 0
+        ? state.messages.map(m => {
+          const role = (m as any).role || (m.getType ? m.getType() : 'assistant');
+          return `${role === 'user' || role === 'human' ? 'User' : 'Assistant'}: ${m.content}`;
+        }).join('\n')
+        : "Nema prethodnih poruka.";
+
+      const systemPrompt = `Ti si Manager Brainstorming sesije. Tvoj zadatak je analizirati povijest razgovora i trenutni zahtjev korisnika, te kreirati precizan prompt za Workera (AI model koji će generirati odgovor).
+
+POVIJEST RAZGOVORA:
+${history}
+
+TRENUTNI ZAHTJEV KORISNIKA:
+${state.userInput}
+
+ZADATAK:
+1. Identificiraj ključne teme i ideje iz povijesti.
+2. Formuliraj jasne instrukcije za Workera kako da odgovori na trenutni zahtjev, uzimajući u obzir kontekst.
+3. Ako je zahtjev nepovezan s povijesti, ignoriraj povijest.
+
+OUTPUT FORMAT:
+Samo tekst prompta za Workera. BEZ UVODNIH REČENICA (npr. "Evo prompta", "Prompt za workera"). SAMO INSTRUKCIJE.`;
+
+      workerPrompt = await aiProvider.generateText(systemPrompt, options);
+
+      // Cleanup common prefixes if AI ignores instructions
+      workerPrompt = workerPrompt.replace(/^(Evo|Here is|Ovo je).*?:/i, '').trim();
+
+      analysis = "Brainstorming context analyzed.";
+
+    } else if (state.mode === 'writer') {
+      // Writer logika
+      const systemPrompt = `Ti si Urednik (Manager) knjige. Tvoj zadatak je pripremiti instrukcije za Pisca (Worker) koji će napisati ili nastaviti tekst.
+
+KONTEKST PRIČE (iz baze):
+${state.ragContext || "Nema dodatnog konteksta."}
+
+TRENUTNI TEKST U EDITORU:
+${state.editorContent || "(Prazno)"}
+
+ZAHTJEV KORISNIKA:
+${state.userInput}
+
+ZADATAK:
+1. Analiziraj stil i ton trenutnog teksta.
+2. Poveži zahtjev korisnika s kontekstom priče.
+3. Napiši detaljan prompt za Pisca koji sadrži:
+    - Ulogu (npr. "Ti si ko-autor...")
+    - Kontekst (sažeto ono što je bitno za ovu scenu)
+    - Stil i ton (kako treba pisati)
+    - Konkretan zadatak (što točno napisati)
+
+OUTPUT FORMAT:
+Samo tekst prompta za Pisca. BEZ UVODNIH REČENICA. SAMO INSTRUKCIJE.`;
+
+      workerPrompt = await aiProvider.generateText(systemPrompt, options);
+
+      // Cleanup common prefixes
+      workerPrompt = workerPrompt.replace(/^(Evo|Here is|Ovo je).*?:/i, '').trim();
+
+      analysis = "Writer context analyzed.";
+
+    } else {
+      // Default / Planner logika
+      const systemPrompt = getPlannerSystemPrompt(state.plannerContext || 'general') +
+        `\n\nKONTEKST: ${state.ragContext}\nZAHTJEV: ${state.userInput}\n\nZADATAK: Pretvori ovo u prompt za Workera koji će generirati sadržaj. SAMO TEKST PROMPTA.`;
+
+      workerPrompt = await aiProvider.generateText(systemPrompt, options);
+      workerPrompt = workerPrompt.replace(/^(Evo|Here is|Ovo je).*?:/i, '').trim();
+
+      analysis = "Planner context analyzed.";
+    }
+
+    return {
+      workerPrompt,
+      managerAnalysis: analysis
+    };
+
+  } catch (error) {
+    console.error("[MANAGER_CONTEXT] Error:", error);
+    return {
+      workerPrompt: state.userInput,
+      managerAnalysis: `Error: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+}
+
+/**
+ * Čvor za generiranje teksta (Worker)
+ */
+export async function workerGenerationNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[WORKER_GENERATION] Starting");
+
+  try {
+    const aiProvider = await createWorkerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.7,
       maxTokens: 2000,
       timeout: 45000
     };
 
-    let systemPrompt = "";
-    let aiProvider;
-
-    if (state.mode === 'brainstorming') {
-      // Brainstorming koristi OpenAI (ChatGPT)
-      aiProvider = await createPreferredAIProvider('openai');
-
-      systemPrompt = `You are a helpful assistant.
-
-${state.userInput}`;
-
-    } else if (state.mode === 'writer') {
-      // Writer mode koristi Anthropic (Haiku/Sonnet)
-      aiProvider = await createPreferredAIProvider('anthropic');
-
-      // Writer mode prioritetizira editorContent
-      systemPrompt = `Ti si AI Ko-autor. Nastavi pisati priču ili scenu na temelju trenutnog teksta u editoru i korisnikovih uputa.
-Stil i ton moraju odgovarati postojećem tekstu.
-
-TRENUTNI TEKST U EDITORU:
-${state.editorContent || "(Prazno)"}
-
-KONTEKST PRIČE (iz baze):
-${state.ragContext || "Nema dodatnog konteksta."}
-
-UPUTE ZA NASTAVAK:
-${state.userInput}
-
-ZADATAK:
-Napiši nastavak teksta. Ne ponavljaj postojeći tekst, samo nastavi gdje je stalo.`;
-
-    } else if (state.mode === 'planner') {
-      // Planner mode koristi default (Anthropic)
-      aiProvider = await createPreferredAIProvider('anthropic');
-
-      // Planner mode koristi specifične prompte
-      systemPrompt = getPlannerSystemPrompt(state.plannerContext || 'general');
-      // Dodajemo kontekst na kraj ako nije u promptu
-      systemPrompt += `\n\nKONTEKST PRIČE:\n${state.ragContext || state.storyContext}`;
-      systemPrompt += `\n\nZAHTJEV:\n${state.userInput}`;
-
-    } else {
-      // Default Story Writer mode
-      aiProvider = await createPreferredAIProvider('anthropic');
-
-      systemPrompt = `Ti si AI Pisac. Tvoj zadatak je napisati scenu ili dio priče na temelju zahtjeva.
-Koristi elemente iz konteksta priče.
-
-KONTEKST PRIČE:
-${state.ragContext}
-
-ZAHTJEV:
-${state.userInput}`;
-    }
+    const systemPrompt = state.workerPrompt || state.userInput;
 
     const draft = await aiProvider.generateText(systemPrompt, options);
 
     return {
       draft: draft.trim(),
+      finalOutput: draft.trim(),
       draftCount: 1
     };
 
   } catch (error) {
-    console.error("[GENERATE_DRAFT] Error:", error);
+    console.error("[WORKER_GENERATION] Error:", error);
     return {
-      draft: `Greška prilikom generiranja nacrta: ${error instanceof Error ? error.message : String(error)}`
+      draft: `Greška prilikom generiranja: ${error instanceof Error ? error.message : String(error)}`
     };
   }
 }
@@ -282,31 +337,31 @@ export async function critiqueDraftNode(state: AgentState): Promise<AgentStateUp
       };
     }
 
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    // Manager radi kritiku
+    const aiProvider = await createManagerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.2,
       maxTokens: 500,
       timeout: 20000
     };
 
-    const systemPrompt = `Ti si AI Kritičar. Analiziraj tekst i provjeri usklađenost s kontekstom.
+    const systemPrompt = `Ti si AI Kritičar.Analiziraj tekst i provjeri usklađenost s kontekstom.
 
-KONTEKST:
+      KONTEKST:
 ${state.ragContext}
 
-NACRT:
+    NACRT:
 ${state.draft}
 
-ODGOVOR (JSON):
-{
-  "issues": ["popis problema"],
-  "score": 0-100,
-  "stop": boolean (true ako je score > 85)
-}`;
+    ODGOVOR(JSON):
+    {
+      "issues": ["popis problema"],
+        "score": 0 - 100,
+          "stop": boolean(true ako je score > 85)
+    } `;
 
     let critique = await aiProvider.generateText(systemPrompt, options);
 
-    // Osiguraj validan JSON
     try {
       JSON.parse(critique);
     } catch {
@@ -343,22 +398,23 @@ export async function refineDraftNode(state: AgentState): Promise<AgentStateUpda
       return { draft: state.draft };
     }
 
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    // Worker radi poboljšanje
+    const aiProvider = await createWorkerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.6,
       maxTokens: 1000,
       timeout: 30000
     };
 
-    const systemPrompt = `Ti si AI Urednik. Poboljšaj tekst na temelju kritike.
+    const systemPrompt = `Ti si AI Urednik.Poboljšaj tekst na temelju kritike.
 
-KRITIKA:
+      KRITIKA:
 ${state.critique}
 
-TEKST:
+    TEKST:
 ${state.draft}
 
-POBOLJŠANI TEKST:`;
+POBOLJŠANI TEKST: `;
 
     const refinedDraft = await aiProvider.generateText(systemPrompt, options);
 
@@ -379,19 +435,20 @@ export async function modifyTextNode(state: AgentState): Promise<AgentStateUpdat
   console.log("[MODIFY_TEXT] Starting");
 
   try {
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    // Worker radi modifikaciju
+    const aiProvider = await createWorkerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.3,
       maxTokens: 1000,
       timeout: 30000
     };
 
-    const systemPrompt = `Ti si AI Urednik. Modificiraj tekst prema uputama.
+    const systemPrompt = `Ti si AI Urednik.Modificiraj tekst prema uputama.
 
-UPUTE:
+      UPUTE:
 ${state.userInput}
 
-MODIFICIRANI TEKST:`;
+MODIFICIRANI TEKST: `;
 
     const modifiedText = await aiProvider.generateText(systemPrompt, options);
 
@@ -404,4 +461,12 @@ MODIFICIRANI TEKST:`;
     console.error("[MODIFY_TEXT] Error:", error);
     return { draft: "Greška pri modifikaciji." };
   }
+}
+
+/**
+ * Čvor za finalizaciju izlaza
+ */
+export async function finalOutputNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("--- FINALIZACIJA IZLAZA ---");
+  return { finalOutput: state.draft };
 }

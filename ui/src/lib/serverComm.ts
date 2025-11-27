@@ -10,36 +10,23 @@ class APIError extends Error {
   }
 }
 
-// Token cache for performance
-let tokenCache: { token: string; expiry: number } | null = null;
+// Token cache removed to rely on Firebase SDK's internal caching and auto-refresh logic.
+// This prevents issues where we might cache a token that expires sooner than our cache duration.
 
 async function getAuthToken(): Promise<string | null> {
-  // Provjeri cache
-  if (tokenCache && Date.now() < tokenCache.expiry) {
-    return tokenCache.token;
-  }
-
   const auth = getAuth(app);
   const user = auth.currentUser;
   if (!user) {
-    tokenCache = null;
     return null;
   }
 
-  const token = await user.getIdToken();
-
-  // Cachirati token na 5 minuta
-  tokenCache = {
-    token,
-    expiry: Date.now() + 5 * 60 * 1000,
-  };
-
-  return token;
+  // Firebase SDK automatically caches the token and refreshes it if it's expired or close to expiration.
+  return await user.getIdToken();
 }
 
-// Funkcija za brisanje cache-a
+// Funkcija za brisanje cache-a (zadržana radi kompatibilnosti, ali prazna)
 export function clearTokenCache() {
-  tokenCache = null;
+  // No-op since we rely on SDK
 }
 
 async function fetchWithAuth(

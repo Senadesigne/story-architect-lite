@@ -64,6 +64,20 @@ export interface AgentState {
    */
   routingDecision?: "simple_retrieval" | "creative_generation" | "text_modification" | "cannot_answer";
 
+  // === MANAGER-WORKER ARHITEKTURA ===
+
+  /**
+   * Prompt koji generira Manager (Context Node) za Workera.
+   * Sadrži precizne upute i sažeti kontekst.
+   */
+  workerPrompt?: string;
+
+  /**
+   * Analiza konteksta ili povijesti koju je napravio Manager.
+   * Korisno za debugging i razumijevanje odluka Managera.
+   */
+  managerAnalysis?: string;
+
   // === FAZA REFLEKSIJE (REFLECTION) - ITERATIVNA PETLJA ===
 
   /**
@@ -116,7 +130,8 @@ export function createInitialState(
   storyContext: string,
   plannerContext?: string,
   mode?: 'planner' | 'brainstorming' | 'writer',
-  editorContent?: string
+  editorContent?: string,
+  messages: BaseMessage[] = []
 ): AgentState {
   return {
     userInput,
@@ -125,7 +140,7 @@ export function createInitialState(
     mode,
     editorContent,
     draftCount: 0,
-    messages: []
+    messages: messages
   };
 }
 

@@ -10,25 +10,33 @@ export const AIChatSidebar: React.FC = () => {
         closeModal,
         plannerMessages,
         writerMessages,
-        brainstormingMessages,
+        plannerBrainstormingMessages,
+        studioBrainstormingMessages,
         sendMessage,
         isLoading,
         mode,
         setMode,
         context,
         pendingApplication,
-        setGhostTextAction
+        setGhostTextAction,
+        setActiveView
     } = usePlannerAIStore();
+
+    const location = useLocation();
+    const isStudioMode = location.pathname.includes('/studio');
+
+    // Ažuriraj activeView u store-u kad se promijeni lokacija
+    useEffect(() => {
+        setActiveView(isStudioMode ? 'studio' : 'planner');
+    }, [isStudioMode, setActiveView]);
 
     const messages = mode === 'planner' ? plannerMessages :
         mode === 'writer' ? writerMessages :
-            brainstormingMessages;
+            (isStudioMode ? studioBrainstormingMessages : plannerBrainstormingMessages);
 
     const [input, setInput] = React.useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
-    const location = useLocation();
-    const isStudioMode = location.pathname.includes('/studio');
 
     // Auto-scroll na dno poruka
     useEffect(() => {
@@ -103,19 +111,6 @@ export const AIChatSidebar: React.FC = () => {
                     </button>
                 )}
 
-                <button
-                    onClick={() => setMode('brainstorming')}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                        mode === 'brainstorming'
-                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                >
-                    <BrainCircuit className="w-4 h-4" />
-                    Brainstorming
-                </button>
-
                 {isStudioMode && (
                     <button
                         onClick={() => setMode('writer')}
@@ -130,6 +125,19 @@ export const AIChatSidebar: React.FC = () => {
                         Writer
                     </button>
                 )}
+
+                <button
+                    onClick={() => setMode('brainstorming')}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                        mode === 'brainstorming'
+                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                >
+                    <BrainCircuit className="w-4 h-4" />
+                    Brainstorming
+                </button>
             </div>
 
             {/* Context Info (Planner Mode only) */}

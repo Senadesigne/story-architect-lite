@@ -81,3 +81,23 @@ export async function createDefaultAIProvider(): Promise<AIProvider> {
   // Default ponašanje je preferirati Anthropic
   return createPreferredAIProvider('anthropic');
 }
+
+/**
+ * Kreira providera za Manager ulogu (Context, Prompting, Critique).
+ * Čita iz MANAGER_AI_PROVIDER env varijable ili koristi default (Anthropic Haiku).
+ */
+export async function createManagerProvider(): Promise<AIProvider> {
+  const providerType = (process.env.MANAGER_AI_PROVIDER as AIProviderType) || 'anthropic';
+  console.log(`[AI_FACTORY] Creating Manager provider: ${providerType}`);
+  return createPreferredAIProvider(providerType);
+}
+
+/**
+ * Kreira providera za Worker ulogu (Generation).
+ * Čita iz WORKER_AI_PROVIDER env varijable ili koristi default (Anthropic Sonnet).
+ */
+export async function createWorkerProvider(): Promise<AIProvider> {
+  const providerType = (process.env.WORKER_AI_PROVIDER as AIProviderType) || 'anthropic';
+  console.log(`[AI_FACTORY] Creating Worker provider: ${providerType}`);
+  return createPreferredAIProvider(providerType);
+}

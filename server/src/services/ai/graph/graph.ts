@@ -7,10 +7,12 @@ import {
   transformQueryNode,
   routeTaskNode,
   handleSimpleRetrievalNode,
-  generateDraftNode,
+  managerContextNode,
+  workerGenerationNode,
   critiqueDraftNode,
   refineDraftNode,
-  modifyTextNode
+  modifyTextNode,
+  finalOutputNode
 } from "./nodes";
 
 /**
@@ -72,6 +74,13 @@ const graphConfig: StateGraphArgs<AgentState> = {
       value: (x: BaseMessage[], y: BaseMessage[]) => x.concat(y),
       default: () => [],
     },
+    // Manager-Worker polja
+    workerPrompt: {
+      value: (x, y) => y ?? x,
+    },
+    managerAnalysis: {
+      value: (x, y) => y ?? x,
+    },
   },
 };
 
@@ -88,8 +97,11 @@ export function createStoryArchitectGraph() {
   graph.addNode("route_task", routeTaskNode);
   graph.addNode("handle_simple_retrieval", handleSimpleRetrievalNode);
 
+  // ✅ MANAGER-WORKER ČVOROVI (V2 Arhitektura):
+  graph.addNode("manager_context_node", managerContextNode);
+  graph.addNode("worker_generation_node", workerGenerationNode);
+
   // ✅ REFLECTION ČVOROVI (Zadatak 3.10):
-  graph.addNode("generate_draft", generateDraftNode);
   graph.addNode("critique_draft", critiqueDraftNode);
   graph.addNode("refine_draft", refineDraftNode);
 
@@ -99,11 +111,6 @@ export function createStoryArchitectGraph() {
   // ✅ FINALIZACIJA ČVOR:
   graph.addNode("final_output", finalOutputNode);
 
-  // TODO: Dodati uvjetne rubove (conditional edges) u sljedećim fazama
-  // Planirani uvjetni rubovi:
-  // - Nakon route_task: usmjeravanje na simple_retrieval ili creative_generation
-  // - Nakon critique_draft: provjera draftCount i stop zastavice za petlju
-
   // ✅ POSTAVLJANJE ULAZNE TOČKE:
   graph.setEntryPoint("transform_query" as any);
 
@@ -112,9 +119,11 @@ export function createStoryArchitectGraph() {
   graph.addEdge("retrieve_context" as any, "route_task" as any); // Povezuje RAG fazu s usmjeravanjem
   graph.addEdge("handle_simple_retrieval" as any, END); // Završava tijek za jednostavne upite
 
-  // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
-  // graph.addEdge("generate_draft" as any, "critique_draft" as any); // STARI LINEARNI EDGE - ZAMIJENJEN UVJETNIM
+  // ✅ MANAGER-WORKER FLOW:
+  // Manager priprema prompt -> Worker generira
+  graph.addEdge("manager_context_node" as any, "worker_generation_node" as any);
 
+  // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
   graph.addEdge("refine_draft" as any, "critique_draft" as any); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
 
   // ✅ TEXT MODIFICATION EDGE:
@@ -130,17 +139,17 @@ export function createStoryArchitectGraph() {
     routingCondition, // koristi postojeću funkciju
     {
       "handle_simple_retrieval": "handle_simple_retrieval",
-      "generate_draft": "generate_draft", // ✅ Sada vodi na generate_draft čvor
+      "creative_generation": "manager_context_node", // ✅ Sada vodi na Managera
       "modify_text": "modify_text", // ✅ Nova ruta za modifikaciju teksta
       [END]: END
     } as any
   );
 
-  // ✅ UVJETNI EDGE-OVI ZA GENERATE DRAFT (Novi zahtjev za Brainstorming):
+  // ✅ UVJETNI EDGE-OVI ZA WORKER GENERATION (Novi zahtjev za Brainstorming):
   // Ako je brainstorming, preskačemo kritiku i idemo na kraj.
   graph.addConditionalEdges(
-    "generate_draft" as any,
-    generateDraftCondition,
+    "worker_generation_node" as any,
+    workerGenerationCondition,
     {
       "critique_draft": "critique_draft",
       "final_output": "final_output"
@@ -185,11 +194,12 @@ export async function runStoryArchitectGraph(
   storyContext: string,
   plannerContext?: string,
   mode?: 'planner' | 'brainstorming' | 'writer',
-  editorContent?: string
+  editorContent?: string,
+  messages: BaseMessage[] = []
 ): Promise<AgentState> {
 
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent);
+  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages);
 
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,
@@ -232,8 +242,8 @@ export function routingCondition(state: AgentState): string {
       console.log("[ROUTING_CONDITION] Routing to handle_simple_retrieval");
       return "handle_simple_retrieval";
     case "creative_generation":
-      console.log("[ROUTING_CONDITION] Routing to generate_draft");
-      return "generate_draft";
+      console.log("[ROUTING_CONDITION] Routing to creative_generation");
+      return "creative_generation";
     case "text_modification":
       console.log("[ROUTING_CONDITION] Routing to modify_text");
       return "modify_text";
@@ -245,26 +255,22 @@ export function routingCondition(state: AgentState): string {
 }
 
 /**
- * Uvjetna funkcija za routing nakon generate_draft čvora
+ * Uvjetna funkcija za routing nakon worker_generation_node čvora
  * Ako je brainstorming, preskače kritiku.
  */
-export function generateDraftCondition(state: AgentState): string {
-  console.log(`[GENERATE_DRAFT_CONDITION] Checking mode: ${state.mode}`);
+export function workerGenerationCondition(state: AgentState): string {
+  console.log(`[WORKER_GENERATION_CONDITION] Checking mode: ${state.mode}`);
 
   if (state.mode === 'brainstorming') {
-    console.log("[GENERATE_DRAFT_CONDITION] Brainstorming mode -> Skipping critique, going to final_output");
+    console.log("[WORKER_GENERATION_CONDITION] Brainstorming mode -> Skipping critique, going to final_output");
     return "final_output";
   }
 
-  console.log("[GENERATE_DRAFT_CONDITION] Standard mode -> Proceeding to critique_draft");
+  console.log("[WORKER_GENERATION_CONDITION] Standard mode -> Proceeding to critique_draft");
   return "critique_draft";
 }
 
-// Novi čvor za finalizaciju
-const finalOutputNode = (state: AgentState): Partial<AgentState> => {
-  console.log("--- FINALIZACIJA IZLAZA (Eksplicitni čvor) ---");
-  return { finalOutput: state.draft };
-};
+
 
 /**
  * Uvjetna funkcija za reflection petlju nakon critique_draft čvora
