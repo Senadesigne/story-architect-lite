@@ -94,50 +94,50 @@ export const AIChatSidebar: React.FC = () => {
                 </button>
             </div>
 
-            {/* Mode Selector */}
-            <div className="p-2 border-b border-border bg-muted/10 flex gap-1">
-                {!isStudioMode && (
+            {/* Mode Selector & Model Config */}
+            <div className="p-2 border-b border-border bg-muted/10 space-y-2">
+                <div className="flex gap-1">
+                    {/* Primary Mode Button (Planner or Writer) */}
                     <button
-                        onClick={() => setMode('planner')}
+                        onClick={() => setMode(isStudioMode ? 'writer' : 'planner')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                            mode === 'planner'
+                            (mode === 'planner' || mode === 'writer')
                                 ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                     >
-                        <BookOpen className="w-4 h-4" />
-                        Planner
+                        {isStudioMode ? <PenTool className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                        {isStudioMode ? 'Writer' : 'Planner'}
                     </button>
-                )}
 
-                {isStudioMode && (
+                    {/* Brainstorming Button - Always second, fixed position relative to first */}
                     <button
-                        onClick={() => setMode('writer')}
+                        onClick={() => setMode('brainstorming')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                            mode === 'writer'
+                            mode === 'brainstorming'
                                 ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                     >
-                        <PenTool className="w-4 h-4" />
-                        Writer
+                        <BrainCircuit className="w-4 h-4" />
+                        Brainstorming
                     </button>
-                )}
+                </div>
 
-                <button
-                    onClick={() => setMode('brainstorming')}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                        mode === 'brainstorming'
-                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                >
-                    <BrainCircuit className="w-4 h-4" />
-                    Brainstorming
-                </button>
+                {/* Worker Model Selector */}
+                <div className="px-1">
+                    <select
+                        className="w-full p-1.5 text-xs rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        onChange={(e) => usePlannerAIStore.getState().setWorkerModel(e.target.value)}
+                        defaultValue="claude-3-5-sonnet-20240620"
+                    >
+                        <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (Writer)</option>
+                        <option value="gpt-4o">GPT-4o (Writer)</option>
+                        <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fast)</option>
+                    </select>
+                </div>
             </div>
 
             {/* Context Info (Planner Mode only) */}

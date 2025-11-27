@@ -30,6 +30,9 @@ interface PlannerAIState {
   // UI Stanje
   activeView: 'planner' | 'studio'; // Prati gdje se korisnik nalazi
 
+  // Model Selector
+  workerModel: string; // ID modela za Workera (npr. "claude-3-5-sonnet-20240620")
+
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
 
@@ -43,6 +46,7 @@ interface PlannerAIState {
   closeModal: () => void;
   setMode: (mode: 'planner' | 'brainstorming' | 'writer') => void;
   setActiveView: (view: 'planner' | 'studio') => void;
+  setWorkerModel: (modelId: string) => void;
   setPendingApplication: (content: string | null) => void;
   setEditorContent: (content: string | null) => void;
   setPendingGhostText: (content: string | null) => void;
@@ -65,6 +69,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   projectId: null,
   mode: 'planner', // Default mode
   activeView: 'planner',
+  workerModel: 'claude-3-5-sonnet-20240620', // Default model
   pendingApplication: null,
   editorContent: null,
   pendingGhostText: null,
@@ -119,6 +124,10 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
   setActiveView: (view) => {
     set({ activeView: view });
+  },
+
+  setWorkerModel: (modelId) => {
+    set({ workerModel: modelId });
   },
 
   setPendingApplication: (content) => {
@@ -188,6 +197,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         userInput: content.trim(),
         plannerContext: state.context,
         mode: state.mode, // Šaljemo odabrani mod
+        workerModel: state.workerModel, // Šaljemo odabrani model za Workera
         editorContent: currentEditorContent || state.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,

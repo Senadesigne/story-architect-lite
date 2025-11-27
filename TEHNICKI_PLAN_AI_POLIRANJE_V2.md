@@ -60,22 +60,22 @@ Cilj je optimizirati troškove i kvalitetu, te pripremiti sustav za lokalni LLM.
 ### 3.1. Backend (`server/src/services/ai/`)
 
 #### A. `ai.factory.ts` & `ai.service.ts`
-*   [ ] Dodati `createManagerProvider()` i `createWorkerProvider()` funkcije.
-*   [ ] Implementirati logiku za odabir modela iz konfiguracije.
+*   [x] Dodati `createManagerProvider()` i `createWorkerProvider()` funkcije.
+*   [x] Implementirati logiku za odabir modela iz konfiguracije.
 
 #### B. `graph/state.ts`
-*   [ ] Dodati `workerPrompt` u `AgentState` (string).
-*   [ ] Dodati `managerAnalysis` u `AgentState` (opcionalno, za debug).
+*   [x] Dodati `workerPrompt` u `AgentState` (string).
+*   [x] Dodati `managerAnalysis` u `AgentState` (opcionalno, za debug).
 
 #### C. `graph/nodes.ts`
-*   [ ] **Refaktorirati `generateDraftNode`:** Preimenovati u `workerGenerationNode` i pojednostaviti (samo prima prompt i generira).
-*   [ ] **Kreirati `managerContextNode`:**
+*   [x] **Refaktorirati `generateDraftNode`:** Preimenovati u `workerGenerationNode` i pojednostaviti (samo prima prompt i generira).
+*   [x] **Kreirati `managerContextNode`:**
     *   Implementirati logiku za Writer mode (analiza konteksta -> prompt).
     *   Implementirati logiku za Brainstorming mode (analiza povijesti -> prompt).
-*   [ ] **Ažurirati `critiqueDraftNode`:** Osigurati da koristi `createManagerProvider()`.
+*   [x] **Ažurirati `critiqueDraftNode`:** Osigurati da koristi `createManagerProvider()`.
 
 #### D. `graph/graph.ts`
-*   [ ] Rekonstruirati graf da uključuje nove čvorove:
+*   [x] Rekonstruirati graf da uključuje nove čvorove:
     *   `START` -> `transform_query` -> `retrieve_context` -> `route_task`
     *   `route_task` -> `manager_context_node` (umjesto direktno na generation)
     *   `manager_context_node` -> `worker_generation_node`

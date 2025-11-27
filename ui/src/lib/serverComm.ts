@@ -237,6 +237,7 @@ export async function chat(
     userInput: string;
     plannerContext?: string;
     mode?: 'planner' | 'brainstorming' | 'writer';
+    workerModel?: string;
     editorContent?: string;
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
   }
