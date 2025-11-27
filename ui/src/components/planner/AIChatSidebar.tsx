@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
-import { X, Send, Sparkles, BrainCircuit, BookOpen, Check } from 'lucide-react';
+import { X, Send, Sparkles, BrainCircuit, BookOpen, Check, PenTool, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
 
@@ -8,14 +8,21 @@ export const AIChatSidebar: React.FC = () => {
     const {
         isOpen,
         closeModal,
-        messages,
+        plannerMessages,
+        writerMessages,
+        brainstormingMessages,
         sendMessage,
         isLoading,
         mode,
         setMode,
+        context,
         pendingApplication,
-        context
+        setGhostTextAction
     } = usePlannerAIStore();
+
+    const messages = mode === 'planner' ? plannerMessages :
+        mode === 'writer' ? writerMessages :
+            brainstormingMessages;
 
     const [input, setInput] = React.useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -79,9 +86,9 @@ export const AIChatSidebar: React.FC = () => {
                 </button>
             </div>
 
-            {/* Mode Selector - sakriveno u Studio modu */}
-            {!isStudioMode && (
-                <div className="p-2 border-b border-border bg-muted/10 flex gap-1">
+            {/* Mode Selector */}
+            <div className="p-2 border-b border-border bg-muted/10 flex gap-1">
+                {!isStudioMode && (
                     <button
                         onClick={() => setMode('planner')}
                         className={cn(
@@ -94,20 +101,36 @@ export const AIChatSidebar: React.FC = () => {
                         <BookOpen className="w-4 h-4" />
                         Planner
                     </button>
+                )}
+
+                <button
+                    onClick={() => setMode('brainstorming')}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                        mode === 'brainstorming'
+                            ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                >
+                    <BrainCircuit className="w-4 h-4" />
+                    Brainstorming
+                </button>
+
+                {isStudioMode && (
                     <button
-                        onClick={() => setMode('brainstorming')}
+                        onClick={() => setMode('writer')}
                         className={cn(
                             "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                            mode === 'brainstorming'
+                            mode === 'writer'
                                 ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                     >
-                        <BrainCircuit className="w-4 h-4" />
-                        Brainstorming
+                        <PenTool className="w-4 h-4" />
+                        Writer
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Context Info (Planner Mode only) */}
             {mode === 'planner' && context && (
@@ -124,6 +147,9 @@ export const AIChatSidebar: React.FC = () => {
                         <p>Kako vam mogu pomoći s vašom pričom danas?</p>
                         {mode === 'brainstorming' && (
                             <p className="text-xs opacity-70">Brainstorming mod je aktivan - slobodno istražujte ideje!</p>
+                        )}
+                        {mode === 'writer' && (
+                            <p className="text-xs opacity-70">Writer mod je aktivan - zatražite pomoć u pisanju!</p>
                         )}
                     </div>
                 )}
@@ -159,15 +185,32 @@ export const AIChatSidebar: React.FC = () => {
             </div>
 
             {/* Pending Application Preview (Keep All) */}
-            {pendingApplication && mode === 'planner' && (
+            {pendingApplication && (mode === 'planner' || mode === 'writer') && (
                 <div className="p-3 border-t border-border bg-primary/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-primary flex items-center gap-1">
-                            <Check className="w-3 h-3" /> Spreman prijedlog
+                            <Check className="w-3 h-3" /> {mode === 'writer' ? 'Predloženi tekst' : 'Spreman prijedlog'}
                         </span>
-                        {/* Ovdje ćemo kasnije dodati pravi Keep All gumb */}
+                        {mode === 'writer' && (
+                            <div className="flex gap-1">
+                                <button
+                                    onClick={() => setGhostTextAction('reject')}
+                                    className="p-1 hover:bg-red-100 text-red-500 rounded transition-colors"
+                                    title="Odbaci"
+                                >
+                                    <ThumbsDown className="w-3 h-3" />
+                                </button>
+                                <button
+                                    onClick={() => setGhostTextAction('accept')}
+                                    className="p-1 hover:bg-green-100 text-green-600 rounded transition-colors"
+                                    title="Prihvati"
+                                >
+                                    <ThumbsUp className="w-3 h-3" />
+                                </button>
+                            </div>
+                        )}
                     </div>
-                    <div className="text-xs text-muted-foreground line-clamp-2 italic border-l-2 border-primary/30 pl-2">
+                    <div className="text-xs text-muted-foreground line-clamp-3 italic border-l-2 border-primary/30 pl-2 max-h-24 overflow-y-auto">
                         {pendingApplication}
                     </div>
                 </div>
@@ -181,7 +224,11 @@ export const AIChatSidebar: React.FC = () => {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={mode === 'planner' ? "Zatražite pomoć oko trenutnog polja..." : "Brainstormajte ideje..."}
+                        placeholder={
+                            mode === 'planner' ? "Zatražite pomoć oko trenutnog polja..." :
+                                mode === 'writer' ? "Opiši scenu, napiši dijalog ili nastavi priču..." :
+                                    "Brainstormajte ideje..."
+                        }
                         className="w-full min-h-[80px] max-h-[160px] p-3 pr-10 rounded-md border border-input bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                         rows={3}
                     />

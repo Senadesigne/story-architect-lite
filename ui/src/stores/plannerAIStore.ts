@@ -13,11 +13,19 @@ interface PlannerAIState {
   context: string | null; // npr. "planner_logline"
   targetField: string | null; // npr. "logline" (ime polja u formi)
   projectId: string | null;
-  mode: 'planner' | 'brainstorming'; // Novi mod rada
+  mode: 'planner' | 'brainstorming' | 'writer'; // Novi mod rada
   pendingApplication: string | null; // Sadržaj koji čeka na "Keep All"
 
-  // Chat stanje
-  messages: ChatMessage[];
+  // Studio specifično stanje
+  editorContent: string | null;
+  pendingGhostText: string | null;
+  ghostTextAction: 'idle' | 'accept' | 'reject';
+
+  // Chat stanje - RAZDVOJENO PO MODOVIMA
+  plannerMessages: ChatMessage[];
+  writerMessages: ChatMessage[];
+  brainstormingMessages: ChatMessage[];
+
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
 
@@ -29,9 +37,12 @@ interface PlannerAIState {
     initialPrompt?: string
   ) => void;
   closeModal: () => void;
-  setMode: (mode: 'planner' | 'brainstorming') => void;
+  setMode: (mode: 'planner' | 'brainstorming' | 'writer') => void;
   setPendingApplication: (content: string | null) => void;
-  sendMessage: (content: string) => Promise<void>;
+  setEditorContent: (content: string | null) => void;
+  setPendingGhostText: (content: string | null) => void;
+  setGhostTextAction: (action: 'idle' | 'accept' | 'reject') => void;
+  sendMessage: (content: string, currentEditorContent?: string) => Promise<void>;
   clearMessages: () => void;
   reset: () => void;
 }
@@ -49,7 +60,15 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   projectId: null,
   mode: 'planner', // Default mode
   pendingApplication: null,
-  messages: [],
+  editorContent: null,
+  pendingGhostText: null,
+  ghostTextAction: 'idle',
+
+  // Inicijalno prazni nizovi poruka
+  plannerMessages: [],
+  writerMessages: [],
+  brainstormingMessages: [],
+
   isLoading: false,
   lastResponse: null,
 
@@ -62,12 +81,12 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       context,
       targetField,
       projectId,
-      // Ne resetiramo poruke ako je isti kontekst/projekt da sačuvamo historiju? 
-      // Za sada resetiramo kao i prije, ali to možemo promijeniti za perzistentnost.
-      // messages: [], // TODO: Razmisliti o perzistentnosti
+      // Ne resetiramo poruke da sačuvamo historiju
       lastResponse: null,
       isLoading: false,
       pendingApplication: null,
+      pendingGhostText: null,
+      ghostTextAction: 'idle',
     });
 
     // Ako postoji initialPrompt, odmah ga pošalji
@@ -81,15 +100,9 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   closeModal: () => {
     set({
       isOpen: false,
-      // Ne čistimo ostalo stanje da bi ostalo u sidebaru kad se ponovno otvori?
-      // Za sada čistimo da bude kao modal, ali za sidebar možda želimo sačuvati stanje.
-      // context: null,
-      // targetField: null,
-      // projectId: null,
-      // messages: [],
-      // isLoading: false,
-      // lastResponse: null,
       pendingApplication: null,
+      pendingGhostText: null,
+      ghostTextAction: 'idle',
     });
   },
 
@@ -101,7 +114,19 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     set({ pendingApplication: content });
   },
 
-  sendMessage: async (content: string) => {
+  setEditorContent: (content) => {
+    set({ editorContent: content });
+  },
+
+  setPendingGhostText: (content) => {
+    set({ pendingGhostText: content, ghostTextAction: 'idle' });
+  },
+
+  setGhostTextAction: (action) => {
+    set({ ghostTextAction: action });
+  },
+
+  sendMessage: async (content: string, currentEditorContent?: string) => {
     const state = get();
 
     if (!state.projectId || !state.context || state.isLoading) {
@@ -114,12 +139,24 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       timestamp: new Date(),
     };
 
-    const currentMessages = state.messages;
+    // Odredi koji niz poruka ažuriramo
+    const currentMode = state.mode;
+    let currentMessages: ChatMessage[] = [];
 
-    set((prevState) => ({
-      messages: [...prevState.messages, userMessage],
-      isLoading: true,
-    }));
+    if (currentMode === 'planner') currentMessages = state.plannerMessages;
+    else if (currentMode === 'writer') currentMessages = state.writerMessages;
+    else if (currentMode === 'brainstorming') currentMessages = state.brainstormingMessages;
+
+    // Optimistično ažuriranje UI-a
+    set((prevState) => {
+      const updates: Partial<PlannerAIState> = { isLoading: true };
+
+      if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, userMessage];
+      else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, userMessage];
+      else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, userMessage];
+
+      return updates as PlannerAIState;
+    });
 
     try {
       // Pozovi API s plannerContext, messages i MODE parametrom
@@ -127,6 +164,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         userInput: content.trim(),
         plannerContext: state.context,
         mode: state.mode, // Šaljemo odabrani mod
+        editorContent: currentEditorContent || state.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content,
@@ -139,13 +177,21 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         timestamp: new Date(),
       };
 
-      set((prevState) => ({
-        messages: [...prevState.messages, assistantMessage],
-        isLoading: false,
-        lastResponse: finalState.finalOutput || null,
-        // Automatski postavi pendingApplication ako je uspješan odgovor
-        pendingApplication: finalState.finalOutput || null
-      }));
+      set((prevState) => {
+        const updates: Partial<PlannerAIState> = {
+          isLoading: false,
+          lastResponse: finalState.finalOutput || null,
+          pendingApplication: finalState.finalOutput || null,
+          pendingGhostText: state.mode === 'writer' ? (finalState.finalOutput || null) : null,
+          ghostTextAction: 'idle'
+        };
+
+        if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, assistantMessage];
+        else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, assistantMessage];
+        else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, assistantMessage];
+
+        return updates as PlannerAIState;
+      });
 
     } catch (error) {
       console.error('❌ Greška prilikom slanja poruke:', error);
@@ -156,20 +202,41 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         timestamp: new Date(),
       };
 
-      set((prevState) => ({
-        messages: [...prevState.messages, errorMessage],
-        isLoading: false,
-        lastResponse: null,
-        pendingApplication: null
-      }));
+      set((prevState) => {
+        const updates: Partial<PlannerAIState> = {
+          isLoading: false,
+          lastResponse: null,
+          pendingApplication: null,
+          pendingGhostText: null,
+          ghostTextAction: 'idle'
+        };
+
+        if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, errorMessage];
+        else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, errorMessage];
+        else if (currentMode === 'brainstorming') updates.brainstormingMessages = [...prevState.brainstormingMessages, errorMessage];
+
+        return updates as PlannerAIState;
+      });
     }
   },
 
   clearMessages: () => {
-    set({
-      messages: [],
-      lastResponse: null,
-      pendingApplication: null,
+    const state = get();
+    const currentMode = state.mode;
+
+    set((prevState) => {
+      const updates: Partial<PlannerAIState> = {
+        lastResponse: null,
+        pendingApplication: null,
+        pendingGhostText: null,
+        ghostTextAction: 'idle',
+      };
+
+      if (currentMode === 'planner') updates.plannerMessages = [];
+      else if (currentMode === 'writer') updates.writerMessages = [];
+      else if (currentMode === 'brainstorming') updates.brainstormingMessages = [];
+
+      return updates as PlannerAIState;
     });
   },
 
@@ -181,7 +248,12 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       projectId: null,
       mode: 'planner',
       pendingApplication: null,
-      messages: [],
+      editorContent: null,
+      pendingGhostText: null,
+      ghostTextAction: 'idle',
+      plannerMessages: [],
+      writerMessages: [],
+      brainstormingMessages: [],
       isLoading: false,
       lastResponse: null,
     });

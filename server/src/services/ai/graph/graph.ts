@@ -38,6 +38,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
     mode: {
       value: (x, y) => y ?? x,
     },
+    editorContent: {
+      value: (x, y) => y ?? x,
+    },
     // RAG faza
     transformedQuery: {
       value: (x, y) => y ?? x,
@@ -110,7 +113,8 @@ export function createStoryArchitectGraph() {
   graph.addEdge("handle_simple_retrieval" as any, END); // Završava tijek za jednostavne upite
 
   // ✅ LINEARNI EDGE-OVI ZA REFLECTION PETLJU (Zadatak 3.10):
-  graph.addEdge("generate_draft" as any, "critique_draft" as any); // Generirani nacrt ide na kritiku
+  // graph.addEdge("generate_draft" as any, "critique_draft" as any); // STARI LINEARNI EDGE - ZAMIJENJEN UVJETNIM
+
   graph.addEdge("refine_draft" as any, "critique_draft" as any); // Poboljšani nacrt vraća se na kritiku (stvara petlju)
 
   // ✅ TEXT MODIFICATION EDGE:
@@ -129,6 +133,17 @@ export function createStoryArchitectGraph() {
       "generate_draft": "generate_draft", // ✅ Sada vodi na generate_draft čvor
       "modify_text": "modify_text", // ✅ Nova ruta za modifikaciju teksta
       [END]: END
+    } as any
+  );
+
+  // ✅ UVJETNI EDGE-OVI ZA GENERATE DRAFT (Novi zahtjev za Brainstorming):
+  // Ako je brainstorming, preskačemo kritiku i idemo na kraj.
+  graph.addConditionalEdges(
+    "generate_draft" as any,
+    generateDraftCondition,
+    {
+      "critique_draft": "critique_draft",
+      "final_output": "final_output"
     } as any
   );
 
@@ -169,11 +184,12 @@ export async function runStoryArchitectGraph(
   userInput: string,
   storyContext: string,
   plannerContext?: string,
-  mode?: 'planner' | 'brainstorming'
+  mode?: 'planner' | 'brainstorming' | 'writer',
+  editorContent?: string
 ): Promise<AgentState> {
 
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext, mode);
+  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent);
 
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,
@@ -226,6 +242,22 @@ export function routingCondition(state: AgentState): string {
       console.log("[ROUTING_CONDITION] Routing to END (cannot answer or unknown)");
       return END;
   }
+}
+
+/**
+ * Uvjetna funkcija za routing nakon generate_draft čvora
+ * Ako je brainstorming, preskače kritiku.
+ */
+export function generateDraftCondition(state: AgentState): string {
+  console.log(`[GENERATE_DRAFT_CONDITION] Checking mode: ${state.mode}`);
+
+  if (state.mode === 'brainstorming') {
+    console.log("[GENERATE_DRAFT_CONDITION] Brainstorming mode -> Skipping critique, going to final_output");
+    return "final_output";
+  }
+
+  console.log("[GENERATE_DRAFT_CONDITION] Standard mode -> Proceeding to critique_draft");
+  return "critique_draft";
 }
 
 // Novi čvor za finalizaciju

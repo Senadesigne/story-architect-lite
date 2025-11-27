@@ -826,7 +826,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { userInput, plannerContext, messages, mode } = getValidatedBody<ChatRequestBody>(c);
+    const { userInput, plannerContext, messages, mode, editorContent } = getValidatedBody<ChatRequestBody>(c);
 
     requireValidUUID(projectId, 'project ID');
 
@@ -844,13 +844,14 @@ app.post(
       hasMessages: !!messages,
       messagesCount: messages?.length || 0,
       userInputLength: userInput.length,
+      hasEditorContent: !!editorContent
     });
 
     // AI Graf Integracija
     const finalState = await handleDatabaseOperation(async () => {
       const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
       const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode);
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent);
       return state;
     });
 

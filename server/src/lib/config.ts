@@ -1,15 +1,17 @@
 export function getAIConfig() {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    // Ovo je ključno za sigurnost i konfiguraciju
+  if (!anthropicApiKey && !openaiApiKey) {
+    // Bacamo grešku samo ako NITI JEDAN ključ nije postavljen
     throw new Error(
-      'AI configuration error: ANTHROPIC_API_KEY is not set in .env file.',
+      'AI configuration error: Neither ANTHROPIC_API_KEY nor OPENAI_API_KEY is set in .env file.',
     );
   }
 
-  // Vraćamo objekt radi lakšeg proširenja u budućnosti
+  // Vraćamo objekt s oba ključa (mogu biti undefined)
   return {
-    anthropicApiKey: apiKey,
+    anthropicApiKey,
+    openaiApiKey,
   };
 }

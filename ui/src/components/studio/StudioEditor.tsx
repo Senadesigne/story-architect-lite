@@ -4,6 +4,9 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { FloatingMenuUI } from './FloatingMenuUI';
 import { useStudioStore } from '@/stores/studioStore';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
+import { GhostTextExtension } from './GhostTextExtension';
+import { useEffect } from 'react';
 
 interface StudioEditorProps {
   content: string;
@@ -18,39 +21,73 @@ const extensions = [
   }),
   FloatingMenu.configure({
     shouldShow: ({ editor }) => {
-      // Pokaži floating menu samo kada je tekst selektiran
       return !editor.state.selection.empty;
     },
   }),
+  GhostTextExtension,
 ];
 
-export function StudioEditor({ 
-  content, 
+export function StudioEditor({
+  content,
   onContentChange,
-  onSelectionChange 
+  onSelectionChange
 }: StudioEditorProps) {
   const { setEditor } = useStudioStore();
-  
+  const {
+    setEditorContent: setAIEditorContent,
+    pendingGhostText,
+    ghostTextAction,
+    setGhostTextAction,
+    setPendingGhostText
+  } = usePlannerAIStore();
+
   const editor = useEditor({
     extensions,
     content,
     onCreate: ({ editor }) => {
-      // Dijeli editor instancu sa store-om kada se kreira
       setEditor(editor);
+      // Inicijalno postavi sadržaj u AI store
+      setAIEditorContent(editor.getHTML());
     },
     onUpdate: ({ editor }) => {
-      onContentChange(editor.getHTML());
+      const html = editor.getHTML();
+      onContentChange(html);
+      setAIEditorContent(html);
     },
     onSelectionUpdate: ({ editor }) => {
       const { from, to, empty } = editor.state.selection;
       onSelectionChange({ from, to, empty, text: editor.state.doc.textBetween(from, to) });
     },
     onDestroy: () => {
-      // Očisti editor instancu kada se komponenta uništi
       setEditor(null);
     },
   });
 
+  // Efekt za prikazivanje Ghost Teksta
+  useEffect(() => {
+    if (editor) {
+      // @ts-ignore - Custom command
+      editor.commands.setGhostText(pendingGhostText);
+    }
+  }, [editor, pendingGhostText]);
+
+  // Efekt za prihvaćanje/odbijanje Ghost Teksta
+  useEffect(() => {
+    if (!editor || ghostTextAction === 'idle') return;
+
+    if (ghostTextAction === 'accept' && pendingGhostText) {
+      // Ubaci tekst na trenutnu poziciju
+      editor.commands.insertContent(pendingGhostText);
+      // Očisti ghost text
+      setPendingGhostText(null);
+    } else if (ghostTextAction === 'reject') {
+      // Samo očisti ghost text
+      setPendingGhostText(null);
+    }
+
+    // Resetiraj akciju
+    setGhostTextAction('idle');
+  }, [editor, ghostTextAction, pendingGhostText, setPendingGhostText, setGhostTextAction]);
 
   return (
     <div className="h-full flex flex-col">
@@ -61,9 +98,9 @@ export function StudioEditor({
         <div className="mx-auto w-full max-w-3xl min-h-[calc(100%-4rem)] bg-background rounded-lg shadow-card border border-border/50">
           {/* Content area - editor s prose stilovima */}
           <div className="p-12 md:p-16">
-            <EditorContent 
-              editor={editor} 
-              className="prose prose-lg prose-slate dark:prose-invert max-w-none focus:outline-none" 
+            <EditorContent
+              editor={editor}
+              className="prose prose-lg prose-slate dark:prose-invert max-w-none focus:outline-none"
             />
           </div>
         </div>
