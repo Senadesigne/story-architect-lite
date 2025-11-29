@@ -193,7 +193,7 @@ export async function runStoryArchitectGraph(
   userInput: string,
   storyContext: string,
   plannerContext?: string,
-  mode?: 'planner' | 'brainstorming' | 'writer',
+  mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
   editorContent?: string,
   messages: BaseMessage[] = []
 ): Promise<AgentState> {

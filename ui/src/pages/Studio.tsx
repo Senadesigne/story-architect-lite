@@ -13,10 +13,22 @@ export function Studio() {
     activeSceneId,
     updateContent,
     setSelectedText,
-    setCursorPosition
+    setCursorPosition,
+    saveActiveScene
   } = useStudioStore();
 
   const { openModal, setMode, isOpen } = usePlannerAIStore();
+
+  // Auto-save effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeSceneId && editorContent) {
+        saveActiveScene();
+      }
+    }, 2000); // 2 seconds debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [editorContent, activeSceneId, saveActiveScene]);
 
   // Auto-open AI sidebar u brainstorming modu kad se uđe u Studio
   useEffect(() => {

@@ -36,6 +36,16 @@ interface PlannerAIState {
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
 
+  // Session Management
+  currentSessionId: string | null;
+  sessions: ChatSession[];
+
+  loadSessions: (projectId: string) => Promise<void>;
+  createSession: (projectId: string, name: string, mode: 'planner' | 'studio') => Promise<void>;
+  loadSession: (sessionId: string) => Promise<void>;
+  deleteSession: (sessionId: string) => Promise<void>;
+  resetSession: () => void; // Clears current session ID and messages
+
   // Akcije
   openModal: (
     context: string,
@@ -54,6 +64,14 @@ interface PlannerAIState {
   sendMessage: (content: string, currentEditorContent?: string) => Promise<void>;
   clearMessages: () => void;
   reset: () => void;
+}
+
+export interface ChatSession {
+  id: string;
+  name: string;
+  mode: 'planner' | 'studio';
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -75,6 +93,10 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   pendingGhostText: null,
   ghostTextAction: 'idle',
 
+  // Session state
+  currentSessionId: null,
+  sessions: [],
+
   // Inicijalno prazni nizovi poruka
   plannerMessages: [],
   writerMessages: [],
@@ -83,6 +105,113 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
   isLoading: false,
   lastResponse: null,
+
+  // --- Session Actions ---
+
+  loadSessions: async (projectId: string) => {
+    try {
+      const sessions = await api.getSessions(projectId);
+      set({ sessions });
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    }
+  },
+
+  resetSession: () => {
+    set({
+      currentSessionId: null,
+      plannerMessages: [],
+      writerMessages: [],
+      plannerBrainstormingMessages: [],
+      studioBrainstormingMessages: [],
+    });
+  },
+
+  createSession: async (projectId: string, name: string, mode: 'planner' | 'studio') => {
+    try {
+      const session = await api.createSession(projectId, name, mode);
+      set((state) => ({
+        sessions: [session, ...state.sessions],
+        currentSessionId: session.id,
+        // Reset messages for the new session
+        plannerMessages: mode === 'planner' ? [] : state.plannerMessages,
+        writerMessages: mode === 'planner' ? [] : state.writerMessages, // Assuming writer uses planner mode for now or separate?
+        // Actually, let's just reset the relevant messages based on mode
+        ...(mode === 'planner' ? { plannerMessages: [] } : {}),
+        // If studio mode, we might want to reset studio messages?
+        // For now, let's just set the session ID and add to list.
+        // The backend handles the actual creation.
+      }));
+    } catch (error) {
+      console.error('Failed to create session:', error);
+    }
+  },
+
+  loadSession: async (sessionId: string) => {
+    try {
+      const sessionData = await api.getSession(sessionId);
+      // sessionData should contain the session info and messages
+      // We need to parse messages and populate the appropriate message arrays
+
+      // Assuming sessionData structure: { session: ChatSession, messages: ChatMessage[] }
+      // If the API returns just the session, we might need to fetch messages separately?
+      // Let's assume getSession returns everything needed.
+
+      const { session, messages } = sessionData;
+
+      set((state) => {
+        const updates: Partial<PlannerAIState> = {
+          currentSessionId: session.id,
+          mode: session.mode === 'studio' ? 'writer' : 'planner', // Map session mode to store mode?
+          // This mapping might need adjustment based on how modes are defined.
+          // Interface says mode: 'planner' | 'brainstorming' | 'writer'
+          // Session says mode: 'planner' | 'studio'
+        };
+
+        // Populate messages
+        // We need to map database messages to ChatMessage interface
+        const chatMessages: ChatMessage[] = messages.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.createdAt),
+        }));
+
+        if (session.mode === 'planner') {
+          updates.plannerMessages = chatMessages;
+        } else {
+          // Studio session -> Writer messages? or Studio Brainstorming?
+          // Let's assume Studio -> Writer for now as per previous context
+          updates.writerMessages = chatMessages;
+        }
+
+        return updates as PlannerAIState;
+      });
+
+    } catch (error) {
+      console.error('Failed to load session:', error);
+    }
+  },
+
+  deleteSession: async (sessionId: string) => {
+    try {
+      await api.deleteSession(sessionId);
+      set((state) => ({
+        sessions: state.sessions.filter((s) => s.id !== sessionId),
+        // If the deleted session was active, reset the current session
+        ...(state.currentSessionId === sessionId ? {
+          currentSessionId: null,
+          plannerMessages: [],
+          writerMessages: [],
+          plannerBrainstormingMessages: [],
+          studioBrainstormingMessages: [],
+        } : {})
+      }));
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+    }
+  },
+
+  // --- Existing Actions ---
 
   /**
    * Otvara sidebar (bivši modal) i postavlja kontekst
@@ -100,6 +229,9 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       pendingGhostText: null,
       ghostTextAction: 'idle',
     });
+
+    // Load sessions when opening
+    get().loadSessions(projectId);
 
     // Ako postoji initialPrompt, odmah ga pošalji
     if (initialPrompt) {
@@ -153,6 +285,18 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       return;
     }
 
+    // Auto-create session if none exists
+    if (!state.currentSessionId) {
+      // Generate a name from the first few words
+      const name = content.substring(0, 30) + (content.length > 30 ? '...' : '');
+      await state.createSession(state.projectId, name, state.activeView);
+      // State is updated by createSession, so we need to get fresh state
+    }
+
+    // Re-get state after potential session creation
+    const freshState = get();
+    const sessionId = freshState.currentSessionId;
+
     const userMessage: ChatMessage = {
       role: 'user',
       content: content.trim(),
@@ -160,17 +304,17 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     };
 
     // Odredi koji niz poruka ažuriramo
-    const currentMode = state.mode;
+    const currentMode = freshState.mode;
     let currentMessages: ChatMessage[] = [];
 
-    if (currentMode === 'planner') currentMessages = state.plannerMessages;
-    else if (currentMode === 'writer') currentMessages = state.writerMessages;
+    if (currentMode === 'planner') currentMessages = freshState.plannerMessages;
+    else if (currentMode === 'writer') currentMessages = freshState.writerMessages;
     else if (currentMode === 'brainstorming') {
       // Odaberi pravi brainstorming niz ovisno o view-u
-      if (state.activeView === 'studio') {
-        currentMessages = state.studioBrainstormingMessages;
+      if (freshState.activeView === 'studio') {
+        currentMessages = freshState.studioBrainstormingMessages;
       } else {
-        currentMessages = state.plannerBrainstormingMessages;
+        currentMessages = freshState.plannerBrainstormingMessages;
       }
     }
 
@@ -195,10 +339,11 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       // Pozovi API s plannerContext, messages i MODE parametrom
       const finalState = await api.chat(state.projectId, {
         userInput: content.trim(),
-        plannerContext: state.context,
-        mode: state.mode, // Šaljemo odabrani mod
-        workerModel: state.workerModel, // Šaljemo odabrani model za Workera
-        editorContent: currentEditorContent || state.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
+        sessionId: sessionId || undefined, // Send sessionId
+        plannerContext: freshState.context || undefined,
+        mode: freshState.mode, // Šaljemo odabrani mod
+        workerModel: freshState.workerModel, // Šaljemo odabrani model za Workera
+        editorContent: currentEditorContent || freshState.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content,
@@ -216,7 +361,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
           isLoading: false,
           lastResponse: finalState.finalOutput || null,
           pendingApplication: finalState.finalOutput || null,
-          pendingGhostText: state.mode === 'writer' ? (finalState.finalOutput || null) : null,
+          pendingGhostText: freshState.mode === 'writer' ? (finalState.finalOutput || null) : null,
           ghostTextAction: 'idle'
         };
 
@@ -310,6 +455,8 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       studioBrainstormingMessages: [],
       isLoading: false,
       lastResponse: null,
+      currentSessionId: null,
+      sessions: [],
     });
   },
 }));

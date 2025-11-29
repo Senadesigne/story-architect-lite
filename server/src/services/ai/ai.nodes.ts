@@ -1,22 +1,17 @@
 import { AgentState } from './ai.state';
 import { getRelevantContext } from './ai.retriever';
-import { ChatAnthropic } from '@langchain/anthropic';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { ChatOllama } from '@langchain/community/chat_models/ollama';
+import { createManagerProvider, createWorkerProvider } from './ai.factory';
 
 /**
  * Čvor 1: Transformira korisnički upit u bolji upit za RAG.
- * Koristi "AI Mentora" (Anthropic Claude Haiku).
+ * Koristi Managera (Claude Haiku).
  */
 export async function transformQueryNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 1: TRANSFORMACIJA UPITA ---");
-  
+
   try {
-    const mentor = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-haiku-20240307", // Koristimo brzi Haiku model
-      temperature: 0.0,
-    });
+    const mentor = createManagerProvider(0.0);
 
     const systemPrompt = `Ti si ekspert za RAG. Korisnikov upit je zahtjev za kreativno pisanje. Pretvori ovaj upit u 3-5 specifičnih, hipotetskih upita optimiziranih za pretraživanje vektorske baze kako bi se prikupio sav potreban kontekst za pisanje scene. Fokusiraj se na dohvaćanje profila likova, relevantnih prošlih događaja, lokacija i ključnih objekata. Vrati samo listu upita, odvojenu novim redom (npr. "Profil lika Ana\nProšla svađa Ane i Marka").`;
 
@@ -26,52 +21,46 @@ export async function transformQueryNode(state: AgentState): Promise<Partial<Age
     ]);
 
     const transformedQuery = response.content.toString();
-    
+
     console.log("Transformirani upit:", transformedQuery);
     return { transformedQuery: transformedQuery };
-    
+
   } catch (error) {
     console.error("Greška u transformQueryNode:", error);
-    // Vraćamo originalni upit kao fallback
     return { transformedQuery: state.userInput };
   }
 }
 
 /**
  * Čvor 2: Dohvaća kontekst iz vektorske baze.
- * Koristi "Logističara" (naš retriever).
+ * (Nema promjene u modelu, samo logika)
  */
 export async function retrieveContextNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 2: DOHVAĆANJE KONTEKSTA ---");
   const query = state.transformedQuery ?? state.userInput;
-  
-  // Pozivamo funkciju koju smo definirali u Zad. 3.8a
+
   const ragContext = await getRelevantContext(query, 5);
-  
+
   console.log("Dohvaćen RAG kontekst:", ragContext.substring(0, 100) + "...");
   return { ragContext: ragContext };
 }
 
 /**
- * Čvor 3: Usmjerava zadatak na temelju korisničkog upita i konteksta.
- * Koristi "AI Mentora" (Lokalni LLM - Ollama) kao router.
+ * Čvor 3: Usmjerava zadatak.
+ * Koristi Managera.
  */
 export async function routeTaskNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 3: USMJERAVANJE ZADATKA ---");
-  
+
   try {
-    const router = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-haiku-20240307",
-      temperature: 0.0,
-    });
+    const router = createManagerProvider(0.0);
 
     const systemPrompt = `Ti si 'AI Logističar' i usmjerivač zadataka. Tvoj zadatak je klasificirati korisnički upit u JEDNU od tri kategorije, na temelju upita i dohvaćenog RAG konteksta.
 
 KATEGORIJE:
-1. **simple_retrieval**: Upit traži jednostavnu činjenicu, sažetak ili informaciju koja je EKSPLICITNO prisutna u RAG kontekstu. (Npr. "Tko je...", "Što je...", "Podsjeti me...", "Gdje je...").
-2. **creative_generation**: Upit zahtijeva novo, kreativno pisanje (npr. pisanje nove scene, dijaloga, opisa, brainstorminga) koje se oslanja na RAG kontekst, ali NIJE direktno u njemu. (Npr. "Napiši...", "Opiši...", "Generiraj...", "Zammisli...").
-3. **cannot_answer**: Upit traži nešto što nije povezano s pričom ili RAG kontekst ne sadrži relevantne informacije za odgovor.
+1. **simple_retrieval**: Upit traži jednostavnu činjenicu, sažetak ili informaciju koja je EKSPLICITNO prisutna u RAG kontekstu.
+2. **creative_generation**: Upit zahtijeva novo, kreativno pisanje (npr. pisanje nove scene, dijaloga, opisa, brainstorminga).
+3. **cannot_answer**: Upit traži nešto što nije povezano s pričom.
 
 KORISNIČKI UPIT:
 ${state.userInput}
@@ -79,7 +68,7 @@ ${state.userInput}
 DOHVAĆENI RAG KONTEKST:
 ${state.ragContext || 'Nema konteksta.'}
 
-Vrati samo JEDNU riječ - naziv kategorije (npr. "simple_retrieval").`;
+Vrati samo JEDNU riječ - naziv kategorije.`;
 
     const response = await router.invoke([
       new SystemMessage(systemPrompt),
@@ -87,36 +76,31 @@ Vrati samo JEDNU riječ - naziv kategorije (npr. "simple_retrieval").`;
 
     const decision = response.content.toString().trim().toLowerCase();
     const validDecisions = ["simple_retrieval", "creative_generation", "cannot_answer"];
-    
-    const routingDecision = validDecisions.includes(decision) 
+
+    const routingDecision = validDecisions.includes(decision)
       ? decision as "simple_retrieval" | "creative_generation" | "cannot_answer"
       : "cannot_answer";
-    
+
     console.log("Odluka usmjeravanja:", routingDecision);
     return { routingDecision };
-    
+
   } catch (error) {
     console.error("Greška u routeTaskNode:", error);
-    // Defaultno na kreativno generiranje ako je greška
     return { routingDecision: "creative_generation" };
   }
 }
 
 /**
- * Čvor 4: Obrađuje jednostavne upite za dohvaćanje informacija.
- * Koristi "AI Mentora" (Lokalni LLM - Ollama) za generiranje odgovora.
+ * Čvor 4: Jednostavno dohvaćanje.
+ * Koristi Managera.
  */
 export async function handleSimpleRetrievalNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 4: JEDNOSTAVNO DOHVAĆANJE ---");
-  
-  try {
-    const mentor = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-haiku-20240307",
-      temperature: 0.3,
-    });
 
-    const systemPrompt = `Ti si pomoćnik koji odgovara na pitanja o priči. Na temelju dohvaćenog konteksta, pruži jasan i koncizan odgovor na korisnikov upit. Koristi samo informacije iz konteksta. Ako informacija nije dostupna, ljubazno to naglasi.
+  try {
+    const mentor = createManagerProvider(0.3);
+
+    const systemPrompt = `Ti si pomoćnik koji odgovara na pitanja o priči. Na temelju dohvaćenog konteksta, pruži jasan i koncizan odgovor na korisnikov upit.
 
 KONTEKST PRIČE:
 ${state.ragContext || 'Nema dostupnog konteksta.'}
@@ -129,33 +113,28 @@ ${state.userInput}`;
     ]);
 
     const finalOutput = response.content.toString();
-    
-    console.log("Generirani odgovor:", finalOutput.substring(0, 100) + "...");
     return { finalOutput };
-    
+
   } catch (error) {
     console.error("Greška u handleSimpleRetrievalNode:", error);
-    return { finalOutput: "Nažalost, dogodila se greška pri obradi vašeg upita. Molim pokušajte ponovo." };
+    return { finalOutput: "Greška pri obradi upita." };
   }
 }
 
 /**
- * Čvor 5: Generira prvi nacrt kreativnog teksta.
- * Koristi "Pisca" (Claude 3 Sonnet) za generiranje.
+ * Čvor 5a: Manager priprema kontekst (NOVO).
+ * Koristi Managera.
  */
-export async function generateDraftNode(state: AgentState): Promise<Partial<AgentState>> {
-  console.log("--- KORAK 5: GENERIRANJE NACRTA ---");
-  
+export async function managerContextNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 5a: MANAGER PRIPREMA KONTEKST ---");
+
   try {
-    const writer = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-sonnet-20240229", // Snažniji model za kreativno pisanje
-      temperature: 0.8, // Viša temperatura za kreativnost
-    });
+    const manager = createManagerProvider(0.2);
 
-    const systemPrompt = `Ti si talentirani kreativni pisac. Na temelju korisničkog zahtjeva i dohvaćenog konteksta priče, napiši živopisan, uvjerljiv i emocionalno rezonantan tekst. Strogo se pridržavaj informacija iz konteksta (imena likova, lokacije, odnosi, prošli događaji), ali slobodno dodaj kreativne detalje koji obogaćuju priču.
+    const systemPrompt = `Ti si 'AI Manager' i glavni urednik. Tvoj zadatak je analizirati korisnikov zahtjev i sav dostupni kontekst, te pripremiti DETALJNE I PRECIZNE UPUTE za 'Workera' (AI Pisca).
+Worker NEĆE vidjeti cijeli kontekst koji ti vidiš, već samo tvoje upute. Zato moraš biti vrlo specifičan.
 
-KONTEKST PRIČE:
+KONTEKST PRIČE (RAG):
 ${state.ragContext || 'Nema specifičnog konteksta.'}
 
 GLOBALNI KONTEKST:
@@ -164,70 +143,95 @@ ${state.storyContext}
 KORISNIČKI ZAHTJEV:
 ${state.userInput}
 
-Napiši tekst koji je:
-- Vjeran postojećem kontekstu i likovima
-- Emocionalno uvjerljiv
-- Živopisan i detaljan
-- Prirodan u dijalogu i opisu`;
+Tvoj zadatak:
+1. Sintetiziraj najvažnije informacije iz konteksta koje su ključne za ovaj zadatak.
+2. Definiraj ton, stil i cilj scene/teksta.
+3. Napiši prompt za Workera koji sadrži sve te informacije.
+
+Vrati samo tekst prompta za Workera.`;
+
+    const response = await manager.invoke([
+      new SystemMessage(systemPrompt),
+    ]);
+
+    const workerPrompt = response.content.toString();
+    console.log("Manager generirao prompt za Workera.");
+
+    return { workerPrompt };
+
+  } catch (error) {
+    console.error("Greška u managerContextNode:", error);
+    // Fallback: proslijedi originalni upit i kontekst
+    return { workerPrompt: `Kontekst: ${state.ragContext}\n\nZadatak: ${state.userInput}` };
+  }
+}
+
+/**
+ * Čvor 5b: Worker generira tekst (bivši generateDraftNode).
+ * Koristi Workera.
+ */
+export async function workerGenerationNode(state: AgentState): Promise<Partial<AgentState>> {
+  console.log("--- KORAK 5b: WORKER GENERIRA TEKST ---");
+
+  try {
+    const writer = createWorkerProvider(0.8);
+
+    // Worker dobiva upute od Managera
+    const prompt = state.workerPrompt || state.userInput;
+
+    const systemPrompt = `Ti si 'AI Worker', talentirani kreativni pisac. Tvoj zadatak je napisati tekst isključivo na temelju uputa koje si dobio od svog Managera.
+Nemoj komentirati upute, samo izvrši zadatak. Piši živopisno, emocionalno i stilski dotjerano.`;
 
     const response = await writer.invoke([
       new SystemMessage(systemPrompt),
+      new HumanMessage(prompt),
     ]);
 
     const draft = response.content.toString();
     const newDraftCount = state.draftCount + 1;
-    
-    console.log(`Generiran nacrt #${newDraftCount}, duljina: ${draft.length} znakova`);
-    return { 
+
+    console.log(`Worker generirao nacrt #${newDraftCount}, duljina: ${draft.length}`);
+    return {
       draft: draft,
       draftCount: newDraftCount
     };
-    
+
   } catch (error) {
-    console.error("Greška u generateDraftNode:", error);
-    return { 
-      draft: "Greška pri generiranju nacrta. Molim pokušajte ponovo.",
+    console.error("Greška u workerGenerationNode:", error);
+    return {
+      draft: "Greška pri generiranju nacrta.",
       draftCount: state.draftCount + 1
     };
   }
 }
 
 /**
- * Čvor 6: Kritizira trenutni nacrt.
- * Koristi "Kritičara" (Claude 3 Haiku) za brzu analizu.
+ * Čvor 6: Kritika.
+ * Koristi Managera.
  */
 export async function critiqueDraftNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 6: KRITIKA NACRTA ---");
-  
+
   try {
-    const critic = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-haiku-20240307", // Brzi model za analizu
-      temperature: 0.1, // Niska temperatura za preciznu analizu
-    });
+    const critic = createManagerProvider(0.1);
 
-    const systemPrompt = `Ti si 'AI Mentor', strogi, ali pošteni urednik kreativnog pisanja. Tvoj zadatak je pregledati sljedeći NACRT i osigurati da je 100% usklađen s pruženim KONTEKSTOM (RAG smjernicama). Budi precizan i nepopustljiv u vezi dosljednosti.
+    const systemPrompt = `Ti si 'AI Mentor', strogi urednik. Pregledaj NACRT i usporedi ga s KONTEKSTOM.
 
-KONTEKST (Smjernice koje se moraju poštovati):
+KONTEKST:
 ${state.ragContext || 'Nema specifičnog konteksta.'}
 
 KORISNIČKI ZAHTJEV:
 ${state.userInput}
 
-NACRT (Tekst koji se pregledava):
+NACRT:
 ${state.draft}
 
-Tvoj zadatak:
-1. **Provjera Koherentnosti:** Pronađi BILO KAKVE činjenične kontradikcije između NACRTA i KONTEKSTA. Jesu li imena likova, lokacije i prošli događaji točno preneseni?
-2. **Provjera Dosljednosti Lika:** Odstupa li ponašanje lika u NACRTU od njegovog profila u KONTEKSTU?
-3. **Provjera Potpunosti:** Je li NACRT ispunio SVE zahtjeve iz originalnog korisničkog upita?
-
-Vrati SAMO JSON objekt sa svojim povratnim informacijama:
+Vrati SAMO JSON:
 {
-  "issues": ["Popis pronađenih problema..."],
-  "suggestions": ["Konkretni prijedlozi za poboljšanje..."],
-  "score": <ocjena od 0-100 o usklađenosti s kontekstom>,
-  "stop": <true ako je nacrt savršen, false ako treba poboljšanje>
+  "issues": ["..."],
+  "suggestions": ["..."],
+  "score": 0-100,
+  "stop": boolean
 }`;
 
     const response = await critic.invoke([
@@ -235,77 +239,44 @@ Vrati SAMO JSON objekt sa svojim povratnim informacijama:
     ]);
 
     const critique = response.content.toString();
-    
-    console.log("Generirana kritika:", critique);
     return { critique: critique };
-    
+
   } catch (error) {
     console.error("Greška u critiqueDraftNode:", error);
-    // Ako kritika ne uspije, prekidamo petlju
-    return { 
-      critique: JSON.stringify({ 
-        issues: [], 
-        suggestions: [], 
-        score: 100, 
-        stop: true 
-      })
+    return {
+      critique: JSON.stringify({ issues: [], suggestions: [], score: 100, stop: true })
     };
   }
 }
 
 /**
- * Čvor 7: Poboljšava nacrt na temelju kritike.
- * Koristi "Popravljača" (Claude 3 Sonnet) za refiniranje.
+ * Čvor 7: Refiniranje.
+ * Koristi Workera.
  */
 export async function refineDraftNode(state: AgentState): Promise<Partial<AgentState>> {
   console.log("--- KORAK 7: POBOLJŠAVANJE NACRTA ---");
-  
+
   try {
-    const refiner = new ChatAnthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: "claude-3-sonnet-20240229", // Snažniji model za poboljšanje
-      temperature: 0.6, // Umjerena temperatura za kontrolirane izmjene
-    });
+    const refiner = createWorkerProvider(0.6);
 
-    const systemPrompt = `Ti si talentirani kreativni pisac koji poboljšava svoje tekstove na temelju konstruktivne kritike. Imaš svoj originalni nacrt i detaljnu kritiku s konkretnim prijedlozima za poboljšanje.
+    const systemPrompt = `Ti si pisac koji poboljšava tekst.
+Original: ${state.draft}
+Kritika: ${state.critique}
 
-KONTEKST PRIČE:
-${state.ragContext || 'Nema specifičnog konteksta.'}
-
-KORISNIČKI ZAHTJEV:
-${state.userInput}
-
-TVOJ ORIGINALNI NACRT:
-${state.draft}
-
-KRITIKA I PRIJEDLOZI:
-${state.critique}
-
-Poboljšaj svoj originalni nacrt. Strogo slijedi upute za ispravak iz JSON kritike kako bi riješio navedene probleme. Zadrži sve dobre elemente originalnog nacrta, ali ispravi identificirane nedostatke. Tekst mora biti:
-- Potpuno usklađen s kontekstom priče
-- Vjerno prikazivati likove i njihove odnose
-- Ispunjavati sve zahtjeve korisničkog upita
-- Zadržati kreativnu kvalitetu i emocionalnu dubinu`;
+Poboljšaj tekst prema kritici.`;
 
     const response = await refiner.invoke([
       new SystemMessage(systemPrompt),
     ]);
 
     const refinedDraft = response.content.toString();
-    const newDraftCount = state.draftCount + 1;
-    
-    console.log(`Poboljšan nacrt #${newDraftCount}, duljina: ${refinedDraft.length} znakova`);
-    return { 
+    return {
       draft: refinedDraft,
-      draftCount: newDraftCount
-    };
-    
-  } catch (error) {
-    console.error("Greška u refineDraftNode:", error);
-    // Ako poboljšanje ne uspije, zadržavamo originalni nacrt
-    return { 
-      draft: state.draft,
       draftCount: state.draftCount + 1
     };
+
+  } catch (error) {
+    console.error("Greška u refineDraftNode:", error);
+    return { draft: state.draft, draftCount: state.draftCount + 1 };
   }
 }

@@ -140,12 +140,25 @@ Ova faza fokusira se na dublju integraciju između Chata i "Papira" (Text Editor
 **Cilj:** Bolja organizacija rada i mogućnost "resetiranja" mozga AI-a.
 
 *   **Novi Chat (+):**
-    *   Gumb u headeru sidebara koji resetira `messages` array za trenutni mod.
-    *   Starta čisti kontekst.
+    *   **UI:** Gumb "**+**" u gornjem desnom kutu (pored "History" ikone).
+    *   **Akcija:** Resetira `messages` array za trenutni mod i starta čisti kontekst.
+    *   **Svrha:** Omogućuje korisniku da započne novu temu ili "tabula rasa" razgovor bez prtljage prethodnog konteksta.
 *   **History Sidebar:**
-    *   Lista prethodnih razgovora.
+    *   Lista prethodnih razgovora (dohvaćena iz lokalne Postgres baze).
     *   Automatsko imenovanje sesija (npr. "Brainstorming o liku Jojo", "Scena 3 draft").
     *   Mogućnost učitavanja stare sesije.
+
+### 6.4. Token Economy & Local Storage
+**Cilj:** Minimizirati troškove slanja povijesti vanjskom LLM-u.
+
+*   **Pohrana:** Sva povijest chata (`messages`) sprema se **lokalno** u Postgres bazu.
+*   **Manager (Lokalni LLM/Jeftini Model):**
+    *   Jedini ima pristup punoj povijesti razgovora iz baze.
+    *   Analizira povijest i izvlači samo bitne informacije ("Konceptualna Memorija").
+*   **Worker (Skupi Model):**
+    *   Ne prima cijelu povijest.
+    *   Prima samo **sažeti prompt** od Managera.
+    *   **Rezultat:** Drastična ušteda tokena jer se "teški" kontekst ne šalje na API svaki put.
 
 ### 6.4. Relokacija Selektora Modela
 **Cilj:** Poboljšati ergonomiju.

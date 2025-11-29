@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
-import { X, Send, Sparkles, BrainCircuit, BookOpen, Check, PenTool, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { X, Send, Sparkles, BrainCircuit, BookOpen, Check, PenTool, ThumbsUp, ThumbsDown, Clock, Plus, Trash2, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLocation } from 'react-router-dom';
 
@@ -19,16 +19,32 @@ export const AIChatSidebar: React.FC = () => {
         context,
         pendingApplication,
         setGhostTextAction,
-        setActiveView
+        setActiveView,
+        // Session Management
+        sessions,
+        loadSessions,
+        loadSession,
+        deleteSession,
+        resetSession,
+        currentSessionId,
+        projectId
     } = usePlannerAIStore();
 
     const location = useLocation();
     const isStudioMode = location.pathname.includes('/studio');
+    const [showHistory, setShowHistory] = useState(false);
 
     // Ažuriraj activeView u store-u kad se promijeni lokacija
     useEffect(() => {
         setActiveView(isStudioMode ? 'studio' : 'planner');
     }, [isStudioMode, setActiveView]);
+
+    // Load sessions when sidebar opens
+    useEffect(() => {
+        if (isOpen && projectId) {
+            loadSessions(projectId);
+        }
+    }, [isOpen, projectId, loadSessions]);
 
     const messages = mode === 'planner' ? plannerMessages :
         mode === 'writer' ? writerMessages :
@@ -67,6 +83,26 @@ export const AIChatSidebar: React.FC = () => {
         }
     };
 
+    const handleNewChat = () => {
+        resetSession();
+        setShowHistory(false);
+        setTimeout(() => {
+            inputRef.current?.focus();
+        }, 100);
+    };
+
+    const handleSelectSession = async (sessionId: string) => {
+        await loadSession(sessionId);
+        setShowHistory(false);
+    };
+
+    const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
+        e.stopPropagation();
+        if (confirm('Jeste li sigurni da želite obrisati ovaj razgovor?')) {
+            await deleteSession(sessionId);
+        }
+    };
+
     if (!isOpen) return null;
 
     // Helper funkcija za prikazno ime konteksta
@@ -86,114 +122,177 @@ export const AIChatSidebar: React.FC = () => {
                         AI Asistent{context && mode === 'planner' ? ` - ${getContextDisplayName()}` : ''}
                     </h2>
                 </div>
-                <button
-                    onClick={closeModal}
-                    className="p-1 hover:bg-muted rounded-md transition-colors"
-                >
-                    <X className="w-5 h-5 text-muted-foreground" />
-                </button>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={handleNewChat}
+                        className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                        title="Nova sesija"
+                    >
+                        <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={() => setShowHistory(!showHistory)}
+                        className={cn(
+                            "p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground",
+                            showHistory && "bg-muted text-foreground"
+                        )}
+                        title="Povijest razgovora"
+                    >
+                        <Clock className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={closeModal}
+                        className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
 
             {/* Mode Selector & Model Config */}
-            <div className="p-2 border-b border-border bg-muted/10 space-y-2">
-                <div className="flex gap-1">
-                    {/* Primary Mode Button (Planner or Writer) */}
-                    <button
-                        onClick={() => setMode(isStudioMode ? 'writer' : 'planner')}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                            (mode === 'planner' || mode === 'writer')
-                                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                    >
-                        {isStudioMode ? <PenTool className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
-                        {isStudioMode ? 'Writer' : 'Planner'}
-                    </button>
+            {!showHistory && (
+                <div className="p-2 border-b border-border bg-muted/10 space-y-2">
+                    <div className="flex gap-1">
+                        {/* Primary Mode Button (Planner or Writer) */}
+                        <button
+                            onClick={() => setMode(isStudioMode ? 'writer' : 'planner')}
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                                (mode === 'planner' || mode === 'writer')
+                                    ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            {isStudioMode ? <PenTool className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                            {isStudioMode ? 'Writer' : 'Planner'}
+                        </button>
 
-                    {/* Brainstorming Button - Always second, fixed position relative to first */}
-                    <button
-                        onClick={() => setMode('brainstorming')}
-                        className={cn(
-                            "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
-                            mode === 'brainstorming'
-                                ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
-                                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        )}
-                    >
-                        <BrainCircuit className="w-4 h-4" />
-                        Brainstorming
-                    </button>
-                </div>
+                        {/* Brainstorming Button - Always second, fixed position relative to first */}
+                        <button
+                            onClick={() => setMode('brainstorming')}
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                                mode === 'brainstorming'
+                                    ? "bg-primary/10 text-primary shadow-sm border border-primary/20"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                        >
+                            <BrainCircuit className="w-4 h-4" />
+                            Brainstorming
+                        </button>
+                    </div>
 
-                {/* Worker Model Selector */}
-                <div className="px-1">
-                    <select
-                        className="w-full p-1.5 text-xs rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                        onChange={(e) => usePlannerAIStore.getState().setWorkerModel(e.target.value)}
-                        defaultValue="claude-3-5-sonnet-20240620"
-                    >
-                        <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (Writer)</option>
-                        <option value="gpt-4o">GPT-4o (Writer)</option>
-                        <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fast)</option>
-                    </select>
+                    {/* Worker Model Selector */}
+                    <div className="px-1">
+                        <select
+                            className="w-full p-1.5 text-xs rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            onChange={(e) => usePlannerAIStore.getState().setWorkerModel(e.target.value)}
+                            defaultValue="claude-3-5-sonnet-20240620"
+                        >
+                            <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (Writer)</option>
+                            <option value="gpt-4o">GPT-4o (Writer)</option>
+                            <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fast)</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Context Info (Planner Mode only) */}
-            {mode === 'planner' && context && (
+            {!showHistory && mode === 'planner' && context && (
                 <div className="px-4 py-2 bg-muted/20 text-xs text-muted-foreground border-b border-border">
                     Kontekst: <span className="font-medium text-foreground">{context}</span>
                 </div>
             )}
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.length === 0 && (
-                    <div className="text-center text-muted-foreground mt-10 space-y-2">
-                        <Sparkles className="w-10 h-10 mx-auto opacity-20" />
-                        <p>Kako vam mogu pomoći s vašom pričom danas?</p>
-                        {mode === 'brainstorming' && (
-                            <p className="text-xs opacity-70">Brainstorming mod je aktivan - slobodno istražujte ideje!</p>
-                        )}
-                        {mode === 'writer' && (
-                            <p className="text-xs opacity-70">Writer mod je aktivan - zatražite pomoć u pisanju!</p>
+            {/* Content Area (Messages or History) */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+                {showHistory ? (
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-medium text-muted-foreground mb-4">Povijest razgovora</h3>
+                        {sessions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-8">Nema spremljenih razgovora.</p>
+                        ) : (
+                            sessions.map((session) => (
+                                <div
+                                    key={session.id}
+                                    onClick={() => handleSelectSession(session.id)}
+                                    className={cn(
+                                        "group flex items-center justify-between p-3 rounded-lg border border-border cursor-pointer transition-all hover:bg-muted/50",
+                                        currentSessionId === session.id && "bg-primary/5 border-primary/30"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <MessageSquare className={cn(
+                                            "w-4 h-4 flex-shrink-0",
+                                            currentSessionId === session.id ? "text-primary" : "text-muted-foreground"
+                                        )} />
+                                        <div className="flex flex-col overflow-hidden">
+                                            <span className="text-sm font-medium truncate">{session.name}</span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                                {new Date(session.updatedAt).toLocaleDateString()} • {session.mode}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={(e) => handleDeleteSession(e, session.id)}
+                                        className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-100 text-red-500 rounded transition-all"
+                                        title="Obriši"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))
                         )}
                     </div>
-                )}
+                ) : (
+                    <>
+                        {messages.length === 0 && (
+                            <div className="text-center text-muted-foreground mt-10 space-y-2">
+                                <Sparkles className="w-10 h-10 mx-auto opacity-20" />
+                                <p>Kako vam mogu pomoći s vašom pričom danas?</p>
+                                {mode === 'brainstorming' && (
+                                    <p className="text-xs opacity-70">Brainstorming mod je aktivan - slobodno istražujte ideje!</p>
+                                )}
+                                {mode === 'writer' && (
+                                    <p className="text-xs opacity-70">Writer mod je aktivan - zatražite pomoć u pisanju!</p>
+                                )}
+                            </div>
+                        )}
 
-                {messages.map((msg, idx) => (
-                    <div
-                        key={idx}
-                        className={cn(
-                            "flex flex-col max-w-[85%] rounded-lg p-3 text-sm",
-                            msg.role === 'user'
-                                ? "self-end bg-primary text-primary-foreground ml-auto"
-                                : "self-start bg-muted text-foreground mr-auto border border-border"
-                        )}
-                    >
-                        <div className="whitespace-pre-wrap">{msg.content}</div>
-                        <span className="text-[10px] opacity-50 mt-1 self-end">
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                    </div>
-                ))}
+                        {messages.map((msg, idx) => (
+                            <div
+                                key={idx}
+                                className={cn(
+                                    "flex flex-col max-w-[85%] rounded-lg p-3 text-sm",
+                                    msg.role === 'user'
+                                        ? "self-end bg-primary text-primary-foreground ml-auto"
+                                        : "self-start bg-muted text-foreground mr-auto border border-border"
+                                )}
+                            >
+                                <div className="whitespace-pre-wrap">{msg.content}</div>
+                                <span className="text-[10px] opacity-50 mt-1 self-end">
+                                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                            </div>
+                        ))}
 
-                {isLoading && (
-                    <div className="self-start bg-muted text-foreground rounded-lg p-3 border border-border flex items-center gap-2">
-                        <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                            <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce"></div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">AI razmišlja...</span>
-                    </div>
+                        {isLoading && (
+                            <div className="self-start bg-muted text-foreground rounded-lg p-3 border border-border flex items-center gap-2">
+                                <div className="flex space-x-1">
+                                    <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                    <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                    <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce"></div>
+                                </div>
+                                <span className="text-xs text-muted-foreground">AI razmišlja...</span>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </>
                 )}
-                <div ref={messagesEndRef} />
             </div>
 
             {/* Pending Application Preview (Keep All) */}
-            {pendingApplication && (mode === 'planner' || mode === 'writer') && (
+            {!showHistory && pendingApplication && (mode === 'planner' || mode === 'writer') && (
                 <div className="p-3 border-t border-border bg-primary/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-primary flex items-center gap-1">
@@ -225,33 +324,35 @@ export const AIChatSidebar: React.FC = () => {
             )}
 
             {/* Input Area */}
-            <div className="p-4 border-t border-border bg-background">
-                <div className="relative">
-                    <textarea
-                        ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={
-                            mode === 'planner' ? "Zatražite pomoć oko trenutnog polja..." :
-                                mode === 'writer' ? "Opiši scenu, napiši dijalog ili nastavi priču..." :
-                                    "Brainstormajte ideje..."
-                        }
-                        className="w-full min-h-[80px] max-h-[160px] p-3 pr-10 rounded-md border border-input bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                        rows={3}
-                    />
-                    <button
-                        onClick={handleSend}
-                        disabled={!input.trim() || isLoading}
-                        className="absolute bottom-3 right-3 p-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                        <Send className="w-4 h-4" />
-                    </button>
+            {!showHistory && (
+                <div className="p-4 border-t border-border bg-background">
+                    <div className="relative">
+                        <textarea
+                            ref={inputRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={
+                                mode === 'planner' ? "Zatražite pomoć oko trenutnog polja..." :
+                                    mode === 'writer' ? "Opiši scenu, napiši dijalog ili nastavi priču..." :
+                                        "Brainstormajte ideje..."
+                            }
+                            className="w-full min-h-[80px] max-h-[160px] p-3 pr-10 rounded-md border border-input bg-transparent text-sm focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                            rows={3}
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={!input.trim() || isLoading}
+                            className="absolute bottom-3 right-3 p-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Send className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="text-[10px] text-center text-muted-foreground mt-2">
+                        Pritisnite Enter za slanje, Shift+Enter za novi red
+                    </div>
                 </div>
-                <div className="text-[10px] text-center text-muted-foreground mt-2">
-                    Pritisnite Enter za slanje, Shift+Enter za novi red
-                </div>
-            </div>
+            )}
         </div>
     );
 };

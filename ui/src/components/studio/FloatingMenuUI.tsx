@@ -157,6 +157,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
   const bubbleMenu = (
     <BubbleMenu
       editor={editor}
+      // @ts-ignore - tippyOptions type mismatch
       tippyOptions={{
         duration: 100,
         zIndex: 99999,

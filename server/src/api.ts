@@ -12,7 +12,8 @@ import {
 import { validateBody, getValidatedBody } from './middleware/validation';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
-import { users, projects, locations, characters, scenes, storyArchitectEmbeddings } from './schema/schema';
+import { users, projects, locations, characters, scenes, storyArchitectEmbeddings, chatMessages } from './schema/schema';
+import sessions from './routes/sessions';
 import { eq, sql } from 'drizzle-orm';
 import type {
   DatabaseUpdateData
@@ -226,6 +227,9 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 
 // Protected routes
 app.use('/api/*', authMiddleware);
+
+// Mount sessions route
+app.route('/api/sessions', sessions);
 
 // User endpoint
 app.get('/api/user', (c) => {
@@ -827,7 +831,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { userInput, plannerContext, messages, mode, editorContent } = getValidatedBody<ChatRequestBody>(c);
+    const { userInput, plannerContext, messages, mode, editorContent, sessionId } = getValidatedBody<ChatRequestBody>(c);
 
     requireValidUUID(projectId, 'project ID');
 
@@ -839,6 +843,7 @@ app.post(
     // Logiranje ulaznih parametara za debugging
     console.log("📥 Chat API poziv:", {
       projectId,
+      sessionId,
       hasPlannerContext: !!plannerContext,
       plannerContext: plannerContext || "none",
       mode: mode || "planner (default)",
@@ -847,6 +852,18 @@ app.post(
       userInputLength: userInput.length,
       hasEditorContent: !!editorContent
     });
+
+    // 1. Save User Message if sessionId is provided
+    if (sessionId) {
+      await handleDatabaseOperation(async () => {
+        await db.insert(chatMessages).values({
+          sessionId,
+          role: 'user',
+          content: userInput,
+          metadata: { mode },
+        });
+      });
+    }
 
     // AI Graf Integracija
     const finalState = await handleDatabaseOperation(async () => {
@@ -861,6 +878,22 @@ app.post(
       const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent, langChainMessages);
       return state;
     });
+
+    // 2. Save Assistant Message if sessionId is provided and we have output
+    if (sessionId && finalState.finalOutput) {
+      await handleDatabaseOperation(async () => {
+        await db.insert(chatMessages).values({
+          sessionId,
+          role: 'assistant',
+          content: finalState.finalOutput!,
+          metadata: {
+            mode,
+            draftCount: finalState.draftCount,
+            routingDecision: finalState.routingDecision
+          },
+        });
+      });
+    }
 
     // Dijagnostički logovi za provjeru izlaza
     console.log("🔄 Backend šalje finalState (iz api.ts):", finalState);

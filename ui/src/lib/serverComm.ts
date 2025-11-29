@@ -209,11 +209,11 @@ export async function generateSceneSynopsis(projectId: string, sceneId: string) 
   });
   return response.json();
 }
-
 export async function chat(
   projectId: string,
   data: {
     userInput: string;
+    sessionId?: string;
     plannerContext?: string;
     mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit';
     workerModel?: string;
@@ -251,6 +251,33 @@ export async function deleteUser() {
   return response.json();
 }
 
+// Sessions API
+export async function getSessions(projectId: string) {
+  const response = await fetchWithAuth(`/api/sessions?projectId=${projectId}`);
+  return response.json();
+}
+
+export async function createSession(projectId: string, name: string, mode: 'planner' | 'studio') {
+  const response = await fetchWithAuth('/api/sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectId, name, mode }),
+  });
+  return response.json();
+}
+
+export async function getSession(sessionId: string) {
+  const response = await fetchWithAuth(`/api/sessions/${sessionId}`);
+  return response.json();
+}
+
+export async function deleteSession(sessionId: string) {
+  const response = await fetchWithAuth(`/api/sessions/${sessionId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
 export const api = {
   getCurrentUser,
   updateUser,
@@ -274,6 +301,10 @@ export const api = {
   deleteScene,
   generateSceneSynopsis,
   chat,
+  getSessions,
+  createSession,
+  getSession,
+  deleteSession,
 };
 
 export const clearTokenCache = () => {
