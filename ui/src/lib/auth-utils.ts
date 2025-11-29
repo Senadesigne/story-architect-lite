@@ -34,22 +34,22 @@ export const checkAuthPersistence = () => {
  */
 export const debugAuthState = () => {
   const info = checkAuthPersistence();
-  
+
   console.group('🔍 Firebase Auth Debug Info');
   console.log('Current User:', info.currentUser);
   console.log('Auth Ready:', info.authReady);
   console.log('Local Storage Keys:', info.localStorageKeys);
   console.log('IndexedDB Info:', info.indexedDBStores);
-  
+
   // Provjeri da li postoje Firebase ključevi u Local Storage
   if (info.localStorageKeys.length > 0) {
     console.log('✅ Firebase podaci pronađeni u Local Storage');
   } else {
     console.log('⚠️ Nema Firebase podataka u Local Storage');
   }
-  
+
   console.groupEnd();
-  
+
   return info;
 };
 
@@ -65,9 +65,9 @@ export const clearAllAuthData = () => {
       keysToRemove.push(key);
     }
   }
-  
+
   keysToRemove.forEach(key => localStorage.removeItem(key));
-  
+
   // Očisti Session Storage
   const sessionKeysToRemove = [];
   for (let i = 0; i < sessionStorage.length; i++) {
@@ -76,13 +76,22 @@ export const clearAllAuthData = () => {
       sessionKeysToRemove.push(key);
     }
   }
-  
+
   sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
-  
+
   console.log('🧹 Očišćeni svi Firebase podaci iz Local/Session Storage');
-  
+
   return {
     localStorageKeysRemoved: keysToRemove.length,
     sessionStorageKeysRemoved: sessionKeysToRemove.length
   };
+};
+
+/**
+ * Dohvaća trenutni Firebase ID token
+ */
+export const getAuthToken = async (): Promise<string | null> => {
+  const user = auth.currentUser;
+  if (!user) return null;
+  return await user.getIdToken();
 };

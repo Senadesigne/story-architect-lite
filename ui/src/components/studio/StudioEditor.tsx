@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { FloatingMenu } from '@tiptap/extension-floating-menu';
+import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { FloatingMenuUI } from './FloatingMenuUI';
@@ -21,6 +22,12 @@ const extensions = [
   }),
   FloatingMenu.configure({
     shouldShow: ({ editor }) => {
+      return !editor.state.selection.empty;
+    },
+  }),
+  BubbleMenu.configure({
+    shouldShow: ({ editor }) => {
+      // Only show if selection is not empty
       return !editor.state.selection.empty;
     },
   }),
@@ -65,9 +72,14 @@ export function StudioEditor({
 
   // Efekt za prikazivanje Ghost Teksta
   useEffect(() => {
-    if (editor) {
-      // @ts-ignore - Custom command
-      editor.commands.setGhostText(pendingGhostText);
+    if (editor && pendingGhostText) {
+      // Prvo očisti stari ghost text ako postoji (za svaki slučaj)
+      // @ts-ignore - custom command
+      editor.commands.rejectGhostText();
+
+      // Ubaci novi ghost text
+      // @ts-ignore - custom command
+      editor.commands.insertGhostText(pendingGhostText);
     }
   }, [editor, pendingGhostText]);
 
@@ -75,19 +87,23 @@ export function StudioEditor({
   useEffect(() => {
     if (!editor || ghostTextAction === 'idle') return;
 
-    if (ghostTextAction === 'accept' && pendingGhostText) {
-      // Ubaci tekst na trenutnu poziciju
-      editor.commands.insertContent(pendingGhostText);
-      // Očisti ghost text
+    if (ghostTextAction === 'accept') {
+      // Prihvati (ukloni mark)
+      // @ts-ignore - custom command
+      editor.commands.acceptGhostText();
+      // Očisti state
       setPendingGhostText(null);
     } else if (ghostTextAction === 'reject') {
-      // Samo očisti ghost text
+      // Odbaci (obriši tekst)
+      // @ts-ignore - custom command
+      editor.commands.rejectGhostText();
+      // Očisti state
       setPendingGhostText(null);
     }
 
     // Resetiraj akciju
     setGhostTextAction('idle');
-  }, [editor, ghostTextAction, pendingGhostText, setPendingGhostText, setGhostTextAction]);
+  }, [editor, ghostTextAction, setPendingGhostText, setGhostTextAction]);
 
   return (
     <div className="h-full flex flex-col">

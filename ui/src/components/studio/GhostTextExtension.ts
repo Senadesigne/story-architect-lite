@@ -1,61 +1,86 @@
-import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
-import { Decoration, DecorationSet } from '@tiptap/pm/view';
+import { Mark, mergeAttributes } from '@tiptap/core';
 
 declare module '@tiptap/core' {
     interface Commands<ReturnType> {
         ghostText: {
-            setGhostText: (text: string | null) => ReturnType;
+            insertGhostText: (text: string) => ReturnType;
+            acceptGhostText: () => ReturnType;
+            rejectGhostText: () => ReturnType;
         };
     }
 }
 
-export const GhostTextExtension = Extension.create({
-    name: 'ghostText',
+export const GhostTextExtension = Mark.create({
+    name: 'ghost',
 
-    addCommands() {
+    addOptions() {
         return {
-            setGhostText: (text: string | null) => ({ tr, dispatch }) => {
-                if (dispatch) {
-                    dispatch(tr.setMeta('ghostText', text));
-                }
-                return true;
+            HTMLAttributes: {
+                class: 'text-muted-foreground italic opacity-60',
+                style: 'color: #9ca3af; font-style: italic;',
             },
         };
     },
 
-    addProseMirrorPlugins() {
+    parseHTML() {
         return [
-            new Plugin({
-                key: new PluginKey('ghostText'),
-                state: {
-                    init() {
-                        return null;
-                    },
-                    apply(tr, value) {
-                        const meta = tr.getMeta('ghostText');
-                        if (meta !== undefined) return meta;
-                        return value;
-                    },
-                },
-                props: {
-                    decorations(state) {
-                        const text = this.getState(state);
-                        if (!text) return DecorationSet.empty;
-
-                        const { to } = state.selection;
-                        const widget = document.createElement('span');
-                        widget.textContent = text;
-                        widget.classList.add('text-muted-foreground', 'italic', 'opacity-60', 'pointer-events-none');
-                        widget.style.color = '#9ca3af';
-                        widget.style.fontStyle = 'italic';
-
-                        return DecorationSet.create(state.doc, [
-                            Decoration.widget(to, widget),
-                        ]);
-                    },
-                },
-            }),
+            {
+                tag: 'span[data-ghost]',
+            },
         ];
+    },
+
+    renderHTML({ HTMLAttributes }) {
+        return ['span', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-ghost': '' }), 0];
+    },
+
+    addCommands() {
+        return {
+            insertGhostText:
+                (text: string) =>
+                    ({ commands }) => {
+                        return commands.insertContent({
+                            type: 'text',
+                            text,
+                            marks: [{ type: 'ghost' }],
+                        });
+                    },
+            acceptGhostText:
+                () =>
+                    ({ tr, dispatch }) => {
+                        if (dispatch) {
+                            const { doc } = tr;
+                            doc.descendants((node, pos) => {
+                                if (node.isText && node.marks.find((m) => m.type.name === 'ghost')) {
+                                    tr.removeMark(pos, pos + node.nodeSize, this.type);
+                                }
+                            });
+                        }
+                        return true;
+                    },
+            rejectGhostText:
+                () =>
+                    ({ tr, dispatch }) => {
+                        if (dispatch) {
+                            const { doc } = tr;
+                            // Iterate backwards to avoid position shifting issues when deleting
+                            let rangesToDelete: { from: number; to: number }[] = [];
+
+                            doc.descendants((node, pos) => {
+                                if (node.isText && node.marks.find((m) => m.type.name === 'ghost')) {
+                                    rangesToDelete.push({ from: pos, to: pos + node.nodeSize });
+                                }
+                            });
+
+                            // Sort reverse to delete from end
+                            rangesToDelete.sort((a, b) => b.from - a.from);
+
+                            rangesToDelete.forEach(({ from, to }) => {
+                                tr.delete(from, to);
+                            });
+                        }
+                        return true;
+                    },
+        };
     },
 });

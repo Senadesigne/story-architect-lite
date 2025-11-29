@@ -32,14 +32,19 @@ export interface AgentState {
   plannerContext?: string;
 
   /**
-   * Mod rada: 'planner' (fokus na polja) ili 'brainstorming' (slobodni chat) ili 'writer' (pisanje)
+   * Mod rada: 'planner' (fokus na polja) ili 'brainstorming' (slobodni chat) ili 'writer' (pisanje) ili 'contextual-edit' (izmjena teksta)
    */
-  mode?: 'planner' | 'brainstorming' | 'writer';
+  mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit';
 
   /**
    * Trenutni sadržaj editora (za Writer mod)
    */
   editorContent?: string;
+
+  /**
+   * Selektirani dio teksta za Contextual Editing
+   */
+  selection?: string;
 
   // === FAZA RAG-A I USMJERAVANJA ===
 
@@ -129,9 +134,10 @@ export function createInitialState(
   userInput: string,
   storyContext: string,
   plannerContext?: string,
-  mode?: 'planner' | 'brainstorming' | 'writer',
+  mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
   editorContent?: string,
-  messages: BaseMessage[] = []
+  messages: BaseMessage[] = [],
+  selection?: string
 ): AgentState {
   return {
     userInput,
@@ -139,6 +145,7 @@ export function createInitialState(
     plannerContext,
     mode,
     editorContent,
+    selection,
     draftCount: 0,
     messages: messages
   };

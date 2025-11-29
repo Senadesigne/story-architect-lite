@@ -1,32 +1,11 @@
-import { getAuth } from 'firebase/auth';
-import { app } from './firebase';
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+import { getAuthToken } from './auth-utils';
 
 class APIError extends Error {
   constructor(public status: number, message: string) {
     super(message);
     this.name = 'APIError';
   }
-}
-
-// Token cache removed to rely on Firebase SDK's internal caching and auto-refresh logic.
-// This prevents issues where we might cache a token that expires sooner than our cache duration.
-
-async function getAuthToken(): Promise<string | null> {
-  const auth = getAuth(app);
-  const user = auth.currentUser;
-  if (!user) {
-    return null;
-  }
-
-  // Firebase SDK automatically caches the token and refreshes it if it's expired or close to expiration.
-  return await user.getIdToken();
-}
-
-// Funkcija za brisanje cache-a (zadržana radi kompatibilnosti, ali prazna)
-export function clearTokenCache() {
-  // No-op since we rely on SDK
 }
 
 async function fetchWithAuth(
@@ -236,9 +215,10 @@ export async function chat(
   data: {
     userInput: string;
     plannerContext?: string;
-    mode?: 'planner' | 'brainstorming' | 'writer';
+    mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit';
     workerModel?: string;
     editorContent?: string;
+    selection?: string;
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
   }
 ) {
@@ -294,4 +274,8 @@ export const api = {
   deleteScene,
   generateSceneSynopsis,
   chat,
+};
+
+export const clearTokenCache = () => {
+  // No-op: Token caching is handled by Firebase SDK
 };

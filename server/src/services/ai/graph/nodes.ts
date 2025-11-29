@@ -104,7 +104,7 @@ export async function routeTaskNode(state: AgentState): Promise<AgentStateUpdate
     }
 
     // 1. Direktno usmjeravanje na temelju moda
-    if (state.mode === 'writer' || state.mode === 'brainstorming') {
+    if (state.mode === 'writer' || state.mode === 'brainstorming' || state.mode === 'contextual-edit') {
       console.log(`[ROUTE_TASK] Mode is '${state.mode}', routing directly to creative_generation`);
       return { routingDecision: "creative_generation" };
     }
@@ -265,6 +265,36 @@ Samo tekst prompta za Pisca. BEZ UVODNIH REČENICA. SAMO INSTRUKCIJE.`;
       workerPrompt = workerPrompt.replace(/^(Evo|Here is|Ovo je).*?:/i, '').trim();
 
       analysis = "Writer context analyzed.";
+
+    } else if (state.mode === 'contextual-edit') {
+      // Contextual Editing logika
+      const systemPrompt = `Ti si Glavni Urednik. Tvoj cilj je usmjeriti Pisca (Workera) da napravi preciznu izmjenu u tekstu.
+
+1. ANALIZA:
+   - Pročitaj PUNI TEKST da shvatiš ton, stil i radnju.
+   - Fokusiraj se na SELEKTIRANI DIO koji treba mijenjati.
+
+2. KONTEKST:
+   - Puni tekst: """${state.editorContent || "(Prazno)"}"""
+   - Selektirani dio: """${state.selection || "(Nema selekcije)"}"""
+
+3. KORISNIČKI ZAHTJEV:
+   "Prepiši označeni dio da bude bolji, ali da paše u cjelinu."
+
+4. TVOJ ZADATAK:
+   Napiši instrukciju (Prompt) za Pisca.
+   - Reci Piscu točno što da napiše.
+   - Upozori ga da pazi na "šavove" (kako se tekst spaja s onim prije i poslije).
+   - Neka generira SAMO novi tekst zamjene, bez komentara.
+
+OUTPUT (Samo prompt za pisca):`;
+
+      workerPrompt = await aiProvider.generateText(systemPrompt, options);
+
+      // Cleanup common prefixes
+      workerPrompt = workerPrompt.replace(/^(Evo|Here is|Ovo je).*?:/i, '').trim();
+
+      analysis = "Contextual Edit prepared.";
 
     } else {
       // Default / Planner logika

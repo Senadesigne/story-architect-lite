@@ -91,3 +91,66 @@ Cilj je optimizirati troškove i kvalitetu, te pripremiti sustav za lokalni LLM.
 ## 5. Buduća Nadogradnja (Local LLM)
 
 *   Ova arhitektura omogućuje da u `.env` samo promijenimo `MANAGER_PROVIDER_URL` na `http://localhost:11434` (Ollama) i sustav nastavlja raditi bez promjene koda.
+
+---
+
+## 6. Faza 3: Advanced Editor Integration & Session Management
+
+Ova faza fokusira se na dublju integraciju između Chata i "Papira" (Text Editora) te poboljšanje UX-a.
+
+### 6.1. Dualni Output (Chat + Editor)
+**Cilj:** Smanjiti potrebu za copy-pasteanjem. Tekst koji Worker generira u "Writer Mode-u" treba biti odmah dostupan u editoru.
+
+*   **Implementacija:**
+    *   Kada Worker generira tekst, on se prikazuje u Chat prozoru (kao i do sada).
+    *   Istovremeno, tekst se šalje u Editor.
+    *   **Strategija umetanja:**
+        *   Ako je kursor u editoru: `insertAtCursor`.
+        *   Ako nema kursora: `append` na kraj dokumenta.
+
+### 6.2. Contextual Editing & Live Ghost Text Interaction
+**Cilj:** Precizna AI intervencija na označenom dijelu teksta (bilo da je "pravi" tekst ili Ghost Text) uz mogućnost brzog generiranja novih verzija.
+
+#### A. Live Ghost Text Interaction (NOVO)
+**Problem:** Korisnik trenutno mora kliknuti "Keep All" da bi tekst postao "pravi" i da bi ga mogao označiti/mijenjati.
+**Rješenje:**
+1.  **Interaktivni Ghost Text:** Omogućiti da se Ghost Text ponaša kao "pravi" tekst za potrebe selekcije, *prije* nego što se prihvati.
+2.  **Immediate Edit:** Kada korisnik označi dio Ghost Texta, odmah se pojavljuje `FloatingMenu` s opcijom "Edit" (i dropdownom: Skrati, Proširi, Promijeni ton...).
+3.  **Paralelne Opcije:**
+    *   **`Keep All` (Zadrži sve):** I dalje postoji i služi za prihvaćanje cijelog teksta (ako je korisnik zadovoljan).
+    *   **`Edit Selection` (Uredi dio):** Nova opcija koja se pojavljuje na selekciju *unutar* Ghost Texta.
+
+#### B. Backend Logika za "Edit Selection" unutar Ghost Texta
+*   Backend mora primiti informaciju da se editira `pendingGhostText`.
+*   **Input:** `fullGhostText` (kao kontekst), `selection` (dio koji se mijenja).
+*   **Output:** Nova verzija `pendingGhostText` s promijenjenim dijelom.
+*   **Rezultat:** Ghost Text se u editoru ažurira s novom verzijom, a korisnik i dalje ima opciju "Keep All" za tu *novu* verziju.
+
+#### C. Contextual Edit Flow (Infinite Retry Loop)
+**UX Flow:**
+1.  **Trigger:** Korisnik označi dio teksta (Original ili Ghost) i klikne **"AI Akcije" -> "Prepravi"**.
+2.  **Backend:** Manager-Worker generira zamjenu.
+3.  **UI Rezultat:** Prikazuje se predložena izmjena.
+4.  **KORISNIČKE OPCIJE:**
+    *   **`Keep All`**: Trajno zamjenjuje tekst.
+    *   **`Ponovo promjeni` (Retry)**: Generira novu verziju.
+    *   **`Odbaci`**: Vraća na prethodno stanje.
+
+### 6.3. Upravljanje Sesijama (Chat History)
+**Cilj:** Bolja organizacija rada i mogućnost "resetiranja" mozga AI-a.
+
+*   **Novi Chat (+):**
+    *   Gumb u headeru sidebara koji resetira `messages` array za trenutni mod.
+    *   Starta čisti kontekst.
+*   **History Sidebar:**
+    *   Lista prethodnih razgovora.
+    *   Automatsko imenovanje sesija (npr. "Brainstorming o liku Jojo", "Scena 3 draft").
+    *   Mogućnost učitavanja stare sesije.
+
+### 6.4. Relokacija Selektora Modela
+**Cilj:** Poboljšati ergonomiju.
+
+*   **Promjena:**
+    *   Ukloniti Dropdown za odabir "Workera" iz gornjeg dijela Sidebara.
+    *   Premjestiti ga u **Input Area (Command Bar)**, pored gumba za slanje ili unutar input polja.
+    *   Ovo čini odabir modela (npr. prebacivanje na "Haiku" za brza pitanja ili "Opus/GPT-4" za pisanje) bržim i intuitivnijim.

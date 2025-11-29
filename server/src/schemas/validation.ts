@@ -101,8 +101,9 @@ export const GenerateSceneSynopsisBodySchema = z.object({
 export const ChatRequestBodySchema = z.object({
   userInput: z.string().min(1, 'User input is required').trim(),
   plannerContext: z.string().optional(),
-  mode: z.enum(['planner', 'brainstorming', 'writer']).optional(),
+  mode: z.enum(['planner', 'brainstorming', 'writer', 'contextual-edit']).optional(),
   editorContent: z.string().optional(),
+  selection: z.string().optional(),
   messages: z.array(
     z.object({
       role: z.enum(['user', 'assistant']),
