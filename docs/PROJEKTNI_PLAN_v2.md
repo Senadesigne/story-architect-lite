@@ -7,8 +7,41 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 - 🟡 Važno (poboljšava kvalitetu)
 - 🟢 Korisno (nice-to-have)
 
+## [ ZADACI ZA ODRADITI (To-Do) ]
+
 ### Epic: Planner Poboljšanja (Faza 6) 🟡
 * **Zadatak 6.1 (Faza 0):** Implementirati "Fazu 0: Ideja Priče".
+    - Dodati novu fazu prije Faze 1.
+    - Sadrži samo jedno veliko tekstualno polje za "Brain dump" ideje.
+    - Cilj: Koristiti lokalni LLM za ekstrakciju informacija za popunjavanje ostalih faza.
+* **Zadatak 6.2 (UI/UX):** Implementirati "Help" gumb. ✅
+    - Dodati gumb/ikonu (npr. upitnik) uz svaki korak u svakoj fazi.
+    - Klikom na gumb otvara se objašnjenje što se očekuje u tom koraku.
+* **Zadatak 6.3 (Faza 2):** Restrukturiranje Brainstorminga. ✅
+    - Ukloniti "Brainstorming" tab iz Faze 2.
+    - Dodati gumb "Spremi u Planer/Istraživanje" u Brainstorming chat modu koji sprema sadržaj u "Istraživanje" (Faza 2).
+    - **[NOVO]** Implementirati navigaciju za "Istraživanje":
+        - Parsirati sadržaj polja "Istraživanje" (prepoznavanje naslova/sekcija).
+        - Prikazati listu sekcija (Table of Contents) za brzu navigaciju.
+* **Zadatak 6.4 (Faza 3):** Gumbi za dodavanje i dropdown izbornici.
+    - **Definiranje Pravila:** Dodati gumb "Dodaj" s dropdown opcijama: Fizika, Magija, Tehnologija, Zakoni prirode.
+    - **Kultura:** Dodati gumb "Dodaj" s dropdown opcijama: Magija, Kultura, Običaji, Povijest.
+* **Zadatak 6.5 (Faza 5):** Beat Sheet Struktura.
+    - Implementirati specifična polja za Beat Sheet strukturu:
+        - SETUP (1-10%)
+        - INCITING INCIDENT (10%)
+        - MIDPOINT (10-80%)
+        - CLIMAX (80-95%)
+        - FALLING ACTION (95-100%)
+    - Svako polje treba imati AI asistenciju.
+* **Zadatak 6.6 (Faza 6):** Stil Pisanja.
+    - Dodati dropdown izbornik za odabir stila pisanja (abecednim redom).
+    - Primjeri: Akcijski, Deskriptivni, Dijaloški, Minimalistički, Poetičan, itd.
+
+### Epic: AI Integracija - Faza A (Direktni API) 🔴
+
+### Epic: UI/UX Poboljšanja 🟢
+* **Zadatak 2.1:** Dodati vizualni indikator trenutne faze u navigaciji
 * **Zadatak 2.2:** Implementirati tooltipove i help tekstove za sva polja
 * **Zadatak 2.3:** Dodati dark mode podršku
 * **Zadatak 2.4:** Optimizirati komponente za mobilne uređaje
