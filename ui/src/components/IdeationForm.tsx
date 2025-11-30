@@ -134,7 +134,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('logline')}
             <Textarea
               id="logline"
-              placeholder="Sažmite svoju priču u jednu uzbudljivu rečenicu..."
+              placeholder="Jedna rečenica koja opisuje protagonista, njegov cilj i prepreku."
               value={formData.logline}
               onChange={(e) => onFieldChange('logline' as ProjectField, e.target.value)}
               className="min-h-[80px]"
@@ -159,7 +159,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('theme')}
             <Textarea
               id="theme"
-              placeholder="Koja je glavna tema vaše priče?"
+              placeholder="Koja je središnja poruka ili moralna dilema vaše priče?"
               value={formData.theme}
               onChange={(e) => onFieldChange('theme' as ProjectField, e.target.value)}
               className="min-h-[80px]"
@@ -184,7 +184,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('premise')}
             <Textarea
               id="premise"
-              placeholder="Opišite osnovnu premisu vaše priče..."
+              placeholder="Što ako? Opišite osnovnu ideju koja pokreće radnju."
               value={formData.premise}
               onChange={(e) => onFieldChange('premise' as ProjectField, e.target.value)}
               className="min-h-[120px]"
@@ -201,7 +201,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             </div>
             <Textarea
               id="genre"
-              placeholder="Koji je žanr vaše priče? (npr. drama, komedija, triler...)"
+              placeholder="Odredite žanr i podžanr vaše priče (npr. Znanstvena fantastika - Cyberpunk)."
               value={formData.genre}
               onChange={(e) => onFieldChange('genre' as ProjectField, e.target.value)}
               className="min-h-[80px]"
@@ -226,7 +226,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('audience')}
             <Textarea
               id="audience"
-              placeholder="Tko je vaša ciljna publika? (npr. tinejdžeri, odrasli, obitelji...)"
+              placeholder="Kome je namijenjena ova priča? Definirajte idealnog čitatelja/gledatelja."
               value={formData.audience}
               onChange={(e) => onFieldChange('audience' as ProjectField, e.target.value)}
               className="min-h-[80px]"

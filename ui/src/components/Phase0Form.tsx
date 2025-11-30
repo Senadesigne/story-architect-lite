@@ -105,7 +105,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                     {renderAIProposal('story_idea')}
                     <Textarea
                         id="story_idea"
-                        placeholder="Ovdje izbacite sve svoje ideje, fragmente, scene, dijaloge... Sve što vam padne na pamet!"
+                        placeholder="Ovdje izbacite sve svoje ideje, fragmente, scene, dijaloge... Sve što vam padne na pamet! Ovo je prostor za vaš kreativni kaos."
                         value={formData.story_idea}
                         onChange={(e) => onFieldChange('story_idea', e.target.value)}
                         className="min-h-[300px]"

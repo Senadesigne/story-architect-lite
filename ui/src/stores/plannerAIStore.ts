@@ -35,6 +35,7 @@ interface PlannerAIState {
 
   isLoading: boolean;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
+  projectLastUpdated: number; // Timestamp zadnjeg ažuriranja projekta (za sinkronizaciju)
 
   // Session Management
   currentSessionId: string | null;
@@ -62,6 +63,7 @@ interface PlannerAIState {
   setPendingGhostText: (content: string | null) => void;
   setGhostTextAction: (action: 'idle' | 'accept' | 'reject') => void;
   sendMessage: (content: string, currentEditorContent?: string) => Promise<void>;
+  saveToResearch: (content: string) => Promise<void>;
   clearMessages: () => void;
   reset: () => void;
 }
@@ -105,6 +107,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
   isLoading: false,
   lastResponse: null,
+  projectLastUpdated: 0,
 
   // --- Session Actions ---
 
@@ -408,6 +411,31 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
         return updates as PlannerAIState;
       });
+    }
+  },
+
+  saveToResearch: async (content: string) => {
+    const state = get();
+    if (!state.projectId) return;
+
+    try {
+      // 1. Fetch current project data
+      const project = await api.getProject(state.projectId);
+
+      // 2. Append content
+      const currentResearch = project.research || '';
+      const newResearch = currentResearch ? `${currentResearch}\n\n${content}` : content;
+
+      // 3. Update project
+      await api.updateProject(state.projectId, { research: newResearch });
+
+      // 4. Signal update to listeners
+      set({ projectLastUpdated: Date.now() });
+
+      console.log('Saved to research successfully');
+    } catch (error) {
+      console.error('Failed to save to research:', error);
+      throw error;
     }
   },
 

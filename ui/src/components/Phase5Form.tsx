@@ -166,7 +166,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
             </div>
             <Textarea
               id="synopsis"
-              placeholder="Napišite kratki sinopsis vaše priče..."
+              placeholder="Detaljan pregled radnje od početka do kraja."
               value={formData.synopsis}
               onChange={(e) => onFieldChange('synopsis', e.target.value)}
               className="min-h-[120px]"
@@ -187,7 +187,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
             </div>
             <Textarea
               id="outline_notes"
-              placeholder="Bilješke o strukturi (npr. Struktura tri čina, Metoda pahuljice)..."
+              placeholder="Ključne točke obrata, scene i strukturalni elementi."
               value={formData.outline_notes}
               onChange={(e) => onFieldChange('outline_notes', e.target.value)}
               className="min-h-[120px]"

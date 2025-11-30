@@ -27,7 +27,8 @@ export const AIChatSidebar: React.FC = () => {
         deleteSession,
         resetSession,
         currentSessionId,
-        projectId
+        projectId,
+        saveToResearch
     } = usePlannerAIStore();
 
     const location = useLocation();
@@ -291,13 +292,17 @@ export const AIChatSidebar: React.FC = () => {
                 )}
             </div>
 
-            {/* Pending Application Preview (Keep All) */}
-            {!showHistory && pendingApplication && (mode === 'planner' || mode === 'writer') && (
+            {/* Pending Application Preview */}
+            {!showHistory && pendingApplication && (mode === 'planner' || mode === 'writer' || mode === 'brainstorming') && (
                 <div className="p-3 border-t border-border bg-primary/5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-primary flex items-center gap-1">
-                            <Check className="w-3 h-3" /> {mode === 'writer' ? 'Predloženi tekst' : 'Spreman prijedlog'}
+                            <Check className="w-3 h-3" />
+                            {mode === 'writer' ? 'Predloženi tekst' :
+                                mode === 'brainstorming' ? 'Spremi ideju' : 'Spreman prijedlog'}
                         </span>
+
+                        {/* Writer Mode Actions */}
                         {mode === 'writer' && (
                             <div className="flex gap-1">
                                 <button
@@ -315,6 +320,28 @@ export const AIChatSidebar: React.FC = () => {
                                     <ThumbsUp className="w-3 h-3" />
                                 </button>
                             </div>
+                        )}
+
+                        {/* Brainstorming Mode Actions */}
+                        {mode === 'brainstorming' && (
+                            <button
+                                onClick={async () => {
+                                    if (pendingApplication) {
+                                        const title = window.prompt("Unesite naslov za ovu ideju (bit će prikazan kao gumb za navigaciju):");
+                                        if (!title) return; // Cancelled
+
+                                        const formattedContent = `=== ${title} ===\n\n${pendingApplication}`;
+                                        await saveToResearch(formattedContent);
+
+                                        // Optional: Clear pending application or show success feedback
+                                        alert('Spremljeno u Istraživanje!');
+                                    }
+                                }}
+                                className="px-2 py-1 bg-primary text-primary-foreground text-xs rounded hover:bg-primary/90 transition-colors flex items-center gap-1"
+                                title="Spremi u Istraživanje"
+                            >
+                                <BookOpen className="w-3 h-3" /> Spremi
+                            </button>
                         )}
                     </div>
                     <div className="text-xs text-muted-foreground line-clamp-3 italic border-l-2 border-primary/30 pl-2 max-h-24 overflow-y-auto">

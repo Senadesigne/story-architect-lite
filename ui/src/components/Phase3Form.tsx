@@ -139,7 +139,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
             </div>
             <Textarea
               id="rules_definition"
-              placeholder="Opišite pravila vašeg svijeta (fizika, magija, tehnologija, zakoni prirode...)..."
+              placeholder="Kako funkcionira vaš svijet? Fizika, magija, tehnologija, društvena pravila."
               value={formData.rules_definition}
               onChange={(e) => onFieldChange('rules_definition', e.target.value)}
               className="min-h-[120px]"
@@ -160,7 +160,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
             </div>
             <Textarea
               id="culture_and_history"
-              placeholder="Opišite kulturu, društvene odnose, običaje, religiju i povijest vašeg svijeta..."
+              placeholder="Povijest sukoba, religija, običaji, hijerarhija i svakodnevni život."
               value={formData.culture_and_history}
               onChange={(e) => onFieldChange('culture_and_history', e.target.value)}
               className="min-h-[120px]"

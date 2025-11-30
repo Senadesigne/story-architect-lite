@@ -11,6 +11,7 @@ import { Phase4Form } from '@/components/Phase4Form';
 import { Phase5Form } from '@/components/Phase5Form';
 import { Phase6Form } from '@/components/Phase6Form';
 import { Studio } from './Studio';
+import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 // Constants for timing
 const AUTOSAVE_DELAY = 3000; // 3 seconds
@@ -173,6 +174,15 @@ export function ProjectPage() {
   useEffect(() => {
     fetchProject();
   }, [projectId, fetchProject]);
+
+  // Listen for external updates (e.g. from AI Sidebar)
+  const projectLastUpdated = usePlannerAIStore(state => state.projectLastUpdated);
+
+  useEffect(() => {
+    if (projectLastUpdated > 0) {
+      fetchProject();
+    }
+  }, [projectLastUpdated, fetchProject]);
 
   // Cleanup all timeouts on unmount
   useEffect(() => {
