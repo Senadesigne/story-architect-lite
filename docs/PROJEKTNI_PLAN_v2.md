@@ -38,14 +38,6 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
     - Dodati dropdown izbornik za odabir stila pisanja (abecednim redom).
     - Primjeri: Akcijski, Deskriptivni, Dijaloški, Minimalistički, Poetičan, itd.
 
-### Epic: AI Integracija - Faza A (Direktni API) 🔴
-
-### Epic: UI/UX Poboljšanja 🟢
-* **Zadatak 2.1:** Dodati vizualni indikator trenutne faze u navigaciji
-* **Zadatak 2.2:** Implementirati tooltipove i help tekstove za sva polja
-* **Zadatak 2.3:** Dodati dark mode podršku
-* **Zadatak 2.4:** Optimizirati komponente za mobilne uređaje
-
 
 ### Epic: AI Integracija - Faza B (Orkestrator) 🟢
 * **Zadatak 3.11 (Djelomično):** Korak 5 - Finalna evaluacija i testiranje (Evals) - ⚠️ Test endpoint `/api/ai/test-agent` postoji, ali formalna evaluacija (evals) još nije implementirana

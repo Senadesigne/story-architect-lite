@@ -44,6 +44,13 @@ export const projects = pgTable('projects', {
   synopsis: text('synopsis'),
   outline_notes: text('outline_notes'),
 
+  // Beat Sheet Struktura (Dio Faze 5)
+  beat_sheet_setup: text('beat_sheet_setup'),
+  beat_sheet_inciting_incident: text('beat_sheet_inciting_incident'),
+  beat_sheet_midpoint: text('beat_sheet_midpoint'),
+  beat_sheet_climax: text('beat_sheet_climax'),
+  beat_sheet_falling_action: text('beat_sheet_falling_action'),
+
   // Faza 6: Završne Pripreme
   point_of_view: text('point_of_view'),
 }, (table) => ({

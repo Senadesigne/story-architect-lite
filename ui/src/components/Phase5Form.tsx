@@ -14,11 +14,16 @@ import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 interface Phase5FormProps {
   project: Project;
-  onFieldChange: (field: 'synopsis' | 'outline_notes', value: string) => void;
-  renderSaveIndicator: (field: 'synopsis' | 'outline_notes') => React.ReactNode;
+  onFieldChange: (field: 'synopsis' | 'outline_notes' | 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action', value: string) => void;
+  renderSaveIndicator: (field: 'synopsis' | 'outline_notes' | 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action') => React.ReactNode;
   formData: {
     synopsis: string;
     outline_notes: string;
+    beat_sheet_setup: string;
+    beat_sheet_inciting_incident: string;
+    beat_sheet_midpoint: string;
+    beat_sheet_climax: string;
+    beat_sheet_falling_action: string;
   };
 }
 
@@ -47,6 +52,10 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
   // Handler za otvaranje modala za Outline Notes
   const handleOutlineMagicClick = () => {
     openModal('planner_outline', 'outline_notes', project.id);
+  };
+
+  const handleBeatSheetMagicClick = (field: 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action') => {
+    openModal('planner_beat_sheet', field, project.id);
   };
 
 
@@ -192,6 +201,116 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
               onChange={(e) => onFieldChange('outline_notes', e.target.value)}
               className="min-h-[120px]"
             />
+          </div>
+
+          {/* Beat Sheet Struktura */}
+          <div className="space-y-4 border-t pt-6">
+            <h3 className="text-lg font-semibold">Beat Sheet Struktura</h3>
+
+            {/* SETUP (1-10%) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="beat_sheet_setup">SETUP (1-10%)</Label>
+                  <MagicIcon
+                    onClick={() => handleBeatSheetMagicClick('beat_sheet_setup')}
+                    tooltip="AI Asistent za Setup"
+                  />
+                </div>
+                {renderSaveIndicator('beat_sheet_setup')}
+              </div>
+              <Textarea
+                id="beat_sheet_setup"
+                placeholder="Uvod u svijet, likove i status quo."
+                value={formData.beat_sheet_setup}
+                onChange={(e) => onFieldChange('beat_sheet_setup', e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* INCITING INCIDENT (10%) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="beat_sheet_inciting_incident">INCITING INCIDENT (10%)</Label>
+                  <MagicIcon
+                    onClick={() => handleBeatSheetMagicClick('beat_sheet_inciting_incident')}
+                    tooltip="AI Asistent za Inciting Incident"
+                  />
+                </div>
+                {renderSaveIndicator('beat_sheet_inciting_incident')}
+              </div>
+              <Textarea
+                id="beat_sheet_inciting_incident"
+                placeholder="Događaj koji pokreće priču i mijenja život protagonista."
+                value={formData.beat_sheet_inciting_incident}
+                onChange={(e) => onFieldChange('beat_sheet_inciting_incident', e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* MIDPOINT (10-80%) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="beat_sheet_midpoint">MIDPOINT (10-80%)</Label>
+                  <MagicIcon
+                    onClick={() => handleBeatSheetMagicClick('beat_sheet_midpoint')}
+                    tooltip="AI Asistent za Midpoint"
+                  />
+                </div>
+                {renderSaveIndicator('beat_sheet_midpoint')}
+              </div>
+              <Textarea
+                id="beat_sheet_midpoint"
+                placeholder="Točka bez povratka, promjena dinamike ili veliki otkriće."
+                value={formData.beat_sheet_midpoint}
+                onChange={(e) => onFieldChange('beat_sheet_midpoint', e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* CLIMAX (80-95%) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="beat_sheet_climax">CLIMAX (80-95%)</Label>
+                  <MagicIcon
+                    onClick={() => handleBeatSheetMagicClick('beat_sheet_climax')}
+                    tooltip="AI Asistent za Climax"
+                  />
+                </div>
+                {renderSaveIndicator('beat_sheet_climax')}
+              </div>
+              <Textarea
+                id="beat_sheet_climax"
+                placeholder="Vrhunac sukoba, konačni obračun."
+                value={formData.beat_sheet_climax}
+                onChange={(e) => onFieldChange('beat_sheet_climax', e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+
+            {/* FALLING ACTION (95-100%) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="beat_sheet_falling_action">FALLING ACTION (95-100%)</Label>
+                  <MagicIcon
+                    onClick={() => handleBeatSheetMagicClick('beat_sheet_falling_action')}
+                    tooltip="AI Asistent za Falling Action"
+                  />
+                </div>
+                {renderSaveIndicator('beat_sheet_falling_action')}
+              </div>
+              <Textarea
+                id="beat_sheet_falling_action"
+                placeholder="Posljedice vrhunca, razrješenje i novi status quo."
+                value={formData.beat_sheet_falling_action}
+                onChange={(e) => onFieldChange('beat_sheet_falling_action', e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
           </div>
 
           {/* Popis Scena */}

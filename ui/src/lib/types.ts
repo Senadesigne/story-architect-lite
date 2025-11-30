@@ -23,6 +23,11 @@ export interface Project {
   // Faza 5: Strukturiranje Radnje
   synopsis?: string;
   outline_notes?: string;
+  beat_sheet_setup?: string;
+  beat_sheet_inciting_incident?: string;
+  beat_sheet_midpoint?: string;
+  beat_sheet_climax?: string;
+  beat_sheet_falling_action?: string;
   // Faza 6: Završne Pripreme
   point_of_view?: string;
 }
@@ -50,6 +55,11 @@ export interface ProjectUpdateData {
   // Faza 5: Strukturiranje Radnje
   synopsis?: string;
   outline_notes?: string;
+  beat_sheet_setup?: string;
+  beat_sheet_inciting_incident?: string;
+  beat_sheet_midpoint?: string;
+  beat_sheet_climax?: string;
+  beat_sheet_falling_action?: string;
   // Faza 6: Završne Pripreme
   point_of_view?: string;
 }

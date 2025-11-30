@@ -19,7 +19,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'story_idea' | 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'point_of_view';
+type ProjectField = 'story_idea' | 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action' | 'point_of_view';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -41,6 +41,11 @@ export function ProjectPage() {
     culture_and_history: '',
     synopsis: '',
     outline_notes: '',
+    beat_sheet_setup: '',
+    beat_sheet_inciting_incident: '',
+    beat_sheet_midpoint: '',
+    beat_sheet_climax: '',
+    beat_sheet_falling_action: '',
     point_of_view: ''
   });
   const [saveStatus, setSaveStatus] = useState<{ [key in ProjectField]?: 'saving' | 'saved' | 'error' | null }>({});
@@ -150,6 +155,11 @@ export function ProjectPage() {
         culture_and_history: data.culture_and_history || '',
         synopsis: data.synopsis || '',
         outline_notes: data.outline_notes || '',
+        beat_sheet_setup: data.beat_sheet_setup || '',
+        beat_sheet_inciting_incident: data.beat_sheet_inciting_incident || '',
+        beat_sheet_midpoint: data.beat_sheet_midpoint || '',
+        beat_sheet_climax: data.beat_sheet_climax || '',
+        beat_sheet_falling_action: data.beat_sheet_falling_action || '',
         point_of_view: data.point_of_view || ''
       });
     } catch (error: unknown) {
@@ -389,7 +399,12 @@ export function ProjectPage() {
                         renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                         formData={{
                           synopsis: formData.synopsis ?? '',
-                          outline_notes: formData.outline_notes ?? ''
+                          outline_notes: formData.outline_notes ?? '',
+                          beat_sheet_setup: formData.beat_sheet_setup ?? '',
+                          beat_sheet_inciting_incident: formData.beat_sheet_inciting_incident ?? '',
+                          beat_sheet_midpoint: formData.beat_sheet_midpoint ?? '',
+                          beat_sheet_climax: formData.beat_sheet_climax ?? '',
+                          beat_sheet_falling_action: formData.beat_sheet_falling_action ?? ''
                         }}
                       />
                     </div>

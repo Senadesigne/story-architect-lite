@@ -26,6 +26,11 @@ export const UpdateProjectBodySchema = z.object({
   culture_and_history: z.string().optional(),
   synopsis: z.string().optional(),
   outline_notes: z.string().optional(),
+  beat_sheet_setup: z.string().optional(),
+  beat_sheet_inciting_incident: z.string().optional(),
+  beat_sheet_midpoint: z.string().optional(),
+  beat_sheet_climax: z.string().optional(),
+  beat_sheet_falling_action: z.string().optional(),
   point_of_view: z.string().optional(),
 }).refine(
   (data) => Object.values(data).some(value => value !== undefined),

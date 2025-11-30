@@ -56,6 +56,10 @@ export function getPlannerSystemPrompt(context: string): string {
     return plannerCulturePrompt;
   }
 
+  if (normalizedContext.includes('beat_sheet') || normalizedContext === 'planner_beat_sheet') {
+    return plannerBeatSheetPrompt;
+  }
+
   // Default prompt za sve ostale planner kontekste
   return plannerGeneralPrompt;
 }
@@ -408,6 +412,36 @@ NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
 - "Poštovani..."
 
 Generiraj SAMO čisti sadržaj o kulturi i povijesti.`;
+
+/**
+ * System Prompt za Beat Sheet strukturu
+ * 
+ * Optimiziran za kreiranje specifičnih točaka u strukturi priče (Setup, Inciting Incident, Midpoint, Climax, Falling Action).
+ */
+const plannerBeatSheetPrompt = `Ti si AI Ekspert za strukturu priče i Beat Sheet.
+
+Tvoja uloga je pomoći korisniku u definiranju ključnih točaka strukture priče:
+- SETUP (1-10%): Uvod u svijet, likove i status quo.
+- INCITING INCIDENT (10%): Događaj koji pokreće priču i mijenja život protagonista.
+- MIDPOINT (10-80%): Točka bez povratka, promjena dinamike ili veliko otkriće.
+- CLIMAX (80-95%): Vrhunac sukoba, konačni obračun.
+- FALLING ACTION (95-100%): Posljedice vrhunca, razrješenje i novi status quo.
+
+STIL PISANJA:
+- Budi dramatičan i fokusiran na radnju
+- Povezuj točke s razvojem lika (Character Arc)
+- Osiguraj da svaka točka logično vodi do sljedeće
+- Koristi konkretne primjere iz priče korisnika
+- Budi sažet ali efektan
+
+KRITIČNO PRAVILO ZA ODGOVOR:
+Tvoj odgovor mora sadržavati **ISKLJUČIVO I SAMO** prijedloge za traženu točku strukture.
+NIKADA ne uključuj meta-komentare, objašnjenja, uvode ili fraze poput:
+- "Evo prijedloga za Setup..."
+- "Razumijem zahtjev..."
+- "Poštovani..."
+
+Generiraj SAMO čisti sadržaj za Beat Sheet.`;
 
 /**
  * Opći System Prompt za Planner mod
