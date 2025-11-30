@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/serverComm';
 import { Location } from '@/lib/types';
 import { MagicIcon } from '@/components/planner/MagicIcon';
+import { SectionedEditor } from '@/components/planner/SectionedEditor';
 
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
@@ -116,8 +117,6 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     openModal('planner_culture', 'culture_and_history', project.id);
   };
 
-
-
   return (
     <div className="space-y-6">
       <Card>
@@ -126,46 +125,27 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Definiranje Pravila */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="rules_definition">Definiranje Pravila</Label>
-                <MagicIcon
-                  onClick={handleRulesMagicClick}
-                  tooltip="AI Asistent za Definiranje Pravila"
-                />
-              </div>
-              {renderSaveIndicator('rules_definition')}
-            </div>
-            <Textarea
-              id="rules_definition"
-              placeholder="Kako funkcionira vaš svijet? Fizika, magija, tehnologija, društvena pravila."
-              value={formData.rules_definition}
-              onChange={(e) => onFieldChange('rules_definition', e.target.value)}
-              className="min-h-[120px]"
-            />
-          </div>
+          <SectionedEditor
+            title="Definiranje Pravila"
+            value={formData.rules_definition}
+            onChange={(value) => onFieldChange('rules_definition', value)}
+            options={['Fizika', 'Magija', 'Tehnologija', 'Zakoni prirode']}
+            onMagicClick={handleRulesMagicClick}
+            magicTooltip="AI Asistent za Definiranje Pravila"
+            renderSaveIndicator={() => renderSaveIndicator('rules_definition')}
+          />
 
           {/* Kultura, Društvo i Povijest */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="culture_and_history">Kultura, Društvo i Povijest</Label>
-                <MagicIcon
-                  onClick={handleCultureMagicClick}
-                  tooltip="AI Asistent za Kulturu i Povijest"
-                />
-              </div>
-              {renderSaveIndicator('culture_and_history')}
-            </div>
-            <Textarea
-              id="culture_and_history"
-              placeholder="Povijest sukoba, religija, običaji, hijerarhija i svakodnevni život."
-              value={formData.culture_and_history}
-              onChange={(e) => onFieldChange('culture_and_history', e.target.value)}
-              className="min-h-[120px]"
-            />
-          </div>
+          <SectionedEditor
+            title="Kultura, Društvo i Povijest"
+            value={formData.culture_and_history}
+            onChange={(value) => onFieldChange('culture_and_history', value)}
+            options={['Magija', 'Kultura', 'Običaji', 'Povijest']}
+            onMagicClick={handleCultureMagicClick}
+            magicTooltip="AI Asistent za Kulturu i Povijest"
+            renderSaveIndicator={() => renderSaveIndicator('culture_and_history')}
+          />
+
 
           {/* Geografija i Lokacije */}
           <div className="space-y-4">

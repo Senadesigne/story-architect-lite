@@ -7,24 +7,8 @@ Ovaj dokument je naš centralni sustav za praćenje zadataka post-MVP faze. Za d
 - 🟡 Važno (poboljšava kvalitetu)
 - 🟢 Korisno (nice-to-have)
 
-## [ ZADACI ZA ODRADITI (To-Do) ]
-
 ### Epic: Planner Poboljšanja (Faza 6) 🟡
 * **Zadatak 6.1 (Faza 0):** Implementirati "Fazu 0: Ideja Priče".
-    - Dodati novu fazu prije Faze 1.
-        - INCITING INCIDENT (10%)
-        - MIDPOINT (10-80%)
-        - CLIMAX (80-95%)
-        - FALLING ACTION (95-100%)
-    - Svako polje treba imati AI asistenciju.
-* **Zadatak 6.6 (Faza 6):** Stil Pisanja.
-    - Dodati dropdown izbornik za odabir stila pisanja (abecednim redom).
-    - Primjeri: Akcijski, Deskriptivni, Dijaloški, Minimalistički, Poetičan, itd.
-
-### Epic: AI Integracija - Faza A (Direktni API) 🔴
-
-### Epic: UI/UX Poboljšanja 🟢
-* **Zadatak 2.1:** Dodati vizualni indikator trenutne faze u navigaciji
 * **Zadatak 2.2:** Implementirati tooltipove i help tekstove za sva polja
 * **Zadatak 2.3:** Dodati dark mode podršku
 * **Zadatak 2.4:** Optimizirati komponente za mobilne uređaje
