@@ -22,6 +22,9 @@ export const projects = pgTable('projects', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
 
+  // Faza 0: Ideja Priče
+  story_idea: text('story_idea'),
+
   // Faza 1: Ideja i Koncept
   logline: text('logline'),
   premise: text('premise'),

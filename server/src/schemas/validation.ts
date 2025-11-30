@@ -14,6 +14,7 @@ export const CreateProjectBodySchema = z.object({
 });
 
 export const UpdateProjectBodySchema = z.object({
+  story_idea: z.string().optional(),
   logline: z.string().optional(),
   premise: z.string().optional(),
   theme: z.string().optional(),

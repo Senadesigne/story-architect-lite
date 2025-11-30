@@ -6,6 +6,8 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   userId: string;
+  // Faza 0: Ideja Priče
+  story_idea?: string;
   // Faza 1: Ideja i Koncept
   logline?: string;
   premise?: string;
@@ -31,6 +33,8 @@ export interface User {
 }
 
 export interface ProjectUpdateData {
+  // Faza 0: Ideja Priče
+  story_idea?: string;
   // Faza 1: Ideja i Koncept
   logline?: string;
   premise?: string;

@@ -1,5 +1,6 @@
-import { 
-  Lightbulb, 
+import {
+  Sparkles,
+  Lightbulb,
   Search,
   Globe,
   Users,
@@ -16,6 +17,12 @@ export function ProjectSidebar() {
   const isActive = (path: string) => location.pathname === `/project/${projectId}${path}`;
 
   const phases = [
+    {
+      path: "/story-idea",
+      label: "Faza 0: Ideja Priče",
+      icon: Sparkles,
+      description: "Brain Dump"
+    },
     {
       path: "/ideation",
       label: "Faza 1: Ideja",
@@ -69,8 +76,8 @@ export function ProjectSidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200",
                   "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  active 
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground"
                 )}
               >

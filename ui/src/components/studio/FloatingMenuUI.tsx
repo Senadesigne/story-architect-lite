@@ -29,18 +29,16 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<AIAction | null>(null);
   const [originalSelection, setOriginalSelection] = useState<{ from: number; to: number } | null>(null);
-
   // State for custom dropdown visibility
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // We track selection state to force re-renders if needed, but BubbleMenu handles its own visibility
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isSelectionEmpty, setIsSelectionEmpty] = useState(editor.state.selection.empty);
+  const [, setIsSelectionEmpty] = useState(editor.state.selection.empty);
 
   // Global state for Ghost Text (Writer mode)
   const { pendingGhostText, setPendingGhostText } = usePlannerAIStore();
 
-  // Determine which suggestion to show (Local or Global)
   const activeSuggestion = suggestion || pendingGhostText;
 
   // Handle selection updates to toggle UI and force re-render

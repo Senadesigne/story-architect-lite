@@ -159,7 +159,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
       const { session, messages } = sessionData;
 
-      set((state) => {
+      set((_) => {
         const updates: Partial<PlannerAIState> = {
           currentSessionId: session.id,
           mode: session.mode === 'studio' ? 'writer' : 'planner', // Map session mode to store mode?

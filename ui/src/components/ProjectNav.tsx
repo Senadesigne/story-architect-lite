@@ -34,7 +34,7 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
       {/* Navigation tabs - centered */}
       <div className="flex items-center justify-center flex-1 gap-2">
         <Link
-          to={`/project/${projectId}/ideation`}
+          to={`/project/${projectId}/story-idea`}
           className={cn(
             "px-6 py-2 rounded-md transition-all duration-200 font-medium",
             !isStudio

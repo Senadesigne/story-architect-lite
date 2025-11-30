@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { api } from '@/lib/serverComm';
 import { Project, ProjectUpdateData } from '@/lib/types';
 import { Button } from '@/components/ui/button';
+import { Phase0Form } from '@/components/Phase0Form';
 import { IdeationForm } from '@/components/IdeationForm';
 import { Phase2Form } from '@/components/Phase2Form';
 import { Phase3Form } from '@/components/Phase3Form';
@@ -17,7 +18,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'point_of_view';
+type ProjectField = 'story_idea' | 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'point_of_view';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -27,6 +28,7 @@ export function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<ProjectUpdateData>({
+    story_idea: '',
     logline: '',
     premise: '',
     theme: '',
@@ -64,38 +66,38 @@ export function ProjectPage() {
 
   const handleSave = useCallback(async (field: ProjectField, value: string) => {
     if (!projectId) return;
-    
+
     // Check if this field is already being saved
     if (saveStatus[field] === 'saving') return;
-    
+
     // Clear existing timeout for this field before starting new save operation
     clearFieldTimeout(field);
-    
+
     setSaveStatus(prev => ({ ...prev, [field]: 'saving' }));
-    
+
     try {
       const updateData = { [field]: value } as Record<string, string>;
       const updatedProject = await api.updateProject(projectId, updateData);
       setProject(updatedProject);
       setSaveStatus(prev => ({ ...prev, [field]: 'saved' }));
-      
+
       // Hide "saved" indicator after timeout
       const timeout = setTimeout(() => {
         setSaveStatus(prev => ({ ...prev, [field]: null }));
         delete saveTimeoutsRef.current[field];
       }, SAVE_INDICATOR_DISPLAY_TIME);
-      
+
       saveTimeoutsRef.current[field] = timeout;
     } catch (error: unknown) {
       console.error('Error saving project:', error);
       setSaveStatus(prev => ({ ...prev, [field]: 'error' }));
-      
+
       // Hide error indicator after timeout
       const timeout = setTimeout(() => {
         setSaveStatus(prev => ({ ...prev, [field]: null }));
         delete saveTimeoutsRef.current[field];
       }, ERROR_INDICATOR_DISPLAY_TIME);
-      
+
       saveTimeoutsRef.current[field] = timeout;
     }
   }, [projectId, saveStatus, clearFieldTimeout]);
@@ -107,15 +109,15 @@ export function ProjectPage() {
 
   const handleFieldChange = useCallback((field: ProjectField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Debounce logic - field-specific
     clearDebounceTimeout(field);
-    
+
     const timeout = setTimeout(() => {
       handleSave(field, value);
       delete debounceTimeoutsRef.current[field];
     }, AUTOSAVE_DELAY);
-    
+
     debounceTimeoutsRef.current[field] = timeout;
   }, [clearDebounceTimeout, handleSave]);
 
@@ -135,6 +137,7 @@ export function ProjectPage() {
       setProject(data);
       // Initialize form data
       setFormData({
+        story_idea: data.story_idea || '',
         logline: data.logline || '',
         premise: data.premise || '',
         theme: data.theme || '',
@@ -181,7 +184,7 @@ export function ProjectPage() {
         }
       });
       saveTimeoutsRef.current = {};
-      
+
       // Clear all debounce timeouts
       Object.values(debounceTimeoutsRef.current).forEach(timeout => {
         if (timeout) {
@@ -195,9 +198,9 @@ export function ProjectPage() {
   const renderSaveIndicator = useMemo(() => (field: ProjectField) => {
     const status = saveStatus[field];
     if (!status) return null;
-    
+
     const baseClasses = "text-sm ml-2 inline-flex items-center";
-    
+
     if (status === 'saving') {
       return (
         <span className={`${baseClasses} text-muted-foreground`}>
@@ -205,7 +208,7 @@ export function ProjectPage() {
         </span>
       );
     }
-    
+
     if (status === 'saved') {
       return (
         <span className={`${baseClasses} text-muted-foreground`}>
@@ -213,7 +216,7 @@ export function ProjectPage() {
         </span>
       );
     }
-    
+
     if (status === 'error') {
       return (
         <div className={`${baseClasses} text-red-600`}>
@@ -231,7 +234,7 @@ export function ProjectPage() {
         </div>
       );
     }
-    
+
     return null;
   }, [saveStatus, retryFieldSave]);
 
@@ -250,15 +253,15 @@ export function ProjectPage() {
       <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
           <p className="text-destructive mb-4">{error}</p>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={fetchProject}
             className="mr-4"
           >
             Pokušaj ponovno
           </Button>
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             onClick={() => window.history.back()}
           >
             Nazad
@@ -290,99 +293,113 @@ export function ProjectPage() {
         <div className="h-full overflow-y-auto bg-muted/50">
           <div className="container mx-auto py-8 px-4 md:px-8 bg-transparent">
             <div className="space-y-6 pb-40">
-            {/* Header section */}
-            <div className="max-w-3xl mx-auto">
-              <h1 className="text-3xl font-bold font-serif">{project.title}</h1>
-              <p className="text-muted-foreground mt-2">
-                Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} | 
-                Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
-              </p>
-            </div>
+              {/* Header section */}
+              <div className="max-w-3xl mx-auto">
+                <h1 className="text-3xl font-bold font-serif">{project.title}</h1>
+                <p className="text-muted-foreground mt-2">
+                  Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} |
+                  Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
+                </p>
+              </div>
 
-            {/* Nested routes content */}
-            <Routes>
-              <Route index element={<Navigate to="ideation" replace />} />
-              <Route 
-                path="ideation" 
-                element={
-                  <div className="max-w-3xl mx-auto">
-                    <IdeationForm 
-                      onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                    formData={{
-                      logline: formData.logline ?? '',
-                      premise: formData.premise ?? '',
-                      theme: formData.theme ?? '',
-                      genre: formData.genre ?? '',
-                      audience: formData.audience ?? ''
-                    }}
-                  />
-                  </div>
-                } 
-              />
-              <Route 
-                path="planning" 
-                element={
-                  <div className="max-w-3xl mx-auto">
-                    <Phase2Form 
-                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                    formData={{
-                      brainstorming: formData.brainstorming ?? '',
-                      research: formData.research ?? ''
-                    }}
-                  />
-                  </div>
-                } 
-              />
-              <Route 
-                path="worldbuilding" 
-                element={
-                  <div className="max-w-3xl mx-auto">
-                    <Phase3Form 
-                    project={project} 
-                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                    formData={{
-                      rules_definition: formData.rules_definition ?? '',
-                      culture_and_history: formData.culture_and_history ?? ''
-                    }}
-                  />
-                  </div>
-                } 
-              />
-              <Route path="characters" element={<div className="max-w-3xl mx-auto"><Phase4Form /></div>} />
-              <Route 
-                path="structure" 
-                element={
-                  <div className="max-w-3xl mx-auto">
-                    <Phase5Form 
-                    project={project} 
-                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                    formData={{
-                      synopsis: formData.synopsis ?? '',
-                      outline_notes: formData.outline_notes ?? ''
-                    }}
-                  />
-                  </div>
-                } 
-              />
-              <Route 
-                path="finalization" 
-                element={
-                  <div className="max-w-3xl mx-auto">
-                    <Phase6Form 
-                    onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
-                    renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
-                    formData={{
-                      point_of_view: formData.point_of_view ?? ''
-                    }}
-                  />
-                  </div>
-                } 
-              />
-            </Routes>
+              {/* Nested routes content */}
+              <Routes>
+                <Route index element={<Navigate to="story-idea" replace />} />
+                <Route
+                  path="story-idea"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <Phase0Form
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          story_idea: formData.story_idea ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+                <Route
+                  path="ideation"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <IdeationForm
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          logline: formData.logline ?? '',
+                          premise: formData.premise ?? '',
+                          theme: formData.theme ?? '',
+                          genre: formData.genre ?? '',
+                          audience: formData.audience ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+                <Route
+                  path="planning"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <Phase2Form
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          brainstorming: formData.brainstorming ?? '',
+                          research: formData.research ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+                <Route
+                  path="worldbuilding"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <Phase3Form
+                        project={project}
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          rules_definition: formData.rules_definition ?? '',
+                          culture_and_history: formData.culture_and_history ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+                <Route path="characters" element={<div className="max-w-3xl mx-auto"><Phase4Form /></div>} />
+                <Route
+                  path="structure"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <Phase5Form
+                        project={project}
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          synopsis: formData.synopsis ?? '',
+                          outline_notes: formData.outline_notes ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+                <Route
+                  path="finalization"
+                  element={
+                    <div className="max-w-3xl mx-auto">
+                      <Phase6Form
+                        onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
+                        renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
+                        formData={{
+                          point_of_view: formData.point_of_view ?? ''
+                        }}
+                      />
+                    </div>
+                  }
+                />
+              </Routes>
             </div>
           </div>
         </div>

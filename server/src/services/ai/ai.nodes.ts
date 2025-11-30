@@ -131,24 +131,16 @@ export async function managerContextNode(state: AgentState): Promise<Partial<Age
   try {
     const manager = createManagerProvider(0.2);
 
-    const systemPrompt = `Ti si 'AI Manager' i glavni urednik. Tvoj zadatak je analizirati korisnikov zahtjev i sav dostupni kontekst, te pripremiti DETALJNE I PRECIZNE UPUTE za 'Workera' (AI Pisca).
-Worker NEĆE vidjeti cijeli kontekst koji ti vidiš, već samo tvoje upute. Zato moraš biti vrlo specifičan.
-
-KONTEKST PRIČE (RAG):
-${state.ragContext || 'Nema specifičnog konteksta.'}
-
-GLOBALNI KONTEKST:
-${state.storyContext}
+    const systemPrompt = `Ti si 'AI Manager'. Tvoj zadatak je pripremiti detaljne upute i kontekst za 'AI Workera' koji će pisati tekst.
+Analiziraj korisnički zahtjev i dohvaćeni kontekst.
+Sažmi sve relevantne informacije u jedan jasan prompt koji će Workeru dati sve što mu treba za pisanje.
+Nemoj pisati samu scenu, samo upute.
 
 KORISNIČKI ZAHTJEV:
 ${state.userInput}
 
-Tvoj zadatak:
-1. Sintetiziraj najvažnije informacije iz konteksta koje su ključne za ovaj zadatak.
-2. Definiraj ton, stil i cilj scene/teksta.
-3. Napiši prompt za Workera koji sadrži sve te informacije.
-
-Vrati samo tekst prompta za Workera.`;
+DOHVAĆENI KONTEKST:
+${state.ragContext || 'Nema konteksta.'}`;
 
     const response = await manager.invoke([
       new SystemMessage(systemPrompt),
