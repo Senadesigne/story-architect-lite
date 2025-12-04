@@ -43,6 +43,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
     editorContent: {
       value: (x, y) => y ?? x,
     },
+    selection: {
+      value: (x, y) => y ?? x,
+    },
     // RAG faza
     transformedQuery: {
       value: (x, y) => y ?? x,
@@ -195,11 +198,12 @@ export async function runStoryArchitectGraph(
   plannerContext?: string,
   mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
   editorContent?: string,
-  messages: BaseMessage[] = []
+  messages: BaseMessage[] = [],
+  selection?: string
 ): Promise<AgentState> {
 
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages);
+  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages, selection);
 
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,

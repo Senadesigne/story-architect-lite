@@ -21,6 +21,19 @@ export const GhostTextExtension = Mark.create({
             },
         };
     },
+    
+    // Postavke koje sprečavaju probleme s brisanjem
+    inclusive: true,  // Omogućava tipkanje unutar marka
+    excludes: '',    // Ne isključuje druge markove
+    exitable: true,  // Može se izaći iz marka
+
+    addAttributes() {
+        return {
+            class: {
+                default: 'text-muted-foreground italic opacity-60',
+            },
+        };
+    },
 
     parseHTML() {
         return [
@@ -60,7 +73,7 @@ export const GhostTextExtension = Mark.create({
                     },
             rejectGhostText:
                 () =>
-                    ({ tr, dispatch }) => {
+                    ({ tr, dispatch, state }) => {
                         if (dispatch) {
                             const { doc } = tr;
                             // Iterate backwards to avoid position shifting issues when deleting
@@ -76,6 +89,8 @@ export const GhostTextExtension = Mark.create({
                             rangesToDelete.sort((a, b) => b.from - a.from);
 
                             rangesToDelete.forEach(({ from, to }) => {
+                                // Prvo ukloni mark, zatim obriši tekst
+                                tr.removeMark(from, to, state.schema.marks.ghost);
                                 tr.delete(from, to);
                             });
                         }

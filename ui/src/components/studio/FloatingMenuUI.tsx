@@ -6,6 +6,7 @@ import { api } from '@/lib/serverComm';
 import { Button } from '@/components/ui/button';
 import { Wand2, Loader2, Check, RefreshCw, X } from 'lucide-react';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 interface FloatingMenuUIProps {
   editor: Editor;
@@ -28,7 +29,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<AIAction | null>(null);
-  const [originalSelection, setOriginalSelection] = useState<{ from: number; to: number } | null>(null);
+  const [originalSelection, setOriginalSelection] = useState<{ from: number; to: number; text: string } | null>(null);
   // State for custom dropdown visibility
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -38,6 +39,9 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
 
   // Global state for Ghost Text (Writer mode)
   const { pendingGhostText, setPendingGhostText } = usePlannerAIStore();
+  
+  // Studio store za AI processing lock
+  const { setAIProcessing } = useStudioStore();
 
   const activeSuggestion = suggestion || pendingGhostText;
 
@@ -66,12 +70,20 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
 
     setIsLoading(true);
     setLastAction(action);
+    
+    // Postavi AI processing lock da sprijećimo auto-save tijekom procesiranja
+    setAIProcessing(true);
+    
     const { from, to } = editor.state.selection;
-    setOriginalSelection({ from, to });
+    const selectedText = editor.state.doc.textBetween(from, to);
+
+    // Store selection AND text so we can restore it if discarded
+    setOriginalSelection({ from, to, text: selectedText });
+
+    // 1. Mark the selection so we can find it later even if the document changes
+    editor.chain().focus().setMark('ghost', { class: 'pending-edit' }).run();
 
     try {
-      const selectedText = editor.state.doc.textBetween(from, to);
-
       if (!selectedText.trim()) {
         setIsLoading(false);
         return;
@@ -92,24 +104,143 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
         const newText = finalState.finalOutput;
         setSuggestion(newText);
 
-        // IMMEDIATE UPDATE:
-        // If we are editing Ghost Text, we update the editor immediately so the user sees the change.
-        if (pendingGhostText) {
-          editor
-            .chain()
-            .focus()
-            .deleteSelection()
-            .insertGhostText(newText) // Insert as ghost text
-            .run();
+        // 2. Find the marked selection dynamically
+        let targetFrom = Infinity;
+        let targetTo = -Infinity;
+        let foundMark = false;
 
-          // Update the store so "Keep All" knows the new full text
-          setPendingGhostText(editor.getText());
+        console.log("🔍 FloatingMenu: Searching for ghost mark...");
+        editor.state.doc.descendants((node, pos) => {
+          const hasGhost = node.marks.find(m => m.type.name === 'ghost' && m.attrs.class === 'pending-edit');
+          if (hasGhost) {
+            console.log(`   Found ghost node at ${pos}, size ${node.nodeSize}`);
+            if (pos < targetFrom) targetFrom = pos;
+            if (pos + node.nodeSize > targetTo) targetTo = pos + node.nodeSize;
+            foundMark = true;
+          }
+        });
+
+        console.log(`🎯 FloatingMenu: Target Range [${targetFrom}, ${targetTo}], Found: ${foundMark}`);
+
+        // Fallback if mark is lost
+        if (!foundMark) {
+          console.warn("⚠️ Ghost mark lost, using original coordinates");
+          targetFrom = from;
+          targetTo = to;
         }
+        
+        // SIGURNOSNA PROVJERA: Provjeri da su koordinate valjane
+        const docSize = editor.state.doc.content.size;
+        if (targetFrom < 0 || targetTo > docSize || targetFrom > targetTo) {
+          console.error(`❌ Nevaljane koordinate: from=${targetFrom}, to=${targetTo}, docSize=${docSize}`);
+          setIsLoading(false);
+          setAIProcessing(false);
+          return;
+        }
+
+        // --- DEEP DIAGNOSTIC LOGGING ---
+        console.group("🕵️ FloatingMenu: Deep Diagnostic");
+        let finalFrom = targetFrom;
+        let finalTo = targetTo;
+        console.log("1. Initial Ranges:", { targetFrom, targetTo, finalFrom, finalTo });
+
+        // Log document structure around the target
+        try {
+          const slice = editor.state.doc.slice(Math.max(0, finalFrom - 10), Math.min(editor.state.doc.content.size, finalTo + 10));
+          console.log("2. Document Slice (JSON):", slice.toJSON());
+          console.log("3. Parent Node:", editor.state.doc.resolve(finalFrom).parent.type.name);
+        } catch (e) { console.error("Log failed", e); }
+
+        // --- SMART BLOCK REPLACEMENT STRATEGY ---
+        let replaceWithBlock = false;
+
+        try {
+          const $from = editor.state.doc.resolve(targetFrom);
+          const $to = editor.state.doc.resolve(targetTo);
+
+          if (!$from.sameParent($to)) {
+            console.log("🧱 Cross-block selection detected.");
+            replaceWithBlock = true;
+            finalFrom = $from.before(1);
+            finalTo = $to.after(1);
+            console.log(`🧱 Adjusted to Block Range: [${finalFrom}, ${finalTo}]`);
+          } else {
+            console.log("📄 Inline selection detected (same parent).");
+          }
+        } catch (e) {
+          console.error("Error calculating block expansion:", e);
+        }
+
+        console.log(`✂️ Replacing range [${finalFrom}, ${finalTo}]`);
+        
+        // KRITIČNO: Koristi jedinstvenu transakciju za sve operacije
+        // Ovo sprječava race conditione između transakcija
+        const success = editor.chain()
+          .focus()
+          .command(({ tr, dispatch, state }) => {
+            if (!dispatch) return false;
+            
+            try {
+              console.log("🧹 Započinje jedinstvena transakcija zamjene");
+              
+              // 1. Prvo ukloni ghost mark SAMO iz ciljanog raspona
+              if (foundMark) {
+                tr.removeMark(finalFrom, finalTo, state.schema.marks.ghost);
+                console.log("✅ Ghost mark uklonjen iz raspona");
+              }
+              
+              // 2. Obriši stari tekst
+              tr.delete(finalFrom, finalTo);
+              console.log(`🗑️ Obrisan tekst iz raspona [${finalFrom}, ${finalTo}]`);
+              
+              // 3. Umetni novi tekst (bez marka za sada)
+              const contentNode = state.schema.text(newText);
+              tr.insert(finalFrom, contentNode);
+              console.log(`✅ Umetnut novi tekst: "${newText.substring(0, 50)}..."`);
+              
+              return true;
+            } catch (e) {
+              console.error("❌ Transakcija neuspješna:", e);
+              return false;
+            }
+          })
+          .run();
+          
+        if (!success) {
+          console.error("❌ Zamjena teksta neuspješna");
+          setIsLoading(false);
+          setAIProcessing(false);
+          return;
+        }
+
+        
+        // Dodaj ghost mark na novi tekst nakon uspješne zamjene
+        setTimeout(() => {
+          const newFrom = finalFrom;
+          const newTo = finalFrom + newText.length;
+          
+          editor.chain()
+            .focus()
+            .setTextSelection({ from: newFrom, to: newTo })
+            .setMark('ghost', { class: 'pending-edit' })
+            .run();
+          
+          console.log(`👻 Ghost mark dodan na novi tekst [${newFrom}, ${newTo}]`);
+        }, 50);
+
+        console.groupEnd();
+
+        // Update the store so "Keep All" knows the new full text
+        setTimeout(() => {
+          setPendingGhostText(newText); // Samo novi tekst, ne cijeli dokument
+        }, 50);
       }
     } catch (error) {
       console.error('Error processing AI action:', error);
     } finally {
       setIsLoading(false);
+      // Oslobodi AI processing lock
+      setAIProcessing(false);
     }
   };
 
@@ -130,7 +261,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
   const handleRetry = () => {
     if (lastAction && originalSelection) {
       // Restore selection just in case (though we kept it in state)
-      editor.commands.setTextSelection(originalSelection);
+      editor.commands.setTextSelection({ from: originalSelection.from, to: originalSelection.to });
       handleAction(lastAction);
     }
   };
@@ -141,6 +272,15 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
       // @ts-ignore - custom command
       editor.commands.rejectGhostText();
       setPendingGhostText(null);
+    }
+
+    // RESTORE ORIGINAL TEXT if we have it
+    if (originalSelection && originalSelection.text) {
+      editor.chain()
+        .focus()
+        .insertContentAt(originalSelection.from, originalSelection.text)
+        .setTextSelection({ from: originalSelection.from, to: originalSelection.to })
+        .run();
     }
 
     setSuggestion(null);

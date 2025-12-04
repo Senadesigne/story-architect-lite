@@ -62,7 +62,7 @@ interface PlannerAIState {
   setEditorContent: (content: string | null) => void;
   setPendingGhostText: (content: string | null) => void;
   setGhostTextAction: (action: 'idle' | 'accept' | 'reject') => void;
-  sendMessage: (content: string, currentEditorContent?: string) => Promise<void>;
+  sendMessage: (content: string, currentEditorContent?: string, selection?: string) => Promise<void>;
   saveToResearch: (content: string) => Promise<void>;
   clearMessages: () => void;
   reset: () => void;
@@ -281,7 +281,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     set({ ghostTextAction: action });
   },
 
-  sendMessage: async (content: string, currentEditorContent?: string) => {
+  sendMessage: async (content: string, currentEditorContent?: string, selection?: string) => {
     const state = get();
 
     if (!state.projectId || !state.context || state.isLoading) {
@@ -347,6 +347,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         mode: freshState.mode, // Šaljemo odabrani mod
         workerModel: freshState.workerModel, // Šaljemo odabrani model za Workera
         editorContent: currentEditorContent || freshState.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
+        selection: selection || undefined, // Šaljemo selekciju ako postoji
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content,

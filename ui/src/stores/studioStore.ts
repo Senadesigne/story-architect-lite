@@ -18,6 +18,10 @@ interface StudioState {
   isSidebarOpen: boolean;
   isCommandBarVisible: boolean;
   
+  // AI Processing stanje - za sprječavanje race conditiona
+  isAIProcessing: boolean;
+  aiProcessingLock: Promise<void> | null;
+  
   // Akcije
   setActiveScene: (sceneId: string) => Promise<void>;
   updateContent: (content: string) => void;
@@ -35,6 +39,8 @@ interface StudioState {
   toggleSidebar: () => void;
   insertTextAtCursor: (text: string) => void;
   initializeWithScenes: (scenes: Scene[]) => void;
+  setAIProcessing: (processing: boolean) => void;
+  waitForAIProcessing: () => Promise<void>;
 }
 
 export const useStudioStore = create<StudioState>((set, get) => ({
@@ -47,6 +53,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   scenes: [],
   isSidebarOpen: true,
   isCommandBarVisible: true,
+  isAIProcessing: false,
+  aiProcessingLock: null,
   
   // Implementacija akcija
   setActiveScene: async (sceneId: string) => {
@@ -224,6 +232,12 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       return; // Nema što spremiti
     }
     
+    // Čekaj da se završi AI procesiranje prije spremanja
+    if (state.isAIProcessing && state.aiProcessingLock) {
+      console.log('⏸️ Čekam da se završi AI procesiranje prije spremanja...');
+      await state.aiProcessingLock;
+    }
+    
     try {
       // Pozovi API za ažuriranje scene
       await api.updateScene(state.activeSceneId, { 
@@ -249,6 +263,31 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     } else {
       // Fallback: ažuriraj samo stanje (za slučaj da editor još nije inicijaliziran)
       console.warn('Editor instance not available, falling back to state update');
+    }
+  },
+  
+  setAIProcessing: (processing: boolean) => {
+    if (processing) {
+      // Stvori novi Promise koji će se riješiti kada AI završi
+      const lockPromise = new Promise<void>((resolve) => {
+        // Sačuvaj resolve funkciju za kasnije
+        (window as any).__aiProcessingResolve = resolve;
+      });
+      set({ isAIProcessing: true, aiProcessingLock: lockPromise });
+    } else {
+      // Riješi Promise i očisti stanje
+      if ((window as any).__aiProcessingResolve) {
+        (window as any).__aiProcessingResolve();
+        delete (window as any).__aiProcessingResolve;
+      }
+      set({ isAIProcessing: false, aiProcessingLock: null });
+    }
+  },
+  
+  waitForAIProcessing: async () => {
+    const state = get();
+    if (state.isAIProcessing && state.aiProcessingLock) {
+      await state.aiProcessingLock;
     }
   },
 }));

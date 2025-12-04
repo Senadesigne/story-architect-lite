@@ -286,6 +286,30 @@ Samo tekst prompta za Pisca. BEZ UVODNIH REČENICA. SAMO INSTRUKCIJE.`;
    - Reci Piscu točno što da napiše.
    - Upozori ga da pazi na "šavove" (kako se tekst spaja s onim prije i poslije).
    - Neka generira SAMO novi tekst zamjene, bez komentara.
+   - KRITIČNO: ZABRANJENO JE VRAĆATI CIJELI TEKST. Vrati samo i isključivo prepravljeni dio.
+
+   STRUKTURA PROMPTA KOJI GENERIRAŠ:
+   
+   ### OUTPUT CONSTRAINT (CRITICAL)
+   RETURN ONLY A JSON OBJECT.
+   - DO NOT return the full document.
+   - DO NOT include the context.
+   - DO NOT include explanations.
+   - The output must be valid JSON with a single field "replacement".
+
+   JSON FORMAT:
+   {
+     "replacement": "Your rewritten text here"
+   }
+
+   ### CONTEXT
+   (Ovdje stavi Puni tekst da pisac ima kontekst)
+
+   ### TARGET SELECTION
+   (Ovdje stavi samo dio koji se mijenja)
+
+   ### INSTRUCTION
+   (Tvoja uputa piscu što da radi s tim dijelom. Npr. "Prepiši ovo da bude dramatičnije...")
 
 OUTPUT (Samo prompt za pisca):`;
 
@@ -339,9 +363,28 @@ export async function workerGenerationNode(state: AgentState): Promise<AgentStat
 
     const draft = await aiProvider.generateText(systemPrompt, options);
 
+    // Try to parse JSON if the prompt requested it (heuristic or explicit mode check)
+    // For now, we'll try to parse and if it has "replacement", use that.
+    let finalOutput = draft.trim();
+    try {
+      // Find JSON object in the output (in case of extra text)
+      const jsonMatch = finalOutput.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.replacement) {
+          finalOutput = parsed.replacement;
+        }
+      }
+    } catch (e) {
+      // If parsing fails, DO NOT use the original text as fallback if it looks like a full document.
+      // Instead, return an error or empty string to prevent duplication.
+      console.error("[WORKER_GENERATION] Failed to parse JSON", e);
+      finalOutput = ""; // Fail safe: return nothing rather than full text
+    }
+
     return {
-      draft: draft.trim(),
-      finalOutput: draft.trim(),
+      draft: finalOutput, // Update draft to be the clean text
+      finalOutput: finalOutput,
       draftCount: 1
     };
 

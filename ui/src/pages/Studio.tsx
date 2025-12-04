@@ -14,21 +14,28 @@ export function Studio() {
     updateContent,
     setSelectedText,
     setCursorPosition,
-    saveActiveScene
+    saveActiveScene,
+    isAIProcessing
   } = useStudioStore();
 
   const { openModal, setMode, isOpen } = usePlannerAIStore();
 
-  // Auto-save effect
+  // Auto-save effect - ali ne tijekom AI procesiranja
   useEffect(() => {
+    // Ne pokreni auto-save ako je AI u tijeku
+    if (isAIProcessing) {
+      console.log('⏸️ Auto-save pauziran tijekom AI procesiranja');
+      return;
+    }
+    
     const timeoutId = setTimeout(() => {
-      if (activeSceneId && editorContent) {
+      if (activeSceneId && editorContent && !isAIProcessing) {
         saveActiveScene();
       }
     }, 2000); // 2 seconds debounce
 
     return () => clearTimeout(timeoutId);
-  }, [editorContent, activeSceneId, saveActiveScene]);
+  }, [editorContent, activeSceneId, saveActiveScene, isAIProcessing]);
 
   // Auto-open AI sidebar u brainstorming modu kad se uđe u Studio
   useEffect(() => {
