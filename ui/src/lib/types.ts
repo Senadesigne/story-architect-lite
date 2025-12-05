@@ -71,6 +71,15 @@ export interface Scene {
   order: number;
   projectId: string;
   locationId?: string;
+  chapterId?: string;
+}
+
+export interface Chapter {
+  id: string;
+  title: string;
+  phase: string; // 'setup', 'inciting_incident', 'midpoint', 'climax', 'falling_action'
+  order: number;
+  projectId: string;
 }
 
 export interface Location {

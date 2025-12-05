@@ -167,13 +167,44 @@ export async function deleteCharacter(characterId: string) {
   return response.json();
 }
 
+// Chapters API
+export async function getChapters(projectId: string) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/chapters`);
+  return response.json();
+}
+
+export async function createChapter(projectId: string, data: { title: string; phase: string; order?: number }) {
+  const response = await fetchWithAuth(`/api/projects/${projectId}/chapters`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function updateChapter(chapterId: string, data: { title?: string; phase?: string; order?: number }) {
+  const response = await fetchWithAuth(`/api/chapters/${chapterId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteChapter(chapterId: string) {
+  const response = await fetchWithAuth(`/api/chapters/${chapterId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
 // Scenes API
 export async function getScenes(projectId: string) {
   const response = await fetchWithAuth(`/api/projects/${projectId}/scenes`);
   return response.json();
 }
 
-export async function createScene(projectId: string, sceneData: { title: string; summary?: string; order?: number; locationId?: string }) {
+export async function createScene(projectId: string, sceneData: { title: string; summary?: string; order?: number; locationId?: string; chapterId?: string }) {
   const response = await fetchWithAuth(`/api/projects/${projectId}/scenes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -182,7 +213,7 @@ export async function createScene(projectId: string, sceneData: { title: string;
   return response.json();
 }
 
-export async function updateScene(sceneId: string, sceneData: { title?: string; summary?: string; order?: number; locationId?: string }) {
+export async function updateScene(sceneId: string, sceneData: { title?: string; summary?: string; order?: number; locationId?: string; chapterId?: string }) {
   const response = await fetchWithAuth(`/api/scenes/${sceneId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -247,6 +278,9 @@ export async function updateUser(data: { displayName?: string; avatarUrl?: strin
 export async function deleteUser() {
   const response = await fetchWithAuth('/api/user', {
     method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
   return response.json();
 }
@@ -295,6 +329,10 @@ export const api = {
   createCharacter,
   updateCharacter,
   deleteCharacter,
+  getChapters,
+  createChapter,
+  updateChapter,
+  deleteChapter,
   getScenes,
   createScene,
   updateScene,

@@ -4,6 +4,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { MagicIcon } from '@/components/planner/MagicIcon';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from 'react';
 
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
@@ -23,6 +40,9 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
   const { projectId } = useParams<{ projectId: string }>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const [renamingSection, setRenamingSection] = useState<{ title: string, lineIndex: number } | null>(null);
+  const [newSectionTitle, setNewSectionTitle] = useState('');
+
   // Planner AI Store
   const {
     openModal,
@@ -39,16 +59,17 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
     if (!formData.research) return [];
 
     const lines = formData.research.split('\n');
-    const headers: { title: string, index: number }[] = [];
+    const headers: { title: string, index: number, lineIndex: number }[] = [];
     let currentIndex = 0;
 
-    lines.forEach((line) => {
+    lines.forEach((line, lineIdx) => {
       const trimmed = line.trim();
       // Detektiraj naslove: === NASLOV ===
       if (trimmed.startsWith('===') && trimmed.endsWith('===')) {
         headers.push({
           title: trimmed.replace(/===/g, '').trim(),
-          index: currentIndex
+          index: currentIndex,
+          lineIndex: lineIdx
         });
       }
       currentIndex += line.length + 1; // +1 za newline
@@ -70,6 +91,30 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
       const linesBefore = formData.research.substring(0, index).split('\n').length;
       textareaRef.current.scrollTop = (linesBefore - 1) * lineHeight;
     }
+  };
+
+  const handleDeleteSection = (lineIndex: number) => {
+    const lines = formData.research.split('\n');
+    if (lineIndex >= 0 && lineIndex < lines.length) {
+      lines.splice(lineIndex, 1);
+      onFieldChange('research', lines.join('\n'));
+    }
+  };
+
+  const openRenameDialog = (section: { title: string, lineIndex: number }) => {
+    setRenamingSection(section);
+    setNewSectionTitle(section.title);
+  };
+
+  const handleRenameSave = () => {
+    if (!renamingSection) return;
+
+    const lines = formData.research.split('\n');
+    if (renamingSection.lineIndex >= 0 && renamingSection.lineIndex < lines.length) {
+      lines[renamingSection.lineIndex] = `=== ${newSectionTitle} ===`;
+      onFieldChange('research', lines.join('\n'));
+    }
+    setRenamingSection(null);
   };
 
   return (
@@ -101,14 +146,25 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
               <div className="flex flex-wrap gap-2 mb-2 p-2 bg-muted/30 rounded-md">
                 <span className="text-xs text-muted-foreground self-center mr-1">Brzi skok:</span>
                 {sections.map((section, i) => (
-                  <button
-                    key={i}
-                    className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 cursor-pointer"
-                    onClick={() => scrollToSection(section.index)}
-                    type="button"
-                  >
-                    {section.title}
-                  </button>
+                  <ContextMenu key={i}>
+                    <ContextMenuTrigger>
+                      <button
+                        className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80 cursor-pointer"
+                        onClick={() => scrollToSection(section.index)}
+                        type="button"
+                      >
+                        {section.title}
+                      </button>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => openRenameDialog(section)}>
+                        Uredi
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => handleDeleteSection(section.lineIndex)} className="text-destructive focus:text-destructive">
+                        Obriši
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
               </div>
             )}
@@ -124,6 +180,33 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!renamingSection} onOpenChange={(open) => !open && setRenamingSection(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Preimenuj sekciju</DialogTitle>
+            <DialogDescription>
+              Unesite novi naziv za ovu sekciju.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              value={newSectionTitle}
+              onChange={(e) => setNewSectionTitle(e.target.value)}
+              placeholder="Naziv sekcije"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleRenameSave();
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenamingSection(null)}>Odustani</Button>
+            <Button onClick={handleRenameSave}>Spremi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

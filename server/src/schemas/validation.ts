@@ -79,6 +79,25 @@ export const UpdateCharacterBodySchema = z.object({
   { message: 'At least one field must be provided' }
 );
 
+
+
+// ========== CHAPTER VALIDATION SCHEMAS ==========
+
+export const CreateChapterBodySchema = z.object({
+  title: z.string().min(1, 'Title is required').trim(),
+  phase: z.string().min(1, 'Phase is required').trim(),
+  order: z.number().int().min(0).optional(),
+});
+
+export const UpdateChapterBodySchema = z.object({
+  title: z.string().min(1, 'Title cannot be empty').trim().optional(),
+  phase: z.string().min(1, 'Phase cannot be empty').trim().optional(),
+  order: z.number().int().min(0).optional(),
+}).refine(
+  (data) => Object.values(data).some(value => value !== undefined),
+  { message: 'At least one field must be provided' }
+);
+
 // ========== SCENE VALIDATION SCHEMAS ==========
 
 export const CreateSceneBodySchema = z.object({
@@ -86,6 +105,7 @@ export const CreateSceneBodySchema = z.object({
   summary: z.string().optional(),
   order: z.number().int().min(0).optional(),
   locationId: z.string().uuid().optional().or(z.literal('')),
+  chapterId: z.string().uuid().optional().or(z.literal('')),
 });
 
 export const UpdateSceneBodySchema = z.object({
@@ -93,6 +113,7 @@ export const UpdateSceneBodySchema = z.object({
   summary: z.string().optional(),
   order: z.number().int().min(0).optional(),
   locationId: z.string().uuid().optional().or(z.literal('')),
+  chapterId: z.string().uuid().optional().or(z.literal('')),
 }).refine(
   (data) => Object.values(data).some(value => value !== undefined),
   { message: 'At least one field must be provided' }
@@ -130,6 +151,8 @@ export type CreateCharacterBody = z.infer<typeof CreateCharacterBodySchema>;
 export type UpdateCharacterBody = z.infer<typeof UpdateCharacterBodySchema>;
 export type CreateSceneBody = z.infer<typeof CreateSceneBodySchema>;
 export type UpdateSceneBody = z.infer<typeof UpdateSceneBodySchema>;
+export type CreateChapterBody = z.infer<typeof CreateChapterBodySchema>;
+export type UpdateChapterBody = z.infer<typeof UpdateChapterBodySchema>;
 export type GenerateSceneSynopsisBody = z.infer<typeof GenerateSceneSynopsisBodySchema>;
 export type ChatRequestBody = z.infer<typeof ChatRequestBodySchema>;
 

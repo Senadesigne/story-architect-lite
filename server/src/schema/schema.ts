@@ -86,6 +86,20 @@ export const locations = pgTable('locations', {
   projectIdIdx: index('idx_locations_project_id').on(table.projectId),
 }));
 
+// Poglavlja
+export const chapters = pgTable('chapters', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 256 }).notNull(),
+  phase: varchar('phase', { length: 50 }).notNull(), // 'setup', 'inciting_incident', etc.
+  order: integer('order').notNull().default(0),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+}, (table) => ({
+  // Indeks za brže dohvaćanje poglavlja po projektu
+  projectIdIdx: index('idx_chapters_project_id').on(table.projectId),
+  // Indeks za sortiranje poglavlja
+  orderIdx: index('idx_chapters_order').on(table.projectId, table.order),
+}));
+
 // Scene
 export const scenes = pgTable('scenes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -94,6 +108,7 @@ export const scenes = pgTable('scenes', {
   order: integer('order').notNull().default(0),
   projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
   locationId: uuid('location_id').references(() => locations.id),
+  chapterId: uuid('chapter_id').references(() => chapters.id, { onDelete: 'set null' }),
 }, (table) => ({
   // Indeks za brže dohvaćanje scena po projektu
   projectIdIdx: index('idx_scenes_project_id').on(table.projectId),
@@ -101,6 +116,8 @@ export const scenes = pgTable('scenes', {
   orderIdx: index('idx_scenes_order').on(table.projectId, table.order),
   // Indeks za brže dohvaćanje scena po lokaciji
   locationIdIdx: index('idx_scenes_location_id').on(table.locationId),
+  // Indeks za brže dohvaćanje scena po poglavlju
+  chapterIdIdx: index('idx_scenes_chapter_id').on(table.chapterId),
 }));
 
 
@@ -116,6 +133,12 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   characters: many(characters),
   locations: many(locations),
   scenes: many(scenes),
+  chapters: many(chapters),
+}));
+
+export const chaptersRelations = relations(chapters, ({ one, many }) => ({
+  project: one(projects, { fields: [chapters.projectId], references: [projects.id] }),
+  scenes: many(scenes),
 }));
 
 export const charactersRelations = relations(characters, ({ one }) => ({
@@ -130,6 +153,7 @@ export const locationsRelations = relations(locations, ({ one, many }) => ({
 export const scenesRelations = relations(scenes, ({ one }) => ({
   project: one(projects, { fields: [scenes.projectId], references: [projects.id] }),
   location: one(locations, { fields: [scenes.locationId], references: [locations.id] }),
+  chapter: one(chapters, { fields: [scenes.chapterId], references: [chapters.id] }),
 }));
 
 

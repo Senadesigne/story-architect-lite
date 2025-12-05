@@ -12,7 +12,7 @@ import {
 import { validateBody, getValidatedBody } from './middleware/validation';
 import { getDatabase } from './lib/db';
 import { getDatabaseUrl } from './lib/env';
-import { users, projects, locations, characters, scenes, storyArchitectEmbeddings, chatMessages } from './schema/schema';
+import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema';
 import sessions from './routes/sessions';
 import { eq, sql } from 'drizzle-orm';
 import type {
@@ -28,6 +28,8 @@ import {
   UpdateCharacterBodySchema,
   CreateSceneBodySchema,
   UpdateSceneBodySchema,
+  CreateChapterBodySchema,
+  UpdateChapterBodySchema,
   GenerateSceneSynopsisBodySchema,
   ChatRequestBodySchema
 } from './schemas/validation';
@@ -41,6 +43,8 @@ import type {
   UpdateCharacterBody,
   CreateSceneBody,
   UpdateSceneBody,
+  CreateChapterBody,
+  UpdateChapterBody,
   GenerateSceneSynopsisBody,
   ChatRequestBody
 } from './schemas/validation';
@@ -665,6 +669,115 @@ app.delete('/api/characters/:characterId', async (c) => {
   return c.json({ message: 'Character deleted successfully' });
 });
 
+// ========== CHAPTERS API ==========
+
+// GET /api/projects/:projectId/chapters
+app.get('/api/projects/:projectId/chapters', async (c) => {
+  const user = c.get('user');
+  const projectId = c.req.param('projectId');
+
+  requireValidUUID(projectId, 'project ID');
+
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+
+  await requireProjectOwnership(db, projectId, user.id);
+
+  const projectChapters = await handleDatabaseOperation(async () => {
+    return await db
+      .select()
+      .from(chapters)
+      .where(eq(chapters.projectId, projectId))
+      .orderBy(chapters.order);
+  });
+
+  return c.json(projectChapters);
+});
+
+// POST /api/projects/:projectId/chapters
+app.post('/api/projects/:projectId/chapters', validateBody(CreateChapterBodySchema), async (c) => {
+  const user = c.get('user');
+  const projectId = c.req.param('projectId');
+
+  requireValidUUID(projectId, 'project ID');
+
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+
+  const { title, phase, order } = getValidatedBody<CreateChapterBody>(c);
+
+  await requireProjectOwnership(db, projectId, user.id);
+
+  const newChapter = await handleDatabaseOperation(async () => {
+    const [result] = await db
+      .insert(chapters)
+      .values({
+        title: title,
+        phase: phase,
+        order: order || 0,
+        projectId: projectId,
+      })
+      .returning();
+
+    return result;
+  });
+
+  return c.json(newChapter, 201);
+});
+
+// PUT /api/chapters/:chapterId
+app.put('/api/chapters/:chapterId', validateBody(UpdateChapterBodySchema), async (c) => {
+  const user = c.get('user');
+  const chapterId = c.req.param('chapterId');
+
+  requireValidUUID(chapterId, 'chapter ID');
+
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+
+  const { title, phase, order } = getValidatedBody<UpdateChapterBody>(c);
+
+  await requireResourceOwnership(db, chapters, chapterId, user.id);
+
+  const updateData: DatabaseUpdateData = {};
+  if (title !== undefined) updateData.title = title;
+  if (phase !== undefined) updateData.phase = phase;
+  if (order !== undefined) updateData.order = order;
+
+  const updatedChapter = await handleDatabaseOperation(async () => {
+    const [result] = await db
+      .update(chapters)
+      .set(updateData)
+      .where(eq(chapters.id, chapterId))
+      .returning();
+
+    return result;
+  });
+
+  return c.json(updatedChapter);
+});
+
+// DELETE /api/chapters/:chapterId
+app.delete('/api/chapters/:chapterId', async (c) => {
+  const user = c.get('user');
+  const chapterId = c.req.param('chapterId');
+
+  requireValidUUID(chapterId, 'chapter ID');
+
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+
+  await requireResourceOwnership(db, chapters, chapterId, user.id);
+
+  await handleDatabaseOperation(async () => {
+    await db
+      .delete(chapters)
+      .where(eq(chapters.id, chapterId));
+  });
+
+  return c.json({ message: 'Chapter deleted successfully' });
+});
+
 // ========== SCENES API ==========
 
 // GET /api/projects/:projectId/scenes
@@ -701,7 +814,7 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
   const db = await getDatabase(databaseUrl);
 
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId } = getValidatedBody<CreateSceneBody>(c);
+  const { title, summary, order, locationId, chapterId } = getValidatedBody<CreateSceneBody>(c);
 
   await requireProjectOwnership(db, projectId, user.id);
 
@@ -713,6 +826,7 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
         summary: summary || null,
         order: order || 0,
         locationId: locationId || null,
+        chapterId: chapterId || null,
         projectId: projectId,
       })
       .returning();
@@ -734,7 +848,7 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
   const db = await getDatabase(databaseUrl);
 
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId } = getValidatedBody<UpdateSceneBody>(c);
+  const { title, summary, order, locationId, chapterId } = getValidatedBody<UpdateSceneBody>(c);
 
   await requireResourceOwnership(db, scenes, sceneId, user.id);
 
@@ -744,6 +858,7 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
   if (summary !== undefined) updateData.summary = summary || null;
   if (order !== undefined) updateData.order = order;
   if (locationId !== undefined) updateData.locationId = locationId || null;
+  if (chapterId !== undefined) updateData.chapterId = chapterId || null;
 
   const updatedScene = await handleDatabaseOperation(async () => {
     const [result] = await db

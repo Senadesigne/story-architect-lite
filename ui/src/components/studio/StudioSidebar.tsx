@@ -29,409 +29,453 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { FileText, Plus, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import {
+  FileText,
+  Plus,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Chapter, Scene } from '@/lib/types';
 
 interface StudioSidebarProps {
   projectId: string;
 }
 
+const PHASES = [
+  { id: 'setup', label: 'Setup' },
+  { id: 'inciting_incident', label: 'Inciting Incident' },
+  { id: 'midpoint', label: 'Midpoint' },
+  { id: 'climax', label: 'Climax' },
+  { id: 'falling_action', label: 'Falling Action' },
+];
+
 export function StudioSidebar({ projectId }: StudioSidebarProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // State varijable za modalne dijaloge
+
+  // UI State
+  const [expandedPhases, setExpandedPhases] = useState<Set<string>>(new Set(['setup']));
+  const [expandedChapters, setExpandedChapters] = useState<Set<string>>(new Set());
+
+  // Dialog States
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedSceneId, setSelectedSceneId] = useState<string | null>(null);
+
+
+  const [selectedItem, setSelectedItem] = useState<{ type: 'chapter' | 'scene', id: string, title: string } | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  
-  // State za API operacije
+
   const [isOperationLoading, setIsOperationLoading] = useState(false);
-  
-  // State za Context Menu kontrolu
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  
-  const { 
-    scenes, 
-    activeSceneId, 
-    isSidebarOpen, 
-    setActiveScene, 
+
+  const {
+    scenes,
+    chapters,
+    activeSceneId,
+    isSidebarOpen,
+    setActiveScene,
     addScene,
     deleteSceneFromStore,
     restoreSceneToStore,
     renameSceneInStore,
-    initializeWithScenes 
+    initializeWithScenes,
+    setChapters,
+    addChapter,
+    updateChapterInStore,
+    deleteChapterFromStore
   } = useStudioStore();
 
-  // Dohvaćanje scena
+  // Fetch Data
   useEffect(() => {
-    const fetchScenes = async () => {
+    const fetchData = async () => {
       if (!projectId) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
-        const scenesData = await api.getScenes(projectId);
+        const [scenesData, chaptersData] = await Promise.all([
+          api.getScenes(projectId),
+          api.getChapters(projectId)
+        ]);
+
         initializeWithScenes(scenesData);
+        setChapters(chaptersData);
       } catch (err) {
-        console.error('Error fetching scenes:', err);
-        setError('Greška pri dohvaćanju scena');
+        console.error('Error fetching data:', err);
+        setError('Greška pri dohvaćanju podataka');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchScenes();
-  }, [projectId, initializeWithScenes]);
+    fetchData();
+  }, [projectId, initializeWithScenes, setChapters]);
 
-  // Event handleri za upravljanje scenama
-  const handleRenameClick = (sceneId: string, currentTitle: string) => {
-    setSelectedSceneId(sceneId);
-    setRenameValue(currentTitle);
-    setIsRenameDialogOpen(true);
-  };
-
-  const handleDeleteClick = (sceneId: string) => {
-    setSelectedSceneId(sceneId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleRenameSubmit = async () => {
-    if (!selectedSceneId || !renameValue.trim()) return;
-    
-    const newTitle = renameValue.trim();
-    
-    // Spremi staru scenu za rollback
-    const oldScene = scenes.find(scene => scene.id === selectedSceneId);
-    if (!oldScene) return;
-    
-    setIsOperationLoading(true);
-    setError(null);
-    
-    try {
-      // 1. Optimistic update - odmah ažuriraj UI
-      renameSceneInStore(selectedSceneId, newTitle);
-      
-      // 2. Pozovi API
-      await api.updateScene(selectedSceneId, { title: newTitle });
-      
-      // 3. Uspjeh - zatvori modal
-      setIsRenameDialogOpen(false);
-      setSelectedSceneId(null);
-      setRenameValue('');
-      
-    } catch (err) {
-      console.error('Error renaming scene:', err);
-      
-      // 4. Rollback - vrati stari naziv
-      renameSceneInStore(selectedSceneId, oldScene.title);
-      
-      // 5. Prikaži grešku
-      setError('Greška pri preimenovanju scene. Pokušajte ponovno.');
-    } finally {
-      setIsOperationLoading(false);
+  // Toggles
+  const togglePhase = (phaseId: string) => {
+    const newExpanded = new Set(expandedPhases);
+    if (newExpanded.has(phaseId)) {
+      newExpanded.delete(phaseId);
+    } else {
+      newExpanded.add(phaseId);
     }
+    setExpandedPhases(newExpanded);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedSceneId) return;
-    
-    // Spremi staru scenu i aktivnu scenu za rollback
-    const oldScene = scenes.find(scene => scene.id === selectedSceneId);
-    const wasActiveScene = activeSceneId === selectedSceneId;
-    
-    if (!oldScene) return;
-    
-    setIsOperationLoading(true);
-    setError(null);
-    
-    try {
-      // 1. Optimistic update - odmah ukloni iz UI
-      deleteSceneFromStore(selectedSceneId);
-      
-      // 2. Pozovi API
-      await api.deleteScene(selectedSceneId);
-      
-      // 3. Uspjeh - zatvori modal
-      setIsDeleteDialogOpen(false);
-      setSelectedSceneId(null);
-      
-    } catch (err) {
-      console.error('Error deleting scene:', err);
-      
-      // 4. Rollback - vrati obrisanu scenu na popis
-      restoreSceneToStore(oldScene, wasActiveScene);
-      
-      // 5. Prikaži grešku
-      setError('Greška pri brisanju scene. Pokušajte ponovno.');
-    } finally {
-      setIsOperationLoading(false);
+  const toggleChapter = (chapterId: string) => {
+    const newExpanded = new Set(expandedChapters);
+    if (newExpanded.has(chapterId)) {
+      newExpanded.delete(chapterId);
+    } else {
+      newExpanded.add(chapterId);
     }
+    setExpandedChapters(newExpanded);
   };
 
-  const handleRenameCancel = () => {
-    if (isOperationLoading) return;
-    setIsRenameDialogOpen(false);
-    setSelectedSceneId(null);
-    setRenameValue('');
-  };
-
-  const handleDeleteCancel = () => {
-    if (isOperationLoading) return;
-    setIsDeleteDialogOpen(false);
-    setSelectedSceneId(null);
-  };
-
-  // Funkcija za kreiranje nove scene
-  const handleCreateScene = async () => {
+  // Actions
+  const handleCreateChapter = async (phaseId: string) => {
     if (!projectId) return;
-    
+
     try {
-      const newSceneData = {
-        title: `Scena ${scenes.length + 1}`,
-        summary: '',
-        order: scenes.length
+      const phaseChapters = chapters.filter(c => c.phase === phaseId);
+      const newChapterData = {
+        title: `Novo Poglavlje ${phaseChapters.length + 1}`,
+        phase: phaseId,
+        order: phaseChapters.length
       };
-      
+
+      const newChapter = await api.createChapter(projectId, newChapterData);
+      addChapter(newChapter);
+
+      // Auto-expand phase
+      if (!expandedPhases.has(phaseId)) {
+        togglePhase(phaseId);
+      }
+    } catch (err) {
+      console.error('Error creating chapter:', err);
+      setError('Greška pri kreiranju poglavlja');
+    }
+  };
+
+  const handleCreateScene = async (chapterId: string) => {
+    if (!projectId) return;
+
+    try {
+      const chapterScenes = scenes.filter(s => s.chapterId === chapterId);
+      const newSceneData = {
+        title: `Scena ${chapterScenes.length + 1}`,
+        summary: '',
+        order: chapterScenes.length,
+        chapterId: chapterId
+      };
+
       const newScene = await api.createScene(projectId, newSceneData);
       addScene(newScene);
+
+      // Auto-expand chapter
+      if (!expandedChapters.has(chapterId)) {
+        toggleChapter(chapterId);
+      }
     } catch (err) {
       console.error('Error creating scene:', err);
       setError('Greška pri kreiranju scene');
     }
   };
 
-  // Ne prikazuj sidebar ako je zatvoren
-  if (!isSidebarOpen) {
-    return null;
-  }
+  const handleRenameSubmit = async () => {
+    if (!selectedItem || !renameValue.trim()) return;
+
+    setIsOperationLoading(true);
+    try {
+      if (selectedItem.type === 'chapter') {
+        updateChapterInStore(selectedItem.id, { title: renameValue });
+        await api.updateChapter(selectedItem.id, { title: renameValue });
+      } else {
+        renameSceneInStore(selectedItem.id, renameValue);
+        await api.updateScene(selectedItem.id, { title: renameValue });
+      }
+      setIsRenameDialogOpen(false);
+      setSelectedItem(null);
+    } catch (err) {
+      console.error('Error renaming:', err);
+      setError('Greška pri preimenovanju');
+      // Revert would go here
+    } finally {
+      setIsOperationLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedItem) return;
+
+    setIsOperationLoading(true);
+    try {
+      if (selectedItem.type === 'chapter') {
+        deleteChapterFromStore(selectedItem.id);
+        await api.deleteChapter(selectedItem.id);
+      } else {
+        deleteSceneFromStore(selectedItem.id);
+        await api.deleteScene(selectedItem.id);
+      }
+      setIsDeleteDialogOpen(false);
+      setSelectedItem(null);
+    } catch (err) {
+      console.error('Error deleting:', err);
+      setError('Greška pri brisanju');
+    } finally {
+      setIsOperationLoading(false);
+    }
+  };
+
+
+
+  if (!isSidebarOpen) return null;
 
   return (
     <div className="w-64 h-full bg-sidebar-background/95 backdrop-blur-sm border-r border-border/50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-muted-foreground">Scene</h3>
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={handleCreateScene}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="p-4 border-b border-border/50 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-muted-foreground">Struktura</h3>
       </div>
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        <div className="p-2">
-          {/* Error Display */}
+        <div className="p-2 space-y-1">
           {error && (
-            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-              <p className="text-sm text-destructive">{error}</p>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-2 h-6 text-xs"
-                onClick={() => setError(null)}
-              >
-                Zatvori
-              </Button>
+            <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
+              {error}
+              <Button variant="ghost" size="sm" className="h-6 mt-2" onClick={() => setError(null)}>Zatvori</Button>
             </div>
           )}
-          
-          {isLoading ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">Učitavam scene...</p>
-            </div>
-          ) : scenes.length === 0 ? (
-            <div className="text-center py-8">
-              <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground mb-2">Nema scena</p>
-              <Button size="sm" variant="outline" onClick={handleCreateScene}>
-                <Plus className="h-4 w-4 mr-2" />
-                Dodaj scenu
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {scenes
-                .sort((a, b) => a.order - b.order)
-                .map((scene, index) => {
-                  const isActive = scene.id === activeSceneId;
-                  return (
-                    <div key={scene.id}>
-                      <div 
-                        className="relative group"
-                        onContextMenu={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setOpenDropdownId(scene.id);
-                        }}
-                      >
-                        <Button
-                          variant={isActive ? "secondary" : "ghost"}
-                          className="w-full justify-start text-left h-auto p-3 pr-10"
-                          onClick={async () => {
-                            try {
-                              await setActiveScene(scene.id);
-                            } catch (error) {
-                              console.error('Greška pri prebacivanju scene:', error);
-                            }
-                          }}
-                        >
-                          <div className="flex items-start gap-3 w-full">
-                            <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {index + 1}.
-                                </span>
-                                <span className="font-medium text-sm truncate font-serif">
-                                  {scene.title}
-                                </span>
-                              </div>
-                              {scene.summary && (
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 font-serif">
-                                  {scene.summary}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </Button>
-                        
-                        {/* Dropdown Menu */}
-                        <div className="absolute top-2 right-2">
-                          <DropdownMenu 
-                            open={openDropdownId === scene.id}
-                            onOpenChange={(open) => setOpenDropdownId(open ? scene.id : null)}
+
+          {PHASES.map(phase => {
+            const phaseChapters = chapters
+              .filter(c => c.phase === phase.id)
+              .sort((a, b) => a.order - b.order);
+            const isExpanded = expandedPhases.has(phase.id);
+
+            return (
+              <div key={phase.id} className="select-none">
+                {/* Phase Header */}
+                <div
+                  className="flex items-center gap-2 p-2 hover:bg-accent/50 rounded-md cursor-pointer group"
+                  onClick={() => togglePhase(phase.id)}
+                >
+                  {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                  <span className="text-sm font-medium flex-1">{phase.label}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCreateChapter(phase.id);
+                    }}
+                    title="Dodaj Poglavlje"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Phase Content (Chapters) */}
+                {isExpanded && (
+                  <div className="ml-4 border-l border-border/50 pl-1">
+                    {phaseChapters.map(chapter => {
+                      const chapterScenes = scenes
+                        .filter(s => s.chapterId === chapter.id)
+                        .sort((a, b) => a.order - b.order);
+                      const isChapterExpanded = expandedChapters.has(chapter.id);
+
+                      return (
+                        <div key={chapter.id}>
+                          {/* Chapter Header */}
+                          <div
+                            className="flex items-center gap-2 p-2 hover:bg-accent/50 rounded-md cursor-pointer group"
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              setOpenDropdownId(chapter.id);
+                            }}
+                            onClick={() => toggleChapter(chapter.id)}
                           >
-                            <DropdownMenuTrigger asChild>
+                            {isChapterExpanded ?
+                              <FolderOpen className="h-4 w-4 text-blue-500/70" /> :
+                              <Folder className="h-4 w-4 text-blue-500/70" />
+                            }
+                            <span className="text-sm flex-1 truncate">{chapter.title}</span>
+
+                            {/* Chapter Actions */}
+                            <div className="flex items-center opacity-0 group-hover:opacity-100">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => e.stopPropagation()}
+                                className="h-6 w-6 p-0 mr-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCreateScene(chapter.id);
+                                }}
+                                title="Dodaj Scenu"
                               >
-                                <MoreVertical className="h-3 w-3" />
+                                <Plus className="h-3 w-3" />
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  handleRenameClick(scene.id, scene.title);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="cursor-pointer"
-                                disabled={isOperationLoading}
+                              <DropdownMenu
+                                open={openDropdownId === chapter.id}
+                                onOpenChange={(open) => setOpenDropdownId(open ? chapter.id : null)}
                               >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Preimenuj
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  handleDeleteClick(scene.id);
-                                  setOpenDropdownId(null);
-                                }}
-                                className="cursor-pointer text-destructive focus:text-destructive"
-                                disabled={isOperationLoading}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Izbriši
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedItem({ type: 'chapter', id: chapter.id, title: chapter.title });
+                                    setRenameValue(chapter.title);
+                                    setIsRenameDialogOpen(true);
+                                    setOpenDropdownId(null);
+                                  }}>
+                                    <Edit className="h-4 w-4 mr-2" /> Preimenuj
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedItem({ type: 'chapter', id: chapter.id, title: chapter.title });
+                                      setIsDeleteDialogOpen(true);
+                                      setOpenDropdownId(null);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" /> Izbriši
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          {/* Chapter Content (Scenes) */}
+                          {isChapterExpanded && (
+                            <div className="ml-4 border-l border-border/50 pl-1">
+                              {chapterScenes.map(scene => (
+                                <div
+                                  key={scene.id}
+                                  className={cn(
+                                    "flex items-center gap-2 p-2 rounded-md cursor-pointer group text-sm",
+                                    activeSceneId === scene.id ? "bg-accent text-accent-foreground" : "hover:bg-accent/50 text-muted-foreground"
+                                  )}
+                                  onClick={() => setActiveScene(scene.id)}
+                                  onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    setOpenDropdownId(scene.id);
+                                  }}
+                                >
+                                  <FileText className="h-3 w-3" />
+                                  <span className="flex-1 truncate">{scene.title}</span>
+
+                                  <DropdownMenu
+                                    open={openDropdownId === scene.id}
+                                    onOpenChange={(open) => setOpenDropdownId(open ? scene.id : null)}
+                                  >
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn("h-6 w-6 p-0 opacity-0 group-hover:opacity-100", openDropdownId === scene.id && "opacity-100")}
+                                      >
+                                        <MoreVertical className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedItem({ type: 'scene', id: scene.id, title: scene.title });
+                                        setRenameValue(scene.title);
+                                        setIsRenameDialogOpen(true);
+                                        setOpenDropdownId(null);
+                                      }}>
+                                        <Edit className="h-4 w-4 mr-2" /> Preimenuj
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-destructive"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedItem({ type: 'scene', id: scene.id, title: scene.title });
+                                          setIsDeleteDialogOpen(true);
+                                          setOpenDropdownId(null);
+                                        }}
+                                      >
+                                        <Trash2 className="h-4 w-4 mr-2" /> Izbriši
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              ))}
+                              {chapterScenes.length === 0 && (
+                                <div className="p-2 text-xs text-muted-foreground italic ml-2">
+                                  Nema scena
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
+                      );
+                    })}
+                    {phaseChapters.length === 0 && (
+                      <div className="p-2 text-xs text-muted-foreground italic ml-2">
+                        Nema poglavlja
                       </div>
-                      {index < scenes.length - 1 && (
-                        <Separator className="my-1" />
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          )}
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
 
-      {/* Rename Dialog */}
-      <Dialog 
-        open={isRenameDialogOpen} 
-        onOpenChange={(open) => {
-          if (!isOperationLoading) {
-            setIsRenameDialogOpen(open);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
+      {/* Dialogs */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Preimenuj scenu</DialogTitle>
+            <DialogTitle>Preimenuj {selectedItem?.type === 'chapter' ? 'poglavlje' : 'scenu'}</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              placeholder="Unesite novi naziv scene"
-              onKeyDown={(e) => {
-                if (isOperationLoading) return;
-                if (e.key === 'Enter') {
-                  handleRenameSubmit();
-                } else if (e.key === 'Escape') {
-                  handleRenameCancel();
-                }
-              }}
-              autoFocus
-            />
-          </div>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+            autoFocus
+          />
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={handleRenameCancel}
-              disabled={isOperationLoading}
-            >
-              Odustani
-            </Button>
-            <Button 
-              onClick={handleRenameSubmit}
-              disabled={!renameValue.trim() || isOperationLoading}
-            >
-              {isOperationLoading ? 'Spremam...' : 'Spremi'}
-            </Button>
+            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Odustani</Button>
+            <Button onClick={handleRenameSubmit} disabled={isOperationLoading}>Spremi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog 
-        open={isDeleteDialogOpen} 
-        onOpenChange={(open) => {
-          if (!isOperationLoading) {
-            setIsDeleteDialogOpen(open);
-          }
-        }}
-      >
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Izbriši scenu</AlertDialogTitle>
+            <AlertDialogTitle>Izbriši {selectedItem?.type === 'chapter' ? 'poglavlje' : 'scenu'}</AlertDialogTitle>
             <AlertDialogDescription>
-              Jeste li sigurni da želite izbrisati ovu scenu? Ova akcija se ne može poništiti.
+              Jeste li sigurni? Ova radnja je nepovratna.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
-              onClick={handleDeleteCancel}
-              disabled={isOperationLoading}
-            >
-              Odustani
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive hover:bg-destructive/90 focus:ring-destructive"
-              disabled={isOperationLoading}
-            >
-              {isOperationLoading ? 'Brišem...' : 'Izbriši'}
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Odustani</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive">Izbriši</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
     </div>
   );
 }
