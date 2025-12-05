@@ -3,7 +3,7 @@ import { api } from '@/lib/serverComm';
 import { useStudioStore } from '@/stores/studioStore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -41,7 +41,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Chapter, Scene } from '@/lib/types';
+
 
 interface StudioSidebarProps {
   projectId: string;
@@ -56,7 +56,6 @@ const PHASES = [
 ];
 
 export function StudioSidebar({ projectId }: StudioSidebarProps) {
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // UI State
@@ -82,7 +81,6 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     setActiveScene,
     addScene,
     deleteSceneFromStore,
-    restoreSceneToStore,
     renameSceneInStore,
     initializeWithScenes,
     setChapters,
@@ -96,7 +94,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     const fetchData = async () => {
       if (!projectId) return;
 
-      setIsLoading(true);
+
       setError(null);
 
       try {
@@ -110,8 +108,6 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Greška pri dohvaćanju podataka');
-      } finally {
-        setIsLoading(false);
       }
     };
 

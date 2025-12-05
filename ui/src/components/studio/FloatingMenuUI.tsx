@@ -39,7 +39,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
 
   // Global state for Ghost Text (Writer mode)
   const { pendingGhostText, setPendingGhostText } = usePlannerAIStore();
-  
+
   // Studio store za AI processing lock
   const { setAIProcessing } = useStudioStore();
 
@@ -70,10 +70,10 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
 
     setIsLoading(true);
     setLastAction(action);
-    
+
     // Postavi AI processing lock da sprijećimo auto-save tijekom procesiranja
     setAIProcessing(true);
-    
+
     const { from, to } = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(from, to);
 
@@ -128,7 +128,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
           targetFrom = from;
           targetTo = to;
         }
-        
+
         // SIGURNOSNA PROVJERA: Provjeri da su koordinate valjane
         const docSize = editor.state.doc.content.size;
         if (targetFrom < 0 || targetTo > docSize || targetFrom > targetTo) {
@@ -152,7 +152,6 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
         } catch (e) { console.error("Log failed", e); }
 
         // --- SMART BLOCK REPLACEMENT STRATEGY ---
-        let replaceWithBlock = false;
 
         try {
           const $from = editor.state.doc.resolve(targetFrom);
@@ -160,7 +159,6 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
 
           if (!$from.sameParent($to)) {
             console.log("🧱 Cross-block selection detected.");
-            replaceWithBlock = true;
             finalFrom = $from.before(1);
             finalTo = $to.after(1);
             console.log(`🧱 Adjusted to Block Range: [${finalFrom}, ${finalTo}]`);
@@ -172,32 +170,32 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
         }
 
         console.log(`✂️ Replacing range [${finalFrom}, ${finalTo}]`);
-        
+
         // KRITIČNO: Koristi jedinstvenu transakciju za sve operacije
         // Ovo sprječava race conditione između transakcija
         const success = editor.chain()
           .focus()
           .command(({ tr, dispatch, state }) => {
             if (!dispatch) return false;
-            
+
             try {
               console.log("🧹 Započinje jedinstvena transakcija zamjene");
-              
+
               // 1. Prvo ukloni ghost mark SAMO iz ciljanog raspona
               if (foundMark) {
                 tr.removeMark(finalFrom, finalTo, state.schema.marks.ghost);
                 console.log("✅ Ghost mark uklonjen iz raspona");
               }
-              
+
               // 2. Obriši stari tekst
               tr.delete(finalFrom, finalTo);
               console.log(`🗑️ Obrisan tekst iz raspona [${finalFrom}, ${finalTo}]`);
-              
+
               // 3. Umetni novi tekst (bez marka za sada)
               const contentNode = state.schema.text(newText);
               tr.insert(finalFrom, contentNode);
               console.log(`✅ Umetnut novi tekst: "${newText.substring(0, 50)}..."`);
-              
+
               return true;
             } catch (e) {
               console.error("❌ Transakcija neuspješna:", e);
@@ -205,7 +203,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
             }
           })
           .run();
-          
+
         if (!success) {
           console.error("❌ Zamjena teksta neuspješna");
           setIsLoading(false);
@@ -213,18 +211,18 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
           return;
         }
 
-        
+
         // Dodaj ghost mark na novi tekst nakon uspješne zamjene
         setTimeout(() => {
           const newFrom = finalFrom;
           const newTo = finalFrom + newText.length;
-          
+
           editor.chain()
             .focus()
             .setTextSelection({ from: newFrom, to: newTo })
             .setMark('ghost', { class: 'pending-edit' })
             .run();
-          
+
           console.log(`👻 Ghost mark dodan na novi tekst [${newFrom}, ${newTo}]`);
         }, 50);
 
