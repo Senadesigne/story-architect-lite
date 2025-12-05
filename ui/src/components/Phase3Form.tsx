@@ -3,7 +3,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/serverComm';
 import { Location } from '@/lib/types';
@@ -219,35 +225,30 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
             ) : (
               <div className="space-y-2">
                 {locations.map((location) => (
-                  <Card key={location.id} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-medium">{location.name}</h4>
-                        {location.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {location.description}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          onClick={() => handleEditLocation(location)}
-                          size="sm"
-                          variant="ghost"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteLocation(location.id)}
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive/90"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                  <ContextMenu key={location.id}>
+                    <ContextMenuTrigger>
+                      <Card className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-medium">{location.name}</h4>
+                            {location.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {location.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent>
+                      <ContextMenuItem onClick={() => handleEditLocation(location)}>
+                        Uredi
+                      </ContextMenuItem>
+                      <ContextMenuItem onClick={() => handleDeleteLocation(location.id)} className="text-destructive focus:text-destructive">
+                        Obriši
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
               </div>
             )}

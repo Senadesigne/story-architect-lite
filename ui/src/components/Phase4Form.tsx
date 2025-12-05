@@ -8,7 +8,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { MagicIcon } from '@/components/planner/MagicIcon';
 
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
@@ -316,62 +322,58 @@ export function Phase4Form() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {characters.map((character) => (
-                <Card key={character.id} className="relative">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">{character.name}</CardTitle>
-                        {character.role && (
-                          <CardDescription>{character.role}</CardDescription>
-                        )}
-                      </div>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditCharacter(character)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteCharacter(character)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-2 text-sm">
-                      {character.motivation && (
-                        <div>
-                          <span className="font-medium">Motivacija:</span>
-                          <p className="text-muted-foreground mt-1 line-clamp-2">
-                            {character.motivation}
-                          </p>
+                <ContextMenu key={character.id}>
+                  <ContextMenuTrigger>
+                    <Card className="relative">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-lg">{character.name}</CardTitle>
+                            {character.role && (
+                              <CardDescription>{character.role}</CardDescription>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {character.goal && (
-                        <div>
-                          <span className="font-medium">Cilj:</span>
-                          <p className="text-muted-foreground mt-1 line-clamp-2">
-                            {character.goal}
-                          </p>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-2 text-sm">
+                          {character.motivation && (
+                            <div>
+                              <span className="font-medium">Motivacija:</span>
+                              <p className="text-muted-foreground mt-1 line-clamp-2">
+                                {character.motivation}
+                              </p>
+                            </div>
+                          )}
+                          {character.goal && (
+                            <div>
+                              <span className="font-medium">Cilj:</span>
+                              <p className="text-muted-foreground mt-1 line-clamp-2">
+                                {character.goal}
+                              </p>
+                            </div>
+                          )}
+                          {character.fear && (
+                            <div>
+                              <span className="font-medium">Strah:</span>
+                              <p className="text-muted-foreground mt-1 line-clamp-2">
+                                {character.fear}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {character.fear && (
-                        <div>
-                          <span className="font-medium">Strah:</span>
-                          <p className="text-muted-foreground mt-1 line-clamp-2">
-                            {character.fear}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem onClick={() => handleEditCharacter(character)}>
+                      Uredi
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleDeleteCharacter(character)} className="text-destructive focus:text-destructive">
+                      Obriši
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
             </div>
           )}
