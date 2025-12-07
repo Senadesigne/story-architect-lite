@@ -219,3 +219,32 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   session: one(chatSessions, { fields: [chatMessages.sessionId], references: [chatSessions.id] }),
 }));
 
+
+export const editorAnalyses = pgTable('editor_analyses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Upit koji je korisnik postavio (npr. "Analiziraj lik Marka")
+  prompt: text('prompt').notNull(),
+
+  // Generirani markdown odgovor od Gemini-ja
+  content: text('content').notNull(),
+
+  // Koji model je korišten (za buduću analitiku/naplatu)
+  model: text('model').default('gemini-1.5-pro'),
+
+  // Token usage (korisno za praćenje troškova)
+  inputTokens: integer('input_tokens'),
+  outputTokens: integer('output_tokens'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  projectIdIdx: index('idx_editor_analyses_project_id').on(table.projectId),
+  userIdIdx: index('idx_editor_analyses_user_id').on(table.userId),
+}));
+
+export const editorAnalysesRelations = relations(editorAnalyses, ({ one }) => ({
+  project: one(projects, { fields: [editorAnalyses.projectId], references: [projects.id] }),
+  user: one(users, { fields: [editorAnalyses.userId], references: [users.id] }),
+}));

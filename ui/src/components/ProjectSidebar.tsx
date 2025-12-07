@@ -5,10 +5,14 @@ import {
   Globe,
   Users,
   BarChart3,
-  CheckCircle
+  CheckCircle,
+  ScrollText,
+  X
 } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import React from 'react';
+import { useChiefEditorStore } from "@/store/useChiefEditorStore";
 
 export function ProjectSidebar() {
   const location = useLocation();
@@ -61,9 +65,22 @@ export function ProjectSidebar() {
     }
   ];
 
+  const { history, fetchHistory, selectAnalysis, setIsOpen, deleteAnalysis } = useChiefEditorStore();
+
+  React.useEffect(() => {
+    if (projectId) {
+      fetchHistory(projectId);
+    }
+  }, [projectId]);
+
+  const handleHistoryParams = (item: any) => {
+    selectAnalysis(item);
+    setIsOpen(true);
+  };
+
   return (
-    <div className="w-64 h-screen bg-sidebar-background/95 border-r border-border/50 sticky top-0 overflow-y-auto backdrop-blur-sm">
-      <div className="p-4">
+    <div className="w-64 h-screen bg-sidebar-background/95 border-r border-border/50 sticky top-0 overflow-y-auto backdrop-blur-sm flex flex-col">
+      <div className="p-4 flex-1">
         <h3 className="text-sm font-semibold text-muted-foreground mb-4">Faze Projekta</h3>
         <nav className="space-y-2">
           {phases.map((phase) => {
@@ -91,6 +108,37 @@ export function ProjectSidebar() {
           })}
         </nav>
       </div>
+
+      {/* Chief Editor History Section */}
+      <div className="p-4 border-t border-border/50">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
+          <span className="text-purple-500">◆</span> Analysis History
+        </h3>
+        <div className="space-y-2 max-h-[30vh] overflow-y-auto pr-1">
+          {history.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic pl-2">No analyses yet.</p>
+          ) : (
+            history.map((item) => (
+              <div key={item.id} className="group flex items-center gap-2 group">
+                <button
+                  onClick={() => handleHistoryParams(item)}
+                  className="text-xs text-left w-full truncate p-2 rounded hover:bg-sidebar-accent text-sidebar-foreground transition-colors flex items-center gap-2"
+                >
+                  <ScrollText className="w-3 h-3 text-muted-foreground shrink-0" />
+                  <span className="truncate">{item.prompt}</span>
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteAnalysis(item.id, projectId!); }}
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }
+

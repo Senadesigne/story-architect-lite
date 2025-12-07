@@ -229,11 +229,16 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 });
 // ---------------------------------------------
 
+import { editor } from './routes/editor.routes';
+
 // Protected routes
 app.use('/api/*', authMiddleware);
 
 // Mount sessions route
 app.route('/api/sessions', sessions);
+
+// Mount editor route
+app.route('/api/editor', editor);
 
 // User endpoint
 app.get('/api/user', (c) => {

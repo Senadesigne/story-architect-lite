@@ -32,6 +32,10 @@ export function ProjectLayout({ children }: ProjectLayoutProps) {
       </div>
       {/* AIChatSidebar je fixed position, pa ga možemo staviti ovdje */}
       <AIChatSidebar />
+      {projectId && <ChiefEditorModal projectId={projectId} userId={useAuth().user?.uid || ''} />}
     </div>
   );
 }
+
+import { useAuth } from "@/lib/auth-context";
+import { ChiefEditorModal } from "@/components/chief-editor/ChiefEditorModal";

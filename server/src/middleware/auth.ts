@@ -59,10 +59,17 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
 
     c.set('user', user);
     await next();
-  } catch (error) {
-    console.error('[AuthMiddleware] Auth error:', error);
-    const message = error instanceof Error ? error.message : 'Authentication failed';
-    return c.json({ error: 'Unauthorized', message }, 401);
+  } catch (error: any) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ [AuthMiddleware] CRITICAL FAILURE:', errorMsg);
+    if (error.stack) console.error(error.stack);
+
+    // Return detailed error in development/debug
+    return c.json({
+      error: 'Unauthorized',
+      message: errorMsg,
+      details: 'Check server terminal for stack trace'
+    }, 401);
   }
 }
 

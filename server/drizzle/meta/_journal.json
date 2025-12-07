@@ -22,6 +22,13 @@
       "when": 1764918012122,
       "tag": "0002_flat_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765136913229,
+      "tag": "0003_mute_mongu",
+      "breakpoints": true
     }
   ]
 }

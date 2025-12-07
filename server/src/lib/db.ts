@@ -1,3 +1,4 @@
+
 import { drizzle } from 'drizzle-orm/neon-http';
 import { drizzle as createDrizzlePostgres } from 'drizzle-orm/node-postgres';
 import { neon } from '@neondatabase/serverless';
@@ -54,10 +55,11 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
 
 export const getDatabase = async (connectionString?: string): Promise<DatabaseConnection> => {
   // Always use DATABASE_URL from environment or provided connectionString
-  const connStr = connectionString || process.env.DATABASE_URL;
+  let connStr = connectionString || process.env.DATABASE_URL;
 
-  if (cachedConnection && cachedConnectionString === connStr) {
-    return cachedConnection;
+  // Defensive: Strip surrounding quotes if present (fix for common .env issues)
+  if (connStr && (connStr.startsWith('"') || connStr.startsWith("'"))) {
+    connStr = connStr.slice(1, -1);
   }
 
   if (!connStr) {
@@ -66,6 +68,14 @@ export const getDatabase = async (connectionString?: string): Promise<DatabaseCo
       'Please ensure your .env file contains: DATABASE_URL=postgresql://postgres:password@127.0.0.1:5432/story_architect_lite_db'
     );
   }
+
+  if (cachedConnection && cachedConnectionString === connStr) {
+    return cachedConnection;
+  }
+
+  // Debug log (mask password)
+  const maskedUrl = connStr.replace(/:([^:@]+)@/, ':****@');
+  console.log(`🔌 Connecting to database: ${maskedUrl}`);
 
   cachedConnection = await createConnection(connStr);
   cachedConnectionString = connStr;

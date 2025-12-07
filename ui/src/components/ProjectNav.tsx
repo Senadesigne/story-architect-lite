@@ -7,6 +7,8 @@ import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { usePlannerAIStore } from "@/stores/plannerAIStore";
+import { useChiefEditorStore } from "@/store/useChiefEditorStore";
+import { FileSearch } from "lucide-react";
 
 interface ProjectNavProps {
   projectId: string;
@@ -17,6 +19,7 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
   const { user } = useAuth();
   const isStudio = location.pathname.includes('/studio');
   const { openModal, setMode } = usePlannerAIStore();
+  const { setIsOpen } = useChiefEditorStore();
 
   const handleBrainstormingClick = () => {
     setMode('brainstorming');
@@ -68,6 +71,15 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
         >
           <BrainCircuit className="h-4 w-4" />
           Brainstorming
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsOpen(true)}
+          className="gap-2 border-primary/20 hover:bg-primary/10 transition-colors"
+        >
+          <FileSearch className="h-4 w-4 text-purple-600" />
+          Chief Editor
         </Button>
         {user && (
           <span className="text-sm text-muted-foreground font-serif">
