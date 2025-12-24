@@ -132,9 +132,14 @@ export class VertexAIService {
                 role: 'user',
                 parts: [{ text: content }]
             }],
-            ttl: { seconds: ttlSeconds },
+            ttl: `${ttlSeconds}s`, // Duration string format: "3600s"
             displayName: `project-${projectId}-cache`
         });
+
+        // Ensure cache name exists
+        if (!cachedContent.name) {
+            throw new Error('Failed to create cache: no cache name returned from Vertex AI');
+        }
 
         // Spremi u memory mapu
         activeCaches[projectId] = {
@@ -188,13 +193,13 @@ export class VertexAIService {
             // Instanciranje modela s cache-om
             generativeModel = this.vertexAI.getGenerativeModel({
                 model: this.modelName,
-                systemInstruction: { parts: [{ text: systemInstruction }] },
+                systemInstruction: systemInstruction,
                 cachedContent: { name: cachedInfoName }
             });
         } else {
             generativeModel = this.vertexAI.getGenerativeModel({
                 model: this.modelName,
-                systemInstruction: { parts: [{ text: systemInstruction }] },
+                systemInstruction: systemInstruction,
             });
         }
 
