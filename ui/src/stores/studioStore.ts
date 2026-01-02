@@ -3,6 +3,40 @@ import { Scene, Chapter } from '@/lib/types';
 import type { Editor } from '@tiptap/core';
 import { api } from '@/lib/serverComm';
 
+// Helper funkcija za retry s exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+
+      // Ne retry-aj ako je 4xx error (client error)
+      if ((error as any).status >= 400 && (error as any).status < 500) {
+        throw error;
+      }
+
+      // Ako je zadnji pokušaj, throw error
+      if (attempt === maxRetries) {
+        throw lastError;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.log(`⏳ Retry ${attempt + 1}/${maxRetries} za ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  throw lastError!;
+}
+
 interface StudioState {
   // Editor stanje
   activeSceneId: string | null;
@@ -22,6 +56,13 @@ interface StudioState {
   // AI Processing stanje - za sprječavanje race conditiona
   isAIProcessing: boolean;
   aiProcessingLock: Promise<void> | null;
+
+  // NOVO: Save Status stanje
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  lastSaveError: string | null;
+  lastSaveTime: Date | null;
+  hasUnsavedChanges: boolean;
+  isOnline: boolean;
 
   // Akcije
   setActiveScene: (sceneId: string) => Promise<void>;
@@ -46,6 +87,14 @@ interface StudioState {
   addChapter: (chapter: Chapter) => void;
   updateChapterInStore: (chapterId: string, updates: Partial<Chapter>) => void;
   deleteChapterFromStore: (chapterId: string) => void;
+
+  // NOVO: Save Status akcije
+  setSaveStatus: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+  setLastSaveError: (error: string | null) => void;
+  setLastSaveTime: (time: Date | null) => void;
+  setHasUnsavedChanges: (hasChanges: boolean) => void;
+  setIsOnline: (online: boolean) => void;
+  forceSave: () => Promise<void>;
 }
 
 export const useStudioStore = create<StudioState>((set, get) => ({
@@ -61,6 +110,14 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   isCommandBarVisible: true,
   isAIProcessing: false,
   aiProcessingLock: null,
+
+  // NOVO: Save Status početna stanja
+  saveStatus: 'idle',
+  lastSaveError: null,
+  lastSaveTime: null,
+  hasUnsavedChanges: false,
+  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+
 
   // Implementacija akcija
   setActiveScene: async (sceneId: string) => {
@@ -86,7 +143,22 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   },
 
   updateContent: (content: string) => {
-    set({ editorContent: content });
+    const state = get();
+    // Spriječi nepotrebna ažuriranja ako je sadržaj isti
+    if (state.editorContent === content) return;
+
+    const updates: Partial<StudioState> = {
+      editorContent: content,
+      hasUnsavedChanges: true,
+    };
+
+    // Resetiraj status samo ako je 'saved' ili 'error'
+    // Ako je 'saving', ostavi ga da se vrti dok se trenutno spremanje ne završi
+    if (state.saveStatus === 'saved' || state.saveStatus === 'error') {
+      updates.saveStatus = 'idle';
+    }
+
+    set(updates);
   },
 
   setCursorPosition: (position: number) => {
@@ -234,29 +306,92 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   saveActiveScene: async () => {
     const state = get();
 
-    if (!state.activeSceneId || !state.editorContent) {
-      return; // Nema što spremiti
+    if (!state.activeSceneId) {
+      return; // Nema se što spremiti ako nema aktivne scene
     }
+    // UKLONJENO: !state.editorContent check - sada dopuštamo spremanje praznog sadržaja (brisanje)
 
-    // Čekaj da se završi AI procesiranje prije spremanja
+    // Spremi sadržaj koji trenutno šaljemo
+    const contentBeingSaved = state.editorContent || '';
+
+    // Postavi status na 'saving'
+    set({
+      saveStatus: 'saving',
+      lastSaveError: null
+    });
+
+    // Čekaj da se završi AI procesiranje prije spremanja (s timeoutom)
     if (state.isAIProcessing && state.aiProcessingLock) {
       console.log('⏸️ Čekam da se završi AI procesiranje prije spremanja...');
-      await state.aiProcessingLock;
-    }
-
-    try {
-      // Pozovi API za ažuriranje scene
-      await api.updateScene(state.activeSceneId, {
-        summary: state.editorContent
+      // Timeout za AI lock kako ne bismo čekali zauvijek
+      const timeoutPromise = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          console.warn('⚠️ AI procesiranje traje predugo, nastavljam sa spremanjem...');
+          resolve();
+        }, 5000); // 5 sekundi timeout
       });
 
-      // Ažuriraj scenu u store-u s novim sadržajem
-      get().updateSceneSummaryInStore(state.activeSceneId, state.editorContent);
+      await Promise.race([state.aiProcessingLock, timeoutPromise]);
+    }
 
-      console.log('Scena uspješno spremljena!');
+    // Zabilježi vrijeme početka spremanja
+    const startTime = Date.now();
+
+    try {
+      // NOVO: Koristi retry logiku s exponential backoff
+      await retryWithBackoff(async () => {
+        // Osiguraj da šaljemo string, makar i prazan
+        const contentToSave = state.editorContent || '';
+        return await api.updateScene(state.activeSceneId!, {
+          summary: contentToSave
+        });
+      }, 3, 2000); // 3 pokušaja, početni delay 2s
+
+      // Ažuriraj scenu u store-u s novim sadržajem
+      get().updateSceneSummaryInStore(state.activeSceneId, contentBeingSaved);
+
+      // FORCE MINIMUM SPINNER DURATION: 2000ms
+      const elapsed = Date.now() - startTime;
+      const minDuration = 2000;
+      if (elapsed < minDuration) {
+        await new Promise(resolve => setTimeout(resolve, minDuration - elapsed));
+      }
+
+      // Provjeri je li se sadržaj promijenio dok smo spremali (user je tipkao)
+      const currentContent = get().editorContent;
+      const hasNewChanges = currentContent !== contentBeingSaved;
+
+      // Postavi status na 'saved'
+      set({
+        saveStatus: 'saved',
+        lastSaveTime: new Date(),
+        lastSaveError: null,
+        hasUnsavedChanges: hasNewChanges // Ako je korisnik tipkao, i dalje imamo nespremljene promjene
+      });
+
+      console.log('✅ Scena uspješno spremljena!');
+
+      // TRANSIENT STATUS: Vrati na 'idle' nakon 2 sekunde
+      setTimeout(() => {
+        // Provjeri jesmo li još uvijek u 'saved' statusu (da ne pregazimo novi 'saving' ili 'error')
+        if (get().saveStatus === 'saved') {
+          set({ saveStatus: 'idle' });
+        }
+      }, 2000);
+
     } catch (error) {
-      console.error('Greška pri spremanju scene:', error);
-      throw error; // Re-throw da pozivatelj može handleati grešku
+      console.error('❌ Greška pri spremanju scene:', error);
+
+      const errorMessage = (error as any).message || 'Nepoznata greška';
+
+      // Postavi status na 'error'
+      set({
+        saveStatus: 'error',
+        lastSaveError: errorMessage,
+        hasUnsavedChanges: true
+      });
+
+      // NE throw-aj grešku - ostavi podatke u store-u i localStorage-u
     }
   },
 
@@ -321,5 +456,46 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set((state) => ({
       chapters: state.chapters.filter(chapter => chapter.id !== chapterId)
     }));
+  },
+
+  // NOVO: Save Status akcije
+  setSaveStatus: (status: 'idle' | 'saving' | 'saved' | 'error') => {
+    set({ saveStatus: status });
+  },
+
+  setLastSaveError: (error: string | null) => {
+    set({ lastSaveError: error });
+  },
+
+  setLastSaveTime: (time: Date | null) => {
+    set({ lastSaveTime: time });
+  },
+
+  setHasUnsavedChanges: (hasChanges: boolean) => {
+    set({ hasUnsavedChanges: hasChanges });
+  },
+
+  setIsOnline: (online: boolean) => {
+    set({ isOnline: online });
+
+    if (online) {
+      console.log('🌐 Veza uspostavljena - pokušavam sync...');
+      // Pokušaj spremiti ako ima nespremljenih promjena
+      const state = get();
+      if (state.hasUnsavedChanges && state.activeSceneId) {
+        state.saveActiveScene();
+      }
+    } else {
+      console.log('📴 Veza izgubljena - rad se sprema lokalno');
+    }
+  },
+
+  forceSave: async () => {
+    const state = get();
+
+    // Forsiraj spremanje čak i ako nema promjena
+    if (state.activeSceneId && state.editorContent) {
+      await state.saveActiveScene();
+    }
   },
 }));

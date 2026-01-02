@@ -19,20 +19,50 @@ async function fetchWithAuth(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      // NOVO: Timeout za sprječavanje beskonačnog čekanja
+      signal: AbortSignal.timeout(30000) // 30 sekundi
+    });
 
-  if (!response.ok) {
-    throw new APIError(
-      response.status,
-      `API request failed: ${response.statusText}`
-    );
+    if (!response.ok) {
+      // Pokušaj parsirati error poruku iz response-a
+      let errorMessage = `API request failed: ${response.statusText}`;
+
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // Ignore JSON parse error
+      }
+
+      throw new APIError(response.status, errorMessage);
+    }
+
+    return response;
+
+  } catch (error) {
+    // Detaljniji error handling
+    if (error instanceof APIError) {
+      throw error; // Re-throw API errors
+    }
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new APIError(408, 'Zahtjev je istekao. Provjerite internet vezu.');
+    }
+
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new APIError(0, 'Nema internet veze. Rad se sprema lokalno.');
+    }
+
+    throw new APIError(500, 'Nepoznata greška pri komunikaciji sa serverom.');
   }
-
-  return response;
 }
+
 
 // API endpoints
 export async function getCurrentUser() {

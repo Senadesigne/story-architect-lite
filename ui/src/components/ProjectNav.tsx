@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { usePlannerAIStore } from "@/stores/plannerAIStore";
 import { useChiefEditorStore } from "@/store/useChiefEditorStore";
 import { FileSearch } from "lucide-react";
+import { SaveStatusBadge } from "./studio/SaveStatusBadge";
 
 interface ProjectNavProps {
   projectId: string;
@@ -18,6 +19,7 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
   const location = useLocation();
   const { user } = useAuth();
   const isStudio = location.pathname.includes('/studio');
+  // console.log('[ProjectNav] Location:', location.pathname, 'isStudio:', isStudio);
   const { openModal, setMode } = usePlannerAIStore();
   const { setIsOpen } = useChiefEditorStore();
 
@@ -32,6 +34,7 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
       <div className="flex items-center gap-2">
         <BookOpen className="w-5 h-5 text-primary" />
         <span className="font-serif font-semibold text-foreground">Story Architect Lite</span>
+        {isStudio && <SaveStatusBadge />}
       </div>
 
       {/* Navigation tabs - centered */}
