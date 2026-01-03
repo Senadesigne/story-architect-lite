@@ -128,7 +128,7 @@ export function ProjectSidebar() {
                   <span className="truncate">{item.prompt}</span>
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); deleteAnalysis(item.id, projectId!); }}
+                  onClick={(e) => { e.stopPropagation(); deleteAnalysis(item.id); }}
                   className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive transition-opacity"
                 >
                   <X className="w-3 h-3" />

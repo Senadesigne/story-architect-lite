@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import { useStudioStore } from '@/stores/studioStore';
 import { StudioSidebar } from '@/components/studio/StudioSidebar';
 import { StudioEditor } from '@/components/studio/StudioEditor';
-import { usePlannerAIStore } from '@/stores/plannerAIStore';
 import { RestoreBackupDialog } from '@/components/studio/RestoreBackupDialog';
 import { useLocalBackup } from '@/hooks/useLocalBackup';
 

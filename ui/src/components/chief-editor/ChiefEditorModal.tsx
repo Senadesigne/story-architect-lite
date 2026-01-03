@@ -6,7 +6,6 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -35,7 +34,7 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
     const [prompt, setPrompt] = useState('');
     const [showConfirm, setShowConfirm] = useState(false);
 
-    const handleClose = () => setIsOpen(false);
+
 
     const handleGenerateClick = () => {
         // Ako nema povijesti (prvi put) ili se eksplicitno traži nova analiza velike knjige

@@ -21,7 +21,7 @@ interface ChiefEditorState {
     fetchHistory: (projectId: string) => Promise<void>;
     runAnalysis: (projectId: string, userId: string, prompt: string) => Promise<void>;
     selectAnalysis: (analysis: Analysis) => void;
-    deleteAnalysis: (id: string, projectId: string) => Promise<void>;
+    deleteAnalysis: (id: string) => Promise<void>;
 }
 
 export const useChiefEditorStore = create<ChiefEditorState>((set, get) => ({
@@ -36,7 +36,7 @@ export const useChiefEditorStore = create<ChiefEditorState>((set, get) => ({
     fetchHistory: async (projectId) => {
         set({ isHistoryLoading: true });
         try {
-            const token = await (window as any).getAuthToken?.(); // Pretpostavljamo da postoji helper ili firebase auth
+            await (window as any).getAuthToken?.(); // Pretpostavljamo da postoji helper ili firebase auth
             // NAPOMENA: U stvarnosti treba koristiti pravi auth header iz nekog auth hooka ili servisa
             // Ovdje ćemo pojednostaviti i pretpostaviti da fetch ima interceptor ili da je token dostupan
 
@@ -98,7 +98,7 @@ export const useChiefEditorStore = create<ChiefEditorState>((set, get) => ({
 
     selectAnalysis: (analysis) => set({ currentAnalysis: analysis }),
 
-    deleteAnalysis: async (id, projectId) => {
+    deleteAnalysis: async (id) => {
         try {
             await fetch(`/api/editor/analysis/${id}`, {
                 method: 'DELETE',
