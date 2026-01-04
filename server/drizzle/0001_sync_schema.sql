@@ -1,6 +1,13 @@
--- Manually created migration to synchronize DB schema with Codebase [Forced Update]
+-- Manually created migration to synchronize DB schema with Codebase [Forced Update 2]
 -- This ensures all new fields exist, and removed fields are dropped.
 
+-- Phase 1 Missing Columns
+ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "premise" text;
+ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "theme" text;
+ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "genre" text;
+ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "audience" text;
+
+-- Other Phases (Already present in previous version)
 ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "point_of_view" text;
 ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "beat_sheet_setup" text;
 ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "beat_sheet_inciting_incident" text;
