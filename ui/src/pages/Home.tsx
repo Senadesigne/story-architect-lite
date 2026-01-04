@@ -42,7 +42,7 @@ export function Home() {
       const data = await api.getProjects();
       setProjects(data);
     } catch (error) {
-      setProjectsError('Greška pri dohvaćanju projekata');
+      setProjectsError('Error fetching projects');
       console.error('Error fetching projects:', error);
     } finally {
       setIsLoadingProjects(false);
@@ -94,9 +94,9 @@ export function Home() {
         {/* Header sekcija */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Moji Projekti</h1>
+            <h1 className="text-3xl font-bold">My Projects</h1>
             <p className="text-muted-foreground mt-2">
-              Upravljajte svojim pričama i projektima na jednom mjestu.
+              Manage your stories and projects in one place.
             </p>
           </div>
           <Button
@@ -104,14 +104,14 @@ export function Home() {
             disabled={!user}
             size="lg"
           >
-            + Novi Projekt
+            + New Project
           </Button>
         </div>
 
         {/* Prikaz rezultata kreiranja projekta */}
         {createProjectResult && createProjectResult.success && (
           <div className="p-4 rounded-lg bg-green-50 text-green-800 border border-green-200">
-            <p className="font-medium">✅ Projekt "{createProjectResult.project?.title}" uspješno stvoren!</p>
+            <p className="font-medium">✅ Project "{createProjectResult.project?.title}" successfully created!</p>
           </div>
         )}
 
@@ -120,7 +120,7 @@ export function Home() {
           {/* Loading state */}
           {isLoadingProjects && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Učitavam projekte...</p>
+              <p className="text-muted-foreground">Loading projects...</p>
             </div>
           )}
 
@@ -133,7 +133,7 @@ export function Home() {
                 onClick={fetchProjects}
                 className="mt-4"
               >
-                Pokušaj ponovno
+                Try again
               </Button>
             </div>
           )}
@@ -142,10 +142,10 @@ export function Home() {
           {!isLoadingProjects && !projectsError && projects.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg mb-4">
-                Još niste kreirali nijedan projekt.
+                You haven't created any projects yet.
               </p>
               <p className="text-muted-foreground">
-                Započnite klikom na 'Novi Projekt'.
+                Get started by clicking 'New Project'.
               </p>
             </div>
           )}
@@ -171,17 +171,13 @@ export function Home() {
                       <CardContent>
                         <div className="space-y-2 text-sm text-muted-foreground">
                           <p>
-                            <strong>Kreiran:</strong>{' '}
-                            {new Date(project.createdAt).toLocaleDateString('hr-HR')}
+                            <strong>Created:</strong>{' '}
+                            {new Date(project.createdAt).toLocaleDateString('en-US')}
                           </p>
-                          {project.logline && (
-                            <p className="line-clamp-2">
-                              <strong>Logline:</strong> {project.logline}
-                            </p>
-                          )}
+
                           {project.premise && (
                             <p className="line-clamp-3">
-                              <strong>Premisa:</strong> {project.premise}
+                              <strong>Premise:</strong> {project.premise}
                             </p>
                           )}
                         </div>
@@ -208,14 +204,14 @@ export function Home() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={(e) => handleRenameClick(e, project)}>
                           <Pencil className="mr-2 h-4 w-4" />
-                          Preimenuj
+                          Rename
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={(e) => handleDeleteClick(e, project)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
-                          Obriši
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

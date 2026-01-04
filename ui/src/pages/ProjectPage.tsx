@@ -19,7 +19,7 @@ const SAVE_INDICATOR_DISPLAY_TIME = 3000; // 3 seconds
 const ERROR_INDICATOR_DISPLAY_TIME = 5000; // 5 seconds
 
 // Type definition for project fields
-type ProjectField = 'story_idea' | 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action' | 'point_of_view';
+type ProjectField = 'story_idea' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research' | 'rules_definition' | 'culture_and_history' | 'synopsis' | 'outline_notes' | 'beat_sheet_setup' | 'beat_sheet_inciting_incident' | 'beat_sheet_midpoint' | 'beat_sheet_climax' | 'beat_sheet_falling_action' | 'point_of_view';
 
 export function ProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -30,7 +30,6 @@ export function ProjectPage() {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<ProjectUpdateData>({
     story_idea: '',
-    logline: '',
     premise: '',
     theme: '',
     genre: '',
@@ -130,7 +129,7 @@ export function ProjectPage() {
 
   const fetchProject = useCallback(async () => {
     if (!projectId) {
-      setError('Nevaljan ID projekta');
+      setError('Invalid Project ID');
       setIsLoading(false);
       return;
     }
@@ -144,7 +143,7 @@ export function ProjectPage() {
       // Initialize form data
       setFormData({
         story_idea: data.story_idea || '',
-        logline: data.logline || '',
+
         premise: data.premise || '',
         theme: data.theme || '',
         genre: data.genre || '',
@@ -166,14 +165,14 @@ export function ProjectPage() {
       if (error && typeof error === 'object' && 'status' in error) {
         const apiError = error as { status: number };
         if (apiError.status === 404) {
-          setError('Projekt nije pronađen');
+          setError('Project not found');
         } else if (apiError.status === 400) {
-          setError('Nevaljan ID projekta');
+          setError('Invalid Project ID');
         } else {
-          setError('Greška pri dohvaćanju projekta');
+          setError('Error fetching project');
         }
       } else {
-        setError('Greška pri dohvaćanju projekta');
+        setError('Error fetching project');
       }
       console.error('Error fetching project:', error);
     } finally {
@@ -224,7 +223,7 @@ export function ProjectPage() {
     if (status === 'saving') {
       return (
         <span className={`${baseClasses} text-muted-foreground`}>
-          Spremam...
+          Saving...
         </span>
       );
     }
@@ -232,7 +231,7 @@ export function ProjectPage() {
     if (status === 'saved') {
       return (
         <span className={`${baseClasses} text-muted-foreground`}>
-          Spremljeno ✓
+          Saved ✓
         </span>
       );
     }
@@ -241,7 +240,7 @@ export function ProjectPage() {
       return (
         <div className={`${baseClasses} text-red-600`}>
           <span className="text-sm">
-            Greška pri spremanju ❌
+            Error saving ❌
           </span>
           <Button
             variant="ghost"
@@ -262,7 +261,7 @@ export function ProjectPage() {
     return (
       <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
-          <p className="text-muted-foreground">Učitavam projekt...</p>
+          <p className="text-muted-foreground">Loading project...</p>
         </div>
       </div>
     );
@@ -278,13 +277,13 @@ export function ProjectPage() {
             onClick={fetchProject}
             className="mr-4"
           >
-            Pokušaj ponovno
+            Try again
           </Button>
           <Button
             variant="default"
             onClick={() => window.history.back()}
           >
-            Nazad
+            Back
           </Button>
         </div>
       </div>
@@ -295,7 +294,7 @@ export function ProjectPage() {
     return (
       <div className="container mx-auto p-6 bg-transparent">
         <div className="text-center py-8">
-          <p className="text-muted-foreground">Projekt nije pronađen.</p>
+          <p className="text-muted-foreground">Project not found.</p>
         </div>
       </div>
     );
@@ -317,8 +316,8 @@ export function ProjectPage() {
               <div className="max-w-3xl mx-auto">
                 <h1 className="text-3xl font-bold font-serif">{project.title}</h1>
                 <p className="text-muted-foreground mt-2">
-                  Kreiran: {new Date(project.createdAt).toLocaleDateString('hr-HR')} |
-                  Zadnje ažuriranje: {new Date(project.updatedAt).toLocaleDateString('hr-HR')}
+                  Created: {new Date(project.createdAt).toLocaleDateString('en-US')} |
+                  Last updated: {new Date(project.updatedAt).toLocaleDateString('en-US')}
                 </p>
               </div>
 
@@ -347,7 +346,6 @@ export function ProjectPage() {
                         onFieldChange={(field, value) => handleFieldChange(field as ProjectField, value)}
                         renderSaveIndicator={(field) => renderSaveIndicator(field as ProjectField)}
                         formData={{
-                          logline: formData.logline ?? '',
                           premise: formData.premise ?? '',
                           theme: formData.theme ?? '',
                           genre: formData.genre ?? '',

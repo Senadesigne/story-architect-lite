@@ -16,11 +16,11 @@ export function CommandBar({ projectId }: CommandBarProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!command.trim() || isLoading) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       // Logiraj što šaljemo
       console.log("🚀 Šaljem API poziv:", { projectId, command });
@@ -38,7 +38,7 @@ export function CommandBar({ projectId }: CommandBarProps) {
         // Server je vratio odgovor, ali bez finalOutputa
         console.warn("⚠️ AI je vratio uspješan odgovor, ali bez 'finalOutput' polja.", finalState);
       }
-      
+
       setCommand('');
     } catch (error) {
       // Kritična greška, npr. server je pao
@@ -56,12 +56,12 @@ export function CommandBar({ projectId }: CommandBarProps) {
           <Input
             value={command}
             onChange={(e) => setCommand(e.target.value)}
-            placeholder="Unesite naredbu za AI asistenta..."
+            placeholder="Enter command for AI assistant..."
             disabled={isLoading}
             className="flex-1"
           />
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isLoading || !command.trim()}
             size="sm"
           >

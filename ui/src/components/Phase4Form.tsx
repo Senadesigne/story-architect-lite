@@ -68,7 +68,7 @@ export function Phase4Form() {
       setCharacters(data);
     } catch (error: unknown) {
       console.error('Error fetching characters:', error);
-      setError('Greška pri dohvaćanju likova');
+      setError('Error fetching characters');
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +120,7 @@ export function Phase4Form() {
       await fetchCharacters(); // Osvježi listu
     } catch (error: unknown) {
       console.error('Error saving character:', error);
-      setError('Greška pri spremanju lika');
+      setError('Error saving character');
     } finally {
       setIsSaving(false);
     }
@@ -128,7 +128,7 @@ export function Phase4Form() {
 
   // Brisanje lika
   const handleDeleteCharacter = async (character: Character) => {
-    if (!confirm(`Jeste li sigurni da želite obrisati lika "${character.name}"?`)) {
+    if (!confirm(`Are you sure you want to delete character "${character.name}"?`)) {
       return;
     }
 
@@ -137,7 +137,7 @@ export function Phase4Form() {
       await fetchCharacters(); // Osvježi listu
     } catch (error: unknown) {
       console.error('Error deleting character:', error);
-      setError('Greška pri brisanju lika');
+      setError('Error deleting character');
     }
   };
 
@@ -150,7 +150,7 @@ export function Phase4Form() {
   if (isLoading) {
     return (
       <div className="p-6 text-center">
-        <p className="text-muted-foreground">Učitavam likove...</p>
+        <p className="text-muted-foreground">Loading characters...</p>
       </div>
     );
   }
@@ -159,9 +159,9 @@ export function Phase4Form() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Faza 4: Razvoj Likova</CardTitle>
+          <CardTitle>Phase 4: Character Development</CardTitle>
           <CardDescription>
-            Kreirajte i upravljajte likovima vaše priče. Definirajte njihove ciljeve, strahove i pozadinske priče.
+            Create and manage your story characters. Define their goals, fears, and backstories.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -175,117 +175,117 @@ export function Phase4Form() {
           <div className="mb-6 flex items-center gap-2">
             <MagicIcon
               onClick={handleCharacterMagicClick}
-              tooltip="AI Asistent za Generiranje Lika"
+              tooltip="AI Character Generator Assistant"
               disabled={!projectId}
             />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={handleAddCharacter} className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Dodaj Lika
+                  Add Character
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>
-                    {editingCharacter ? 'Uredi Lika' : 'Dodaj Novog Lika'}
+                    {editingCharacter ? 'Edit Character' : 'Add New Character'}
                   </DialogTitle>
                   <DialogDescription>
-                    Unesite detalje o liku. Ime je obavezno polje.
+                    Enter character details. Name is required.
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
                   {/* Ime */}
                   <div>
-                    <Label htmlFor="name">Ime *</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ime lika"
+                      placeholder="Character Name"
                     />
                   </div>
 
                   {/* Uloga */}
                   <div>
-                    <Label htmlFor="role">Uloga</Label>
+                    <Label htmlFor="role">Role</Label>
                     <Input
                       id="role"
                       value={formData.role}
                       onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                      placeholder="Protagonist, Antagonist, Sporedni lik..."
+                      placeholder="Protagonist, Antagonist, Supporting..."
                     />
                   </div>
 
                   {/* Motivacija */}
                   <div>
-                    <Label htmlFor="motivation">Motivacija</Label>
+                    <Label htmlFor="motivation">Motivation</Label>
                     <Textarea
                       id="motivation"
                       value={formData.motivation}
                       onChange={(e) => setFormData(prev => ({ ...prev, motivation: e.target.value }))}
-                      placeholder="Što pokreće ovog lika?"
+                      placeholder="What drives this character internally?"
                       rows={3}
                     />
                   </div>
 
                   {/* Cilj */}
                   <div>
-                    <Label htmlFor="goal">Cilj</Label>
+                    <Label htmlFor="goal">Goal</Label>
                     <Textarea
                       id="goal"
                       value={formData.goal}
                       onChange={(e) => setFormData(prev => ({ ...prev, goal: e.target.value }))}
-                      placeholder="Što lik želi postići?"
+                      placeholder="What is their external objective?"
                       rows={3}
                     />
                   </div>
 
                   {/* Strah */}
                   <div>
-                    <Label htmlFor="fear">Strah</Label>
+                    <Label htmlFor="fear">Fear</Label>
                     <Textarea
                       id="fear"
                       value={formData.fear}
                       onChange={(e) => setFormData(prev => ({ ...prev, fear: e.target.value }))}
-                      placeholder="Čega se lik boji?"
+                      placeholder="What are they most afraid of losing or facing?"
                       rows={3}
                     />
                   </div>
 
                   {/* Pozadinska priča */}
                   <div>
-                    <Label htmlFor="backstory">Pozadinska Priča</Label>
+                    <Label htmlFor="backstory">Backstory</Label>
                     <Textarea
                       id="backstory"
                       value={formData.backstory}
                       onChange={(e) => setFormData(prev => ({ ...prev, backstory: e.target.value }))}
-                      placeholder="Važni događaji iz prošlosti lika"
+                      placeholder="Key past events that shaped who they are today."
                       rows={4}
                     />
                   </div>
 
                   {/* Početak luka */}
                   <div>
-                    <Label htmlFor="arcStart">Početak Luka</Label>
+                    <Label htmlFor="arcStart">Arc Start</Label>
                     <Textarea
                       id="arcStart"
                       value={formData.arcStart}
                       onChange={(e) => setFormData(prev => ({ ...prev, arcStart: e.target.value }))}
-                      placeholder="Kako lik počinje svoju priču?"
+                      placeholder="Who are they at the beginning?"
                       rows={3}
                     />
                   </div>
 
                   {/* Kraj luka */}
                   <div>
-                    <Label htmlFor="arcEnd">Kraj Luka</Label>
+                    <Label htmlFor="arcEnd">Arc End</Label>
                     <Textarea
                       id="arcEnd"
                       value={formData.arcEnd}
                       onChange={(e) => setFormData(prev => ({ ...prev, arcEnd: e.target.value }))}
-                      placeholder="Kako se lik mijenja kroz priču?"
+                      placeholder="Who do they become by the end?"
                       rows={3}
                     />
                   </div>
@@ -297,13 +297,13 @@ export function Phase4Form() {
                       onClick={() => setIsDialogOpen(false)}
                       disabled={isSaving}
                     >
-                      Odustani
+                      Cancel
                     </Button>
                     <Button
                       onClick={handleSaveCharacter}
                       disabled={isSaving || !formData.name.trim()}
                     >
-                      {isSaving ? 'Spremam...' : (editingCharacter ? 'Ažuriraj' : 'Dodaj')}
+                      {isSaving ? 'Saving...' : (editingCharacter ? 'Update' : 'Add')}
                     </Button>
                   </div>
                 </div>
@@ -314,9 +314,9 @@ export function Phase4Form() {
           {/* Lista likova */}
           {characters.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">Nema dodanih likova.</p>
+              <p className="text-muted-foreground mb-4">No characters added.</p>
               <p className="text-sm text-muted-foreground">
-                Kliknite "Dodaj Lika" za početak.
+                Click "Add Character" to start.
               </p>
             </div>
           ) : (
@@ -339,7 +339,7 @@ export function Phase4Form() {
                         <div className="space-y-2 text-sm">
                           {character.motivation && (
                             <div>
-                              <span className="font-medium">Motivacija:</span>
+                              <span className="font-medium">Motivation:</span>
                               <p className="text-muted-foreground mt-1 line-clamp-2">
                                 {character.motivation}
                               </p>
@@ -347,7 +347,7 @@ export function Phase4Form() {
                           )}
                           {character.goal && (
                             <div>
-                              <span className="font-medium">Cilj:</span>
+                              <span className="font-medium">Goal:</span>
                               <p className="text-muted-foreground mt-1 line-clamp-2">
                                 {character.goal}
                               </p>
@@ -355,7 +355,7 @@ export function Phase4Form() {
                           )}
                           {character.fear && (
                             <div>
-                              <span className="font-medium">Strah:</span>
+                              <span className="font-medium">Fear:</span>
                               <p className="text-muted-foreground mt-1 line-clamp-2">
                                 {character.fear}
                               </p>
@@ -367,10 +367,10 @@ export function Phase4Form() {
                   </ContextMenuTrigger>
                   <ContextMenuContent>
                     <ContextMenuItem onClick={() => handleEditCharacter(character)}>
-                      Uredi
+                      Edit
                     </ContextMenuItem>
                     <ContextMenuItem onClick={() => handleDeleteCharacter(character)} className="text-destructive focus:text-destructive">
-                      Obriši
+                      Delete
                     </ContextMenuItem>
                   </ContextMenuContent>
                 </ContextMenu>

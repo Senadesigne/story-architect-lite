@@ -77,7 +77,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
 
   // Brisanje lokacije
   const handleDeleteLocation = async (locationId: string) => {
-    if (!confirm('Jeste li sigurni da želite obrisati ovu lokaciju?')) return;
+    if (!confirm('Are you sure you want to delete this location?')) return;
 
     try {
       await api.deleteLocation(locationId);
@@ -89,10 +89,10 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
 
   // Uređivanje lokacije
   const handleEditLocation = async (location: Location) => {
-    const newName = prompt('Unesite novi naziv lokacije:', location.name);
+    const newName = prompt('Enter new location name:', location.name);
     if (newName === null) return; // Korisnik je otkazao
 
-    const newDescription = prompt('Unesite novi opis lokacije:', location.description || '');
+    const newDescription = prompt('Enter new location description:', location.description || '');
     if (newDescription === null) return; // Korisnik je otkazao
 
     try {
@@ -127,28 +127,28 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Faza 3: Izgradnja Svijeta</CardTitle>
+          <CardTitle>Phase 3: World Building</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Definiranje Pravila */}
           <SectionedEditor
-            title="Definiranje Pravila"
+            title="Rules Definition"
             value={formData.rules_definition}
             onChange={(value) => onFieldChange('rules_definition', value)}
             options={['Fizika', 'Magija', 'Tehnologija', 'Zakoni prirode']}
             onMagicClick={handleRulesMagicClick}
-            magicTooltip="AI Asistent za Definiranje Pravila"
+            magicTooltip="AI Rules Assistant"
             renderSaveIndicator={() => renderSaveIndicator('rules_definition')}
           />
 
           {/* Kultura, Društvo i Povijest */}
           <SectionedEditor
-            title="Kultura, Društvo i Povijest"
+            title="Culture, Society & History"
             value={formData.culture_and_history}
             onChange={(value) => onFieldChange('culture_and_history', value)}
             options={['Magija', 'Kultura', 'Običaji', 'Povijest']}
             onMagicClick={handleCultureMagicClick}
-            magicTooltip="AI Asistent za Kulturu i Povijest"
+            magicTooltip="AI Culture & History Assistant"
             renderSaveIndicator={() => renderSaveIndicator('culture_and_history')}
           />
 
@@ -156,11 +156,11 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
           {/* Geografija i Lokacije */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Geografija i Lokacije</Label>
+              <Label className="text-base font-medium">Geography & Locations</Label>
               <div className="flex items-center gap-2">
                 <MagicIcon
                   onClick={handleLocationMagicClick}
-                  tooltip="AI Asistent za Generiranje Lokacije"
+                  tooltip="AI Location Generator Assistant"
                 />
                 <Button
                   onClick={() => setShowAddForm(true)}
@@ -168,7 +168,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Dodaj Lokaciju
+                  Add Location
                 </Button>
               </div>
             </div>
@@ -178,20 +178,20 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
               <Card className="border-dashed">
                 <CardContent className="pt-4 space-y-3">
                   <div>
-                    <Label htmlFor="new-location-name">Naziv lokacije</Label>
+                    <Label htmlFor="new-location-name">Location Name</Label>
                     <Input
                       id="new-location-name"
                       type="text"
-                      placeholder="Unesite naziv lokacije..."
+                      placeholder="Enter location name..."
                       value={newLocationName}
                       onChange={(e) => setNewLocationName(e.target.value)}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="new-location-description">Opis lokacije</Label>
+                    <Label htmlFor="new-location-description">Location Description</Label>
                     <Textarea
                       id="new-location-description"
-                      placeholder="Opišite lokaciju..."
+                      placeholder="Describe the location..."
                       value={newLocationDescription}
                       onChange={(e) => setNewLocationDescription(e.target.value)}
                       className="min-h-[80px]"
@@ -199,7 +199,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={handleAddLocation} size="sm">
-                      Spremi
+                      Save
                     </Button>
                     <Button
                       onClick={() => {
@@ -210,7 +210,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                       variant="outline"
                       size="sm"
                     >
-                      Odustani
+                      Cancel
                     </Button>
                   </div>
                 </CardContent>
@@ -219,9 +219,9 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
 
             {/* Lista lokacija */}
             {isLoadingLocations ? (
-              <p className="text-muted-foreground">Učitavam lokacije...</p>
+              <p className="text-muted-foreground">Loading locations...</p>
             ) : locations.length === 0 ? (
-              <p className="text-muted-foreground">Nema dodanih lokacija.</p>
+              <p className="text-muted-foreground">No locations added.</p>
             ) : (
               <div className="space-y-2">
                 {locations.map((location) => (
@@ -242,10 +242,10 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
                     </ContextMenuTrigger>
                     <ContextMenuContent>
                       <ContextMenuItem onClick={() => handleEditLocation(location)}>
-                        Uredi
+                        Edit
                       </ContextMenuItem>
                       <ContextMenuItem onClick={() => handleDeleteLocation(location.id)} className="text-destructive focus:text-destructive">
-                        Obriši
+                        Delete
                       </ContextMenuItem>
                     </ContextMenuContent>
                   </ContextMenu>

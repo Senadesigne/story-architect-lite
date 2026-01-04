@@ -74,7 +74,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
         <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-md animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between mb-2">
             <div className="text-xs font-medium text-primary flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> AI Prijedlog
+              <Sparkles className="w-3 h-3" /> AI Proposal
             </div>
             <div className="flex gap-1">
               <Button
@@ -82,7 +82,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 variant="ghost"
                 onClick={handleDiscardAI}
                 className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                title="Odbaci"
+                title="Discard"
               >
                 <X className="w-3 h-3" />
               </Button>
@@ -90,9 +90,9 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
                 size="sm"
                 onClick={() => handleAcceptAI(field)}
                 className="h-6 px-2 text-xs gap-1"
-                title="Prihvati"
+                title="Accept"
               >
-                <Check className="w-3 h-3" /> Prihvati
+                <Check className="w-3 h-3" /> Accept
               </Button>
             </div>
           </div>
@@ -109,7 +109,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Faza 1: Ideja i Koncept</CardTitle>
+          <CardTitle className="text-2xl">Phase 1: Idea & Concept</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
 
@@ -118,10 +118,10 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="theme">Tema</Label>
+                <Label htmlFor="theme">Theme</Label>
                 <MagicIcon
                   onClick={handleThemeMagicClick}
-                  tooltip="AI koautor za Temu"
+                  tooltip="AI Co-author for Theme"
                   disabled={!projectId}
                 />
               </div>
@@ -132,7 +132,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('theme')}
             <Textarea
               id="theme"
-              placeholder="Koja je središnja poruka ili moralna dilema vaše priče?"
+              placeholder="What is the central message or moral dilemma of your story?"
               value={formData.theme}
               onChange={(e) => onFieldChange('theme' as ProjectField, e.target.value)}
               className="min-h-[80px]"
@@ -143,10 +143,10 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="premise">Premisa</Label>
+                <Label htmlFor="premise">Premise</Label>
                 <MagicIcon
                   onClick={handlePremiseMagicClick}
-                  tooltip="AI Asistent za Premisu"
+                  tooltip="AI Premise Assistant"
                   disabled={!projectId}
                 />
               </div>
@@ -157,7 +157,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('premise')}
             <Textarea
               id="premise"
-              placeholder="Što ako? Opišite osnovnu ideju koja pokreće radnju."
+              placeholder="What if? Describe the core idea that drives the plot."
               value={formData.premise}
               onChange={(e) => onFieldChange('premise' as ProjectField, e.target.value)}
               className="min-h-[120px]"
@@ -167,14 +167,14 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           {/* Žanr */}
           <div className="space-y-2">
             <div className="flex items-center">
-              <Label htmlFor="genre">Žanr</Label>
+              <Label htmlFor="genre">Genre</Label>
               <div className="min-h-[1.5rem] flex items-center">
                 {renderSaveIndicator('genre')}
               </div>
             </div>
             <Textarea
               id="genre"
-              placeholder="Odredite žanr i podžanr vaše priče (npr. Znanstvena fantastika - Cyberpunk)."
+              placeholder="Define the genre and sub-genre (e.g., Sci-Fi - Cyberpunk)."
               value={formData.genre}
               onChange={(e) => onFieldChange('genre' as ProjectField, e.target.value)}
               className="min-h-[80px]"
@@ -185,10 +185,10 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="audience">Ciljana Publika</Label>
+                <Label htmlFor="audience">Target Audience</Label>
                 <MagicIcon
                   onClick={handleAudienceMagicClick}
-                  tooltip="AI koautor za Ciljanu Publiku"
+                  tooltip="AI Co-author for Target Audience"
                   disabled={!projectId}
                 />
               </div>
@@ -199,7 +199,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
             {renderAIProposal('audience')}
             <Textarea
               id="audience"
-              placeholder="Kome je namijenjena ova priča? Definirajte idealnog čitatelja/gledatelja."
+              placeholder="Who is this story for? Define your ideal reader or viewer."
               value={formData.audience}
               onChange={(e) => onFieldChange('audience' as ProjectField, e.target.value)}
               className="min-h-[80px]"

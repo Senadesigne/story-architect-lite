@@ -33,7 +33,7 @@ interface MagicIconProps {
 export function MagicIcon({
   onClick,
   className,
-  tooltip = "AI koautor",
+  tooltip = "AI Co-author",
   disabled = false
 }: MagicIconProps) {
   const iconButton = (
@@ -61,7 +61,7 @@ export function MagicIcon({
       aria-label={tooltip}
     >
       <Sparkles className="size-3.5" />
-      <span>AI koautor</span>
+      <span>AI Co-author</span>
     </button>
   );
 

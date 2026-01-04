@@ -51,7 +51,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                 <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-md animate-in fade-in slide-in-from-top-2">
                     <div className="flex items-center justify-between mb-2">
                         <div className="text-xs font-medium text-primary flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" /> AI Prijedlog
+                            <Sparkles className="w-3 h-3" /> AI Proposal
                         </div>
                         <div className="flex gap-1">
                             <Button
@@ -59,7 +59,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                                 variant="ghost"
                                 onClick={handleDiscardAI}
                                 className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                                title="Odbaci"
+                                title="Discard"
                             >
                                 <X className="w-3 h-3" />
                             </Button>
@@ -67,9 +67,9 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                                 size="sm"
                                 onClick={() => handleAcceptAI(field)}
                                 className="h-6 px-2 text-xs gap-1"
-                                title="Prihvati"
+                                title="Accept"
                             >
-                                <Check className="w-3 h-3" /> Prihvati
+                                <Check className="w-3 h-3" /> Accept
                             </Button>
                         </div>
                     </div>
@@ -85,7 +85,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-2xl">Faza 0: Ideja Priče</CardTitle>
+                <CardTitle className="text-2xl">Phase 0: Story Idea</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -94,7 +94,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                             <Label htmlFor="story_idea">Brain Dump</Label>
                             <MagicIcon
                                 onClick={handleMagicClick}
-                                tooltip="AI Asistent za Ideju"
+                                tooltip="AI Idea Assistant"
                                 disabled={!projectId}
                             />
                         </div>
@@ -105,7 +105,7 @@ export function Phase0Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                     {renderAIProposal('story_idea')}
                     <Textarea
                         id="story_idea"
-                        placeholder="Ovdje izbacite sve svoje ideje, fragmente, scene, dijaloge... Sve što vam padne na pamet! Ovo je prostor za vaš kreativni kaos."
+                        placeholder="Dump all your raw ideas, fragments, scenes, and dialogues here. Chaos is welcome."
                         value={formData.story_idea}
                         onChange={(e) => onFieldChange('story_idea', e.target.value)}
                         className="min-h-[300px]"

@@ -121,7 +121,7 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Faza 2: Planiranje i Istraživanje</CardTitle>
+          <CardTitle className="text-2xl">Phase 2: Planning & Research</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
 
@@ -129,10 +129,10 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="research">Istraživanje</Label>
+                <Label htmlFor="research">Research</Label>
                 <MagicIcon
                   onClick={handleResearchMagicClick}
-                  tooltip="AI Asistent za Istraživanje"
+                  tooltip="AI Research Assistant"
                   disabled={!projectId}
                 />
               </div>
@@ -144,7 +144,7 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
             {/* Navigacija */}
             {sections.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2 p-2 bg-muted/30 rounded-md">
-                <span className="text-xs text-muted-foreground self-center mr-1">Brzi skok:</span>
+                <span className="text-xs text-muted-foreground self-center mr-1">Quick Jump:</span>
                 {sections.map((section, i) => (
                   <ContextMenu key={i}>
                     <ContextMenuTrigger>
@@ -158,10 +158,10 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
                     </ContextMenuTrigger>
                     <ContextMenuContent>
                       <ContextMenuItem onClick={() => openRenameDialog(section)}>
-                        Uredi
+                        Edit
                       </ContextMenuItem>
                       <ContextMenuItem onClick={() => handleDeleteSection(section.lineIndex)} className="text-destructive focus:text-destructive">
-                        Obriši
+                        Delete
                       </ContextMenuItem>
                     </ContextMenuContent>
                   </ContextMenu>
@@ -172,7 +172,7 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
             <Textarea
               id="research"
               ref={textareaRef}
-              placeholder="Linkovi, činjenice, povijesni podaci i sve što je potrebno za uvjerljivost priče."
+              placeholder="Links, facts, historical data, and notes to ground your story in reality."
               value={formData.research}
               onChange={(e) => onFieldChange('research', e.target.value)}
               className="min-h-[500px] font-mono text-sm"
@@ -184,16 +184,16 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
       <Dialog open={!!renamingSection} onOpenChange={(open) => !open && setRenamingSection(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Preimenuj sekciju</DialogTitle>
+            <DialogTitle>Rename Section</DialogTitle>
             <DialogDescription>
-              Unesite novi naziv za ovu sekciju.
+              Enter new name for this section.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
               value={newSectionTitle}
               onChange={(e) => setNewSectionTitle(e.target.value)}
-              placeholder="Naziv sekcije"
+              placeholder="Section Name"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   handleRenameSave();
@@ -202,8 +202,8 @@ export function Phase2Form({ onFieldChange, renderSaveIndicator, formData }: Pha
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenamingSection(null)}>Odustani</Button>
-            <Button onClick={handleRenameSave}>Spremi</Button>
+            <Button variant="outline" onClick={() => setRenamingSection(null)}>Cancel</Button>
+            <Button onClick={handleRenameSave}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -130,7 +130,7 @@ export function AIAssistantModal({
         {/* Header - Fiksna visina */}
         <DialogHeader className="flex-shrink-0 px-6 py-4 border-b">
           <DialogTitle className="text-xl">
-            AI Asistent: {context}
+            AI Assistant: {context}
           </DialogTitle>
         </DialogHeader>
 
@@ -141,7 +141,7 @@ export function AIAssistantModal({
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-8">
                 <p className="text-sm">
-                  Započnite razgovor s AI asistentom. Postavite pitanje ili zatražite pomoć za polje "{context}".
+                  Start a conversation with the AI assistant. Ask a question or request help for the "{context}" field.
                 </p>
               </div>
             ) : (
@@ -185,7 +185,7 @@ export function AIAssistantModal({
             <Textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Napišite poruku za AI asistenta... (Enter za slanje, Shift+Enter za novi red)"
+              placeholder="Type a message for the AI assistant... (Enter to send, Shift+Enter for new line)"
               disabled={isLoading}
               className={cn(
                 "min-h-[80px] resize-none",

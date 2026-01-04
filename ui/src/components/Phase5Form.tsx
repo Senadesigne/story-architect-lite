@@ -121,7 +121,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
 
   // Brisanje scene
   const handleDeleteScene = async (sceneId: string) => {
-    if (!confirm('Jeste li sigurni da želite obrisati ovu scenu?')) return;
+    if (!confirm('Are you sure you want to delete this scene?')) return;
 
     try {
       await api.deleteScene(sceneId);
@@ -145,7 +145,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
       }
     } catch (error) {
       console.error('Error generating synopsis:', error);
-      alert('Greška pri generiranju sažetka. Molimo pokušajte ponovno.');
+      alert('Error generating synopsis. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -155,9 +155,9 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Faza 5: Strukturiranje Radnje</CardTitle>
+          <CardTitle>Phase 5: Plot Structuring</CardTitle>
           <CardDescription>
-            Definirajte sinopsis, bilješke o strukturi i organizirajte scene vaše priče.
+            Define synopsis, structural notes, and organize scenes.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -165,17 +165,17 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="synopsis">Sinopsis</Label>
+                <Label htmlFor="synopsis">Synopsis</Label>
                 <MagicIcon
                   onClick={handleSynopsisMagicClick}
-                  tooltip="AI Asistent za Sinopsis"
+                  tooltip="AI Synopsis Assistant"
                 />
               </div>
               {renderSaveIndicator('synopsis')}
             </div>
             <Textarea
               id="synopsis"
-              placeholder="Detaljan pregled radnje od početka do kraja."
+              placeholder="A detailed overview of the entire plot from start to finish."
               value={formData.synopsis}
               onChange={(e) => onFieldChange('synopsis', e.target.value)}
               className="min-h-[120px]"
@@ -186,17 +186,17 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Label htmlFor="outline_notes">Izrada Okvira Radnje (Bilješke)</Label>
+                <Label htmlFor="outline_notes">Plot Outline (Notes)</Label>
                 <MagicIcon
                   onClick={handleOutlineMagicClick}
-                  tooltip="AI Asistent za Okvir Radnje"
+                  tooltip="AI Plot Outline Assistant"
                 />
               </div>
               {renderSaveIndicator('outline_notes')}
             </div>
             <Textarea
               id="outline_notes"
-              placeholder="Ključne točke obrata, scene i strukturalni elementi."
+              placeholder="Key turning points, scene ideas, and structural notes."
               value={formData.outline_notes}
               onChange={(e) => onFieldChange('outline_notes', e.target.value)}
               className="min-h-[120px]"
@@ -205,7 +205,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
 
           {/* Beat Sheet Struktura */}
           <div className="space-y-4 border-t pt-6">
-            <h3 className="text-lg font-semibold">Beat Sheet Struktura</h3>
+            <h3 className="text-lg font-semibold">Beat Sheet Structure</h3>
 
             {/* SETUP (1-10%) */}
             <div className="space-y-2">
@@ -214,14 +214,14 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                   <Label htmlFor="beat_sheet_setup">SETUP (1-10%)</Label>
                   <MagicIcon
                     onClick={() => handleBeatSheetMagicClick('beat_sheet_setup')}
-                    tooltip="AI Asistent za Setup"
+                    tooltip="AI Setup Assistant"
                   />
                 </div>
                 {renderSaveIndicator('beat_sheet_setup')}
               </div>
               <Textarea
                 id="beat_sheet_setup"
-                placeholder="Uvod u svijet, likove i status quo."
+                placeholder="Introduction to the world, characters, and status quo."
                 value={formData.beat_sheet_setup}
                 onChange={(e) => onFieldChange('beat_sheet_setup', e.target.value)}
                 className="min-h-[100px]"
@@ -235,14 +235,14 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                   <Label htmlFor="beat_sheet_inciting_incident">INCITING INCIDENT (10%)</Label>
                   <MagicIcon
                     onClick={() => handleBeatSheetMagicClick('beat_sheet_inciting_incident')}
-                    tooltip="AI Asistent za Inciting Incident"
+                    tooltip="AI Inciting Incident Assistant"
                   />
                 </div>
                 {renderSaveIndicator('beat_sheet_inciting_incident')}
               </div>
               <Textarea
                 id="beat_sheet_inciting_incident"
-                placeholder="Događaj koji pokreće priču i mijenja život protagonista."
+                placeholder="The event that sets the story in motion."
                 value={formData.beat_sheet_inciting_incident}
                 onChange={(e) => onFieldChange('beat_sheet_inciting_incident', e.target.value)}
                 className="min-h-[100px]"
@@ -256,14 +256,14 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                   <Label htmlFor="beat_sheet_midpoint">MIDPOINT (10-80%)</Label>
                   <MagicIcon
                     onClick={() => handleBeatSheetMagicClick('beat_sheet_midpoint')}
-                    tooltip="AI Asistent za Midpoint"
+                    tooltip="AI Midpoint Assistant"
                   />
                 </div>
                 {renderSaveIndicator('beat_sheet_midpoint')}
               </div>
               <Textarea
                 id="beat_sheet_midpoint"
-                placeholder="Točka bez povratka, promjena dinamike ili veliki otkriće."
+                placeholder="Point of no return, major revelation, or shift in dynamic."
                 value={formData.beat_sheet_midpoint}
                 onChange={(e) => onFieldChange('beat_sheet_midpoint', e.target.value)}
                 className="min-h-[100px]"
@@ -277,14 +277,14 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                   <Label htmlFor="beat_sheet_climax">CLIMAX (80-95%)</Label>
                   <MagicIcon
                     onClick={() => handleBeatSheetMagicClick('beat_sheet_climax')}
-                    tooltip="AI Asistent za Climax"
+                    tooltip="AI Climax Assistant"
                   />
                 </div>
                 {renderSaveIndicator('beat_sheet_climax')}
               </div>
               <Textarea
                 id="beat_sheet_climax"
-                placeholder="Vrhunac sukoba, konačni obračun."
+                placeholder="The height of conflict and final confrontation."
                 value={formData.beat_sheet_climax}
                 onChange={(e) => onFieldChange('beat_sheet_climax', e.target.value)}
                 className="min-h-[100px]"
@@ -298,14 +298,14 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                   <Label htmlFor="beat_sheet_falling_action">FALLING ACTION (95-100%)</Label>
                   <MagicIcon
                     onClick={() => handleBeatSheetMagicClick('beat_sheet_falling_action')}
-                    tooltip="AI Asistent za Falling Action"
+                    tooltip="AI Falling Action Assistant"
                   />
                 </div>
                 {renderSaveIndicator('beat_sheet_falling_action')}
               </div>
               <Textarea
                 id="beat_sheet_falling_action"
-                placeholder="Posljedice vrhunca, razrješenje i novi status quo."
+                placeholder="Resolution, aftermath, and the new status quo."
                 value={formData.beat_sheet_falling_action}
                 onChange={(e) => onFieldChange('beat_sheet_falling_action', e.target.value)}
                 className="min-h-[100px]"
@@ -316,17 +316,17 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           {/* Popis Scena */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-semibold">Popis Scena</Label>
+              <Label className="text-base font-semibold">Scene List</Label>
               <Button onClick={handleAddScene} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Dodaj Scenu
+                Add Scene
               </Button>
             </div>
 
             {isLoading ? (
-              <p className="text-muted-foreground">Učitavam scene...</p>
+              <p className="text-muted-foreground">Loading scenes...</p>
             ) : scenes.length === 0 ? (
-              <p className="text-muted-foreground">Nema dodanih scena.</p>
+              <p className="text-muted-foreground">No scenes added.</p>
             ) : (
               <div className="space-y-2">
                 {scenes.map((scene) => (
@@ -336,7 +336,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                       {scene.summary && (
                         <p className="text-sm text-muted-foreground mt-1">{scene.summary}</p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-1">Redoslijed: {scene.order}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Order: {scene.order}</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -362,11 +362,11 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
 
           {/* Vizualizacija Strukture */}
           <div className="space-y-2">
-            <Label className="text-base font-semibold">Vizualizacija Strukture Tri Čina</Label>
+            <Label className="text-base font-semibold">Three Act Structure Visualization</Label>
             <div className="border rounded-lg p-4 bg-muted/50">
               <img
                 src="/images/three-act-structure.png"
-                alt="Vizualizacija Strukture Tri Čina"
+                alt="Three Act Structure Visualization"
                 className="w-full max-w-2xl mx-auto"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -388,29 +388,29 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingScene ? 'Uredi Scenu' : 'Dodaj Novu Scenu'}
+              {editingScene ? 'Edit Scene' : 'Add New Scene'}
             </DialogTitle>
             <DialogDescription>
-              Unesite detalje o sceni.
+              Enter scene details.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="scene-title">Naslov Scene</Label>
+              <Label htmlFor="scene-title">Scene Title</Label>
               <Input
                 id="scene-title"
                 value={sceneForm.title}
                 onChange={(e) => setSceneForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Unesite naslov scene..."
+                placeholder="Enter scene title..."
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="scene-summary">Sažetak</Label>
+              <Label htmlFor="scene-summary">Summary</Label>
               <Textarea
                 id="scene-summary"
                 value={sceneForm.summary}
                 onChange={(e) => setSceneForm(prev => ({ ...prev, summary: e.target.value }))}
-                placeholder="Kratki sažetak scene..."
+                placeholder="Short scene summary..."
                 className="min-h-[80px]"
               />
               <Button
@@ -421,11 +421,11 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                 className="w-fit"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                {isGenerating ? 'Generiram...' : '✨ Generiraj sažetak'}
+                {isGenerating ? 'Generating...' : '✨ Generate Summary'}
               </Button>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="scene-order">Redoslijed</Label>
+              <Label htmlFor="scene-order">Order</Label>
               <Input
                 id="scene-order"
                 type="number"
@@ -437,10 +437,10 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Odustani
+              Cancel
             </Button>
             <Button onClick={handleSaveScene} disabled={!sceneForm.title.trim()}>
-              {editingScene ? 'Ažuriraj' : 'Dodaj'}
+              {editingScene ? 'Update' : 'Add'}
             </Button>
           </DialogFooter>
         </DialogContent>
