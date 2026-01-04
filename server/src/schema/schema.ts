@@ -26,7 +26,7 @@ export const projects = pgTable('projects', {
   story_idea: text('story_idea'),
 
   // Faza 1: Ideja i Koncept
-  logline: text('logline'),
+
   premise: text('premise'),
   theme: text('theme'),
   genre: text('genre'),

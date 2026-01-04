@@ -9,7 +9,7 @@ export interface Project {
   // Faza 0: Ideja Priče
   story_idea?: string;
   // Faza 1: Ideja i Koncept
-  logline?: string;
+
   premise?: string;
   theme?: string;
   genre?: string;
@@ -41,7 +41,7 @@ export interface ProjectUpdateData {
   // Faza 0: Ideja Priče
   story_idea?: string;
   // Faza 1: Ideja i Koncept
-  logline?: string;
+
   premise?: string;
   theme?: string;
   genre?: string;

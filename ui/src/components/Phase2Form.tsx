@@ -25,7 +25,7 @@ import { useState } from 'react';
 import { usePlannerAIStore } from '@/stores/plannerAIStore';
 
 // Type definition for project fields that can be edited
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
+type ProjectField = 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
 
 interface Phase2FormProps {
   onFieldChange: (field: ProjectField, value: string) => void;

@@ -8,6 +8,13 @@
       "when": 1767467142461,
       "tag": "0000_moaning_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767511163480,
+      "tag": "0001_red_stingray",
+      "breakpoints": true
     }
   ]
 }

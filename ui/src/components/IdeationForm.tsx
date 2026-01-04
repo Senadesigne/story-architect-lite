@@ -9,13 +9,13 @@ import { usePlannerAIStore } from '@/stores/plannerAIStore';
 import { Sparkles, Check, X } from 'lucide-react';
 
 // Type definition for project fields that can be edited
-type ProjectField = 'logline' | 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
+type ProjectField = 'premise' | 'theme' | 'genre' | 'audience' | 'brainstorming' | 'research';
 
 interface IdeationFormProps {
   onFieldChange: (field: ProjectField, value: string) => void;
   renderSaveIndicator: (field: ProjectField) => React.ReactNode;
   formData: {
-    logline: string;
+
     premise: string;
     theme: string;
     genre: string;
@@ -34,11 +34,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
     setPendingApplication,
   } = usePlannerAIStore();
 
-  // Handler za otvaranje modala za Logline
-  const handleLoglineMagicClick = () => {
-    if (!projectId) return;
-    openModal('planner_logline', 'logline', projectId);
-  };
+
 
   // Handler za otvaranje modala za Premisa
   const handlePremiseMagicClick = () => {
@@ -116,30 +112,7 @@ export function IdeationForm({ onFieldChange, renderSaveIndicator, formData }: I
           <CardTitle className="text-2xl">Faza 1: Ideja i Koncept</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Logline */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="logline">Logline</Label>
-                <MagicIcon
-                  onClick={handleLoglineMagicClick}
-                  tooltip="AI Asistent za Logline"
-                  disabled={!projectId}
-                />
-              </div>
-              <div className="min-h-[1.5rem] flex items-center">
-                {renderSaveIndicator('logline')}
-              </div>
-            </div>
-            {renderAIProposal('logline')}
-            <Textarea
-              id="logline"
-              placeholder="Jedna rečenica koja opisuje protagonista, njegov cilj i prepreku."
-              value={formData.logline}
-              onChange={(e) => onFieldChange('logline' as ProjectField, e.target.value)}
-              className="min-h-[80px]"
-            />
-          </div>
+
 
           {/* Tema */}
           <div className="space-y-2">
