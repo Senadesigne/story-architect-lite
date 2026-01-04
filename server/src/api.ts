@@ -370,7 +370,7 @@ app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async
   const db = await getDatabase(databaseUrl);
 
   // Dohvaćanje validirane podatke
-  const { story_idea, logline, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody<UpdateProjectBody>(c);
+  const { story_idea, premise, theme, genre, audience, brainstorming, research, rules_definition, culture_and_history, synopsis, outline_notes, point_of_view } = getValidatedBody<UpdateProjectBody>(c);
 
   await requireProjectOwnership(db, projectId, user.id);
 
@@ -383,7 +383,7 @@ app.put('/api/projects/:projectId', validateBody(UpdateProjectBodySchema), async
   if (story_idea !== undefined) updateData.story_idea = story_idea;
 
   // Postojeća polja (Faza 1)
-  if (logline !== undefined) updateData.logline = logline;
+  // logline removed
   if (premise !== undefined) updateData.premise = premise;
   if (theme !== undefined) updateData.theme = theme;
   if (genre !== undefined) updateData.genre = genre;

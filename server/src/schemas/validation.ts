@@ -15,7 +15,7 @@ export const CreateProjectBodySchema = z.object({
 
 export const UpdateProjectBodySchema = z.object({
   story_idea: z.string().optional(),
-  logline: z.string().optional(),
+  // Logline removed
   premise: z.string().optional(),
   theme: z.string().optional(),
   genre: z.string().optional(),
