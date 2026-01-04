@@ -34,23 +34,20 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
     const databaseUrl = getDatabaseUrl();
     const db = await getDatabase(databaseUrl);
 
-    // Prvo pokušaj pronaći korisnika po email-u
-    let [user] = await db.select()
-      .from(users)
-      .where(eq(users.email, firebaseUser.email!))
-      .limit(1);
-
-    // Ako korisnik ne postoji, stvori ga
-    if (!user) {
-      const insertResult = await db.insert(users)
-        .values({
-          id: firebaseUser.id,
+    // Atomic Upsert: Create or Update user to prevent race conditions
+    const [user] = await db.insert(users)
+      .values({
+        id: firebaseUser.id,
+        email: firebaseUser.email!,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
           email: firebaseUser.email!,
-        })
-        .returning();
-
-      user = insertResult[0];
-    }
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
 
     if (!user) {
       console.error('[AuthMiddleware] Failed to create/retrieve user in DB');
