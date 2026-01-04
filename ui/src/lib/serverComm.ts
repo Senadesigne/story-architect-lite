@@ -1,4 +1,14 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// DEBUG: Log API Configuration to help diagnose Vercel vs Render mismatch
+console.group('🔌 API Configuration Debug');
+console.log('Current Mode:', import.meta.env.MODE);
+console.log('Raw VITE_API_URL:', import.meta.env.VITE_API_URL);
+console.log('Resolved API_BASE_URL:', API_BASE_URL);
+if (API_BASE_URL === '') console.warn('⚠️ API_BASE_URL is empty! Using relative paths?');
+if (API_BASE_URL.includes('onrender.com')) console.error('🚨 DETECTED RENDER URL! Check Vercel Environment Variables.');
+console.groupEnd();
+
 import { getAuthToken } from './auth-utils';
 
 class APIError extends Error {
