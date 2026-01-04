@@ -50,14 +50,14 @@ export const createMockDatabase = () => {
     // Make the object thenable for await operations
     then: vi.fn((resolve) => resolve([])),
   };
-  
+
   // Ensure all chainable methods return the same mockDb instance
   Object.keys(mockDb).forEach(key => {
     if (typeof mockDb[key] === 'function' && key !== 'returning' && key !== 'execute' && key !== 'all' && key !== 'get' && key !== 'then') {
       mockDb[key].mockReturnValue(mockDb);
     }
   });
-  
+
   return mockDb;
 };
 
@@ -92,7 +92,7 @@ export const createMockProject = (overrides?: Partial<Project>): Project => ({
   createdAt: new Date('2024-01-01T00:00:00Z'),
   updatedAt: new Date('2024-01-01T00:00:00Z'),
   // Phase 1: Idea and Concept
-  logline: null,
+  // logline removed
   premise: null,
   theme: null,
   genre: null,

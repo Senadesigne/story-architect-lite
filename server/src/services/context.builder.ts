@@ -46,7 +46,7 @@ export class ContextBuilder {
     db: DatabaseConnection,
     projectId: string,
   ): Promise<SceneContext> {
-    
+
     const sceneData = await db.query.scenes.findFirst({
       where: and(
         eq(tables.scenes.id, sceneId),
@@ -77,10 +77,10 @@ export class ContextBuilder {
    * Priprema kontekst za cijeli projekt
    */
   static async buildProjectContext(
-    projectId: string, 
+    projectId: string,
     db: DatabaseConnection
   ): Promise<ProjectContext> {
-    
+
     const projectData = await db.query.projects.findFirst({
       where: eq(tables.projects.id, projectId),
       with: {
@@ -106,8 +106,8 @@ export class ContextBuilder {
    * Priprema kontekst za lika s povezanim podacima
    */
   static async buildCharacterContext(
-    characterId: string, 
-    projectId: string, 
+    characterId: string,
+    projectId: string,
     db: DatabaseConnection
   ): Promise<CharacterContext> {
     // TODO: Implementirati u sljedećem koraku
@@ -119,11 +119,10 @@ export class ContextBuilder {
    */
   static formatProjectContextToString(context: ProjectContext): string {
     const { project, characters, locations, scenes } = context;
-    
+
     let storyContext = `KONTEKST PRIČE:
 
 === PROJEKT: ${project.title || 'Bez naslova'} ===
-Logline: ${project.logline || 'Nije definirano'}
 Premisa: ${project.premise || 'Nije definirano'}
 Tema: ${project.theme || 'Nije definirano'}
 Žanr: ${project.genre || 'Nije definirano'}

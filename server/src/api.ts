@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+// Force git update
 import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth';
 import { performanceMonitor } from './middleware/performance';

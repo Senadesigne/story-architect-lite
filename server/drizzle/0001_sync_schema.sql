@@ -1,4 +1,4 @@
--- Manually created migration to synchronize DB schema with Codebase
+-- Manually created migration to synchronize DB schema with Codebase [Forced Update]
 -- This ensures all new fields exist, and removed fields are dropped.
 
 ALTER TABLE "projects" ADD COLUMN IF NOT EXISTS "point_of_view" text;
