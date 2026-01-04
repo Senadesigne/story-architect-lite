@@ -1,4 +1,3 @@
-import { pgTable, text, timestamp, uuid, varchar, integer, index, vector, jsonb } from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 // Korisnici - Povezujemo se s Firebase Auth putem ID-a
