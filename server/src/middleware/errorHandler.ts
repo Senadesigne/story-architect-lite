@@ -45,23 +45,23 @@ export const errorHandler = (err: Error, c: Context) => {
   switch (err.name) {
     case 'ValidationError':
       return c.json({ error: err.message }, 400);
-    
+
     case 'NotFoundError':
       return c.json({ error: err.message }, 404);
-    
+
     case 'UnauthorizedError':
       return c.json({ error: err.message }, 401);
-    
+
     case 'DatabaseError':
       return c.json({ error: 'Database operation failed' }, 500);
-    
+
     // Handle JSON parsing errors
     case 'SyntaxError':
       if (err.message.includes('JSON')) {
         return c.json({ error: 'Invalid JSON in request body' }, 400);
       }
       break;
-    
+
     // Handle UUID validation errors
     default:
       if (err.message.includes('Invalid UUID')) {
@@ -90,13 +90,13 @@ export const requireValidUUID = (id: string, fieldName: string = 'ID'): void => 
 export const requireProjectOwnership = async (db: DatabaseConnection, projectId: string, userId: string): Promise<void> => {
   const { projects } = await import('../schema/schema');
   const { eq, and } = await import('drizzle-orm');
-  
+
   const [project] = await db
     .select({ id: projects.id })
     .from(projects)
     .where(and(eq(projects.id, projectId), eq(projects.userId, userId)))
     .limit(1);
-  
+
   if (!project) {
     throw new NotFoundError('Project not found');
   }
@@ -104,21 +104,21 @@ export const requireProjectOwnership = async (db: DatabaseConnection, projectId:
 
 // Helper function to check resource ownership through project
 export const requireResourceOwnership = async (
-  db: DatabaseConnection, 
-  resourceTable: any, 
-  resourceId: string, 
+  db: DatabaseConnection,
+  resourceTable: any,
+  resourceId: string,
   userId: string
 ): Promise<void> => {
   const { projects } = await import('../schema/schema');
   const { eq, and } = await import('drizzle-orm');
-  
+
   const [resource] = await db
     .select({ id: resourceTable.id })
     .from(resourceTable)
     .innerJoin(projects, eq(resourceTable.projectId, projects.id))
     .where(and(eq(resourceTable.id, resourceId), eq(projects.userId, userId)))
     .limit(1);
-  
+
   if (!resource) {
     throw new NotFoundError('Resource not found');
   }
@@ -128,8 +128,8 @@ export const requireResourceOwnership = async (
 export const handleDatabaseOperation = async <T>(operation: () => Promise<T>): Promise<T> => {
   try {
     return await operation();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database operation failed:', error);
-    throw new DatabaseError('Database operation failed');
+    throw new DatabaseError(`Database operation failed: ${error.message}`);
   }
 };

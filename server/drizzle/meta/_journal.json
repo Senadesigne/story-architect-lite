@@ -15,6 +15,13 @@
       "when": 1767511163480,
       "tag": "0001_sync_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767540031807,
+      "tag": "0002_lying_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }
