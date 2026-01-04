@@ -1,13 +1,12 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const API_BASE_URL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL || '');
 
-// DEBUG: Log API Configuration to help diagnose Vercel vs Render mismatch
-console.group('🔌 API Configuration Debug');
-console.log('Current Mode:', import.meta.env.MODE);
-console.log('Raw VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('Resolved API_BASE_URL:', API_BASE_URL);
-if (API_BASE_URL === '') console.warn('⚠️ API_BASE_URL is empty! Using relative paths?');
-if (API_BASE_URL.includes('onrender.com')) console.error('🚨 DETECTED RENDER URL! Check Vercel Environment Variables.');
-console.groupEnd();
+if (import.meta.env.PROD) {
+  console.log('[Ghost Buster] API Mode: Production (Relative Paths Enabled)');
+} else {
+  if (!API_BASE_URL) {
+    throw new Error('VITE_API_URL is missing in Development! Please set it to http://localhost:8787 in .env.local');
+  }
+}
 
 import { getAuthToken } from './auth-utils';
 
