@@ -1,7 +1,7 @@
 
 import { VertexAI, GenerativeModel, HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
-import { getDatabase } from '../../lib/db';
-import { scenes, chapters, editorAnalyses } from '../../schema/schema';
+import { getDatabase } from '../../lib/db.js';
+import { scenes, chapters, editorAnalyses } from '../../schema/schema.js';
 import { eq, asc, desc } from 'drizzle-orm';
 
 interface BookContextCache {

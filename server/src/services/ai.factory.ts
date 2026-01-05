@@ -1,4 +1,4 @@
-import { AIProvider } from './ai.service';
+import { AIProvider } from './ai.service.js';
 
 // Tipovi za factory pattern
 export type AIProviderType = 'anthropic' | 'openai';

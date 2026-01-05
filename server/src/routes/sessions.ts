@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
-import { getDatabase } from '../lib/db';
-import { getDatabaseUrl } from '../lib/env';
-import { chatSessions, chatMessages } from '../schema/schema';
+import { getDatabase } from '../lib/db.js';
+import { getDatabaseUrl } from '../lib/env.js';
+import { chatSessions, chatMessages } from '../schema/schema.js';
 import { eq, desc, and } from 'drizzle-orm';
-import { requireValidUUID, handleDatabaseOperation, requireProjectOwnership } from '../middleware/errorHandler';
-import { validateBody, getValidatedBody } from '../middleware/validation';
+import { requireValidUUID, handleDatabaseOperation, requireProjectOwnership } from '../middleware/errorHandler.js';
+import { validateBody, getValidatedBody } from '../middleware/validation.js';
 import { z } from 'zod';
 
 const sessions = new Hono();

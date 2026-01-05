@@ -1,24 +1,24 @@
 import { Hono } from 'hono';
 // Force git update
 import { cors } from 'hono/cors';
-import { authMiddleware } from './middleware/auth';
-import { performanceMonitor } from './middleware/performance';
+import { authMiddleware } from './middleware/auth.js';
+import { performanceMonitor } from './middleware/performance.js';
 import {
   errorHandler,
   requireValidUUID,
   requireProjectOwnership,
   requireResourceOwnership,
   handleDatabaseOperation
-} from './middleware/errorHandler';
-import { validateBody, getValidatedBody } from './middleware/validation';
-import { getDatabase } from './lib/db';
-import { getDatabaseUrl } from './lib/env';
-import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema';
-import sessions from './routes/sessions';
+} from './middleware/errorHandler.js';
+import { validateBody, getValidatedBody } from './middleware/validation.js';
+import { getDatabase } from './lib/db.js';
+import { getDatabaseUrl } from './lib/env.js';
+import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema.js';
+import sessions from './routes/sessions.js';
 import { eq, sql } from 'drizzle-orm';
 import type {
   DatabaseUpdateData
-} from './types/api';
+} from './types/api.js';
 import {
   UpdateUserBodySchema,
   CreateProjectBodySchema,
@@ -33,7 +33,7 @@ import {
   UpdateChapterBodySchema,
   GenerateSceneSynopsisBodySchema,
   ChatRequestBodySchema
-} from './schemas/validation';
+} from './schemas/validation.js';
 import type {
   UpdateUserBody,
   CreateProjectBody,
@@ -48,13 +48,13 @@ import type {
   UpdateChapterBody,
   GenerateSceneSynopsisBody,
   ChatRequestBody
-} from './schemas/validation';
-import { createDefaultAIProvider } from './services/ai.service';
-import { ContextBuilder } from './services/context.builder';
-import { PromptService } from './services/prompt.service';
-import { aiRateLimiter } from './middleware/rateLimiter';
-import { getRelevantContext } from './services/ai/ai.retriever';
-import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
+} from './schemas/validation.js';
+import { createDefaultAIProvider } from './services/ai.service.js';
+import { ContextBuilder } from './services/context.builder.js';
+import { PromptService } from './services/prompt.service.js';
+import { aiRateLimiter } from './middleware/rateLimiter.js';
+import { getRelevantContext } from './services/ai/ai.retriever.js';
+import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph.js';
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const app = new Hono();
@@ -230,7 +230,7 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 });
 // ---------------------------------------------
 
-import { editor } from './routes/editor.routes';
+import { editor } from './routes/editor.routes.js';
 
 // Protected routes
 app.use('/api/*', authMiddleware);
