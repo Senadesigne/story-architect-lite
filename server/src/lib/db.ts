@@ -82,8 +82,26 @@ export const getDatabase = async (connectionString?: string): Promise<DatabaseCo
   const maskedUrl = connStr.replace(/:([^:@]+)@/, ':****@');
   console.log(`🔌 Connecting to database: ${maskedUrl}`);
 
-  cachedConnection = await createConnection(connStr);
-  cachedConnectionString = connStr;
+  try {
+    cachedConnection = await Promise.race([
+      createConnection(connStr),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                `DB_CONNECTION_TIMEOUT: Baza se ne javlja na ${maskedUrl}`
+              )
+            ),
+          5000
+        )
+      ),
+    ]);
+    cachedConnectionString = connStr;
+  } catch (error) {
+    console.error('FULL DB CONNECTION ERROR:', error);
+    throw error;
+  }
 
   return cachedConnection;
 };
