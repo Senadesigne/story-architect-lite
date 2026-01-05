@@ -1,8 +1,15 @@
 {
+    "buildCommand": "cd ui && pnpm run build",
+    "outputDirectory": "ui/dist",
     "rewrites": [
         {
             "source": "/api/(.*)",
             "destination": "/api"
         }
-    ]
+    ],
+    "functions": {
+        "api/index.ts": {
+            "maxDuration": 60
+        }
+    }
 }
