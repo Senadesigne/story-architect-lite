@@ -3,15 +3,15 @@ import { dirname } from 'path';
 import 'dotenv/config';
 import path from 'path';
 import { getDatabase } from '../src/lib/db.js';
-import { 
-  projects, 
-  characters, 
-  locations, 
-  scenes 
+import {
+  projects,
+  characters,
+  locations,
+  scenes
 } from '../src/schema/schema.js';
-import { 
-  addDocumentsToVectorStore, 
-  closeVectorStorePool 
+import {
+  addDocumentsToVectorStore,
+  closeVectorStorePool
 } from '../src/services/ai/ai.retriever.js';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Document } from '@langchain/core/documents';
@@ -35,9 +35,9 @@ type SceneType = typeof scenes.$inferSelect;
  */
 function formatProjectDoc(project: ProjectType): Document {
   const contentParts: string[] = [];
-  
+
   if (project.title) contentParts.push(`Naslov: ${project.title}`);
-  if (project.logline) contentParts.push(`Logline: ${project.logline}`);
+
   if (project.premise) contentParts.push(`Premisa: ${project.premise}`);
   if (project.theme) contentParts.push(`Tema: ${project.theme}`);
   if (project.genre) contentParts.push(`Žanr: ${project.genre}`);
@@ -49,9 +49,9 @@ function formatProjectDoc(project: ProjectType): Document {
   if (project.synopsis) contentParts.push(`Sinopsis: ${project.synopsis}`);
   if (project.outline_notes) contentParts.push(`Bilješke outline-a: ${project.outline_notes}`);
   if (project.point_of_view) contentParts.push(`Perspektiva: ${project.point_of_view}`);
-  
+
   const pageContent = contentParts.join('\n\n');
-  
+
   return new Document({
     pageContent,
     metadata: {
@@ -67,7 +67,7 @@ function formatProjectDoc(project: ProjectType): Document {
  */
 function formatCharacterDoc(character: CharacterType): Document {
   const contentParts: string[] = [];
-  
+
   if (character.name) contentParts.push(`Ime: ${character.name}`);
   if (character.role) contentParts.push(`Uloga: ${character.role}`);
   if (character.motivation) contentParts.push(`Motivacija: ${character.motivation}`);
@@ -76,9 +76,9 @@ function formatCharacterDoc(character: CharacterType): Document {
   if (character.backstory) contentParts.push(`Pozadinska priča: ${character.backstory}`);
   if (character.arcStart) contentParts.push(`Početak luka: ${character.arcStart}`);
   if (character.arcEnd) contentParts.push(`Kraj luka: ${character.arcEnd}`);
-  
+
   const pageContent = contentParts.join('\n\n');
-  
+
   return new Document({
     pageContent,
     metadata: {
@@ -94,12 +94,12 @@ function formatCharacterDoc(character: CharacterType): Document {
  */
 function formatLocationDoc(location: LocationType): Document {
   const contentParts: string[] = [];
-  
+
   if (location.name) contentParts.push(`Naziv: ${location.name}`);
   if (location.description) contentParts.push(`Opis: ${location.description}`);
-  
+
   const pageContent = contentParts.join('\n\n');
-  
+
   return new Document({
     pageContent,
     metadata: {
@@ -115,12 +115,12 @@ function formatLocationDoc(location: LocationType): Document {
  */
 function formatSceneDoc(scene: SceneType): Document {
   const contentParts: string[] = [];
-  
+
   if (scene.title) contentParts.push(`Naslov: ${scene.title}`);
   if (scene.summary) contentParts.push(`Sažetak: ${scene.summary}`);
-  
+
   const pageContent = contentParts.join('\n\n');
-  
+
   return new Document({
     pageContent,
     metadata: {
@@ -137,23 +137,23 @@ function formatSceneDoc(scene: SceneType): Document {
  */
 async function main(): Promise<void> {
   console.log('🚀 Pokretanje populate-embeddings skripte...\n');
-  
+
   try {
     // Korak 1: Provjeri environment varijable
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set!');
     }
-    
+
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY environment variable is not set!');
     }
-    
+
     console.log('✅ Environment varijable provjerene');
-    
+
     // Korak 2: Dohvati database konekciju
     console.log('📊 Dohvaćanje podataka iz baze...');
     const db = await getDatabase();
-    
+
     // Korak 3: Dohvati sve podatke paralelno
     const [
       allProjects,
@@ -166,20 +166,20 @@ async function main(): Promise<void> {
       db.select().from(locations),
       db.select().from(scenes)
     ]);
-    
+
     console.log(`📈 Dohvaćeno:`);
     console.log(`   - ${allProjects.length} projekata`);
     console.log(`   - ${allCharacters.length} likova`);
     console.log(`   - ${allLocations.length} lokacija`);
     console.log(`   - ${allScenes.length} scena`);
-    
+
     // Korak 4: Provjeri ima li podataka za procesiranje
     const totalDocuments = allProjects.length + allCharacters.length + allLocations.length + allScenes.length;
     if (totalDocuments === 0) {
       console.log('⚠️  Nema podataka za procesiranje. Baza je prazna.');
       return;
     }
-    
+
     // Korak 5: Formatiranje u Document objekte
     console.log('🔄 Formatiranje dokumenata...');
     const rawDocuments: Document[] = [
@@ -188,18 +188,18 @@ async function main(): Promise<void> {
       ...allLocations.map(formatLocationDoc),
       ...allScenes.map(formatSceneDoc)
     ];
-    
+
     console.log(`📝 Formatirano ${rawDocuments.length} dokumenata`);
-    
+
     // Korak 6: Text Splitting
     console.log('✂️  Cijepanje teksta na manje dijelove...');
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 200,
     });
-    
+
     const splitDocuments = await textSplitter.splitDocuments(rawDocuments);
-    
+
     // Dodaj chunkIndex u metadata
     const allChunks = splitDocuments.map((doc, index) => ({
       ...doc,
@@ -208,27 +208,27 @@ async function main(): Promise<void> {
         chunkIndex: index
       }
     }));
-    
+
     console.log(`🧩 Kreirano ${allChunks.length} chunk-ova`);
-    
+
     // Korak 7: Dodavanje u Vector Store
     console.log('💾 Dodavanje dokumenata u vektorsku bazu...');
     await addDocumentsToVectorStore(allChunks);
-    
+
     console.log('✅ Uspješno dodano u vektorsku bazu!');
     console.log(`📊 Statistike:`);
     console.log(`   - Ukupno dokumenata: ${rawDocuments.length}`);
     console.log(`   - Ukupno chunk-ova: ${allChunks.length}`);
     console.log(`   - Prosječno chunk-ova po dokumentu: ${(allChunks.length / rawDocuments.length).toFixed(2)}`);
-    
+
   } catch (error) {
     console.error('❌ Greška tijekom izvršavanja skripte:', error);
-    
+
     if (error instanceof Error) {
       console.error('💡 Detalji greške:', error.message);
       console.error('🔍 Stack trace:', error.stack);
     }
-    
+
     process.exit(1);
   } finally {
     // Korak 8: Cleanup - zatvaranje pool-a

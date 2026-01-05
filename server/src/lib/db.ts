@@ -18,14 +18,19 @@ let cachedConnectionString: string | null = null;
 let globalPool: Pool | null = null;
 
 const isNeonDatabase = (connectionString: string): boolean => {
-  return connectionString.includes('neon.tech') || connectionString.includes('neon.database');
+  return process.env.USE_NEON_HTTP === 'true' ||
+    connectionString.includes('neon.tech') ||
+    connectionString.includes('neon.database');
 };
 
 const createConnection = async (connectionString: string): Promise<DatabaseConnection> => {
   if (isNeonDatabase(connectionString)) {
+    console.log('🚀 Initializing Neon HTTP driver (Serverless optimized)');
     const sql = neon(connectionString);
     return drizzle(sql, { schema });
   }
+
+  console.log('🐘 Initializing Node-Postgres driver (Persistent connection)');
 
   // Kreiraj ili koristi postojeći Pool za connection pooling
   if (!globalPool || globalPool.options.connectionString !== connectionString) {
