@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
-import { AIProvider, AIGenerationOptions } from '../ai.service';
+import { AIProvider, AIGenerationOptions } from '../ai.service.js';
 import {
     AIProviderError,
     AIInvalidResponseError,
     AITimeoutError,
     mapAIError
-} from '../ai.errors';
-import { retryWithBackoff, RetryConfigs } from '../../utils/retry';
+} from '../ai.errors.js';
+import { retryWithBackoff, RetryConfigs } from '../../utils/retry.js';
 
 // Konkretna implementacija OpenAI providera
 export class OpenAIProvider implements AIProvider {

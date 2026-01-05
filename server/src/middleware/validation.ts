@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono';
 import { z, ZodSchema } from 'zod';
-import { ValidationError } from './errorHandler';
+import { ValidationError } from './errorHandler.js';
 
 /**
  * Middleware za validaciju request body-ja koristeći Zod sheme
@@ -12,13 +12,13 @@ export function validateBody<T>(schema: ZodSchema<T>) {
     try {
       // Parsiranje JSON tijela zahtjeva
       const body = await c.req.json();
-      
+
       // Validacija pomoću Zod sheme
       const validatedData = schema.parse(body);
-      
+
       // Spremanje validirane podatke u context za korištenje u endpoint-u
       c.set('validatedBody', validatedData);
-      
+
       await next();
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -27,10 +27,10 @@ export function validateBody<T>(schema: ZodSchema<T>) {
           const path = err.path.length > 0 ? `${err.path.join('.')}: ` : '';
           return `${path}${err.message}`;
         }) || ['Unknown validation error'];
-        
+
         throw new ValidationError(`Validation failed: ${errorMessages.join(', ')}`);
       }
-      
+
       // Ponovno bacanje drugih grešaka
       throw error;
     }

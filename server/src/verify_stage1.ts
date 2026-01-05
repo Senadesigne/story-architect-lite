@@ -2,8 +2,8 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
-import { users, projects, chapters, scenes } from './schema/schema';
-import { getDatabaseUrl } from './lib/env';
+import { users, projects, chapters, scenes } from './schema/schema.js';
+import { getDatabaseUrl } from './lib/env.js';
 import * as dotenv from 'dotenv';
 
 // Load env vars

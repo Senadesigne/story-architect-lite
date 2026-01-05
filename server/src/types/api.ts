@@ -9,7 +9,7 @@ export type {
   UpdateCharacterBody,
   CreateSceneBody,
   UpdateSceneBody
-} from '../schemas/validation';
+} from '../schemas/validation.js';
 
 // Legacy interfaces kept for backward compatibility (deprecated)
 // @deprecated Use Zod inferred types from validation schemas instead

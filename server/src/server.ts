@@ -2,9 +2,9 @@ import 'dotenv/config';
 
 // Svi ostali importi dolaze NAKON ovog bloka...
 import { serve } from '@hono/node-server';
-import app from './api';
-import { getEnv, getDatabaseUrl } from './lib/env';
-import { initializeFirebaseAdmin } from './lib/firebase-admin';
+import app from './api.js';
+import { getEnv, getDatabaseUrl } from './lib/env.js';
+import { initializeFirebaseAdmin } from './lib/firebase-admin.js';
 
 // Parse CLI arguments
 const parseCliArgs = () => {

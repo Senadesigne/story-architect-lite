@@ -3,7 +3,7 @@
  * Implementacija prema planu oporavka koda - P2 zadatak 5
  */
 
-import { isRetryableError, AIProviderError } from '../services/ai.errors';
+import { isRetryableError, AIProviderError } from '../services/ai.errors.js';
 
 export interface RetryOptions {
   maxRetries: number;
