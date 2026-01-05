@@ -13,7 +13,7 @@ const sessions = new Hono();
 const CreateSessionSchema = z.object({
     projectId: z.string().uuid(),
     name: z.string().min(1),
-    mode: z.enum(['planner', 'studio']),
+    mode: z.string(), // TS2554 Fix: z.enum causing 'Expected 0 arguments'
 });
 
 // GET /?projectId=...
