@@ -1000,7 +1000,7 @@ app.post(
         m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
       ) || [];
 
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent, langChainMessages, selection);
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode as 'planner' | 'brainstorming' | 'writer' | 'contextual-edit', editorContent, langChainMessages, selection);
       return state;
     });
 
