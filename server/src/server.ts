@@ -77,6 +77,7 @@ const startServer = async () => {
   serve({
     fetch: app.fetch,
     port,
+    overrideGlobalObjects: false, // Fix for Node 22 + Undici: Use native globals instead of polyfills
   });
 };
 

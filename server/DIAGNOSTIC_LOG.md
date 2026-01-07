@@ -2,11 +2,11 @@
 🚩 Trenutni Status
 Problem: 504 Gateway Timeout na Vercelu (Node.js 22).
 
-Detektirano: Zahtjev /api/projects puca nakon točno 30.00s (Client-side timeout).
+Detektirano: CRASH na startu (prije CP 1) ili odmah na requestu.
 
 Zadnja greška: TypeError: this.raw.headers.get is not a function.
 
-Cilj: Utvrditi točnu točku zastoja koristeći Checkpointe.
+Cilj: Popraviti kompatibilnost Hono/Node-22/Undici kako bi Checkpointi proradili.
 
 📋 Aktivni Plan: Dijagnostički Mod (Checkpointing)
 Implementirati console.log poruke sa vremenskom oznakom na sljedećim mjestima:
