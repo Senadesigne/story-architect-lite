@@ -24,6 +24,7 @@ const isNeonDatabase = (connectionString: string): boolean => {
 };
 
 const createConnection = async (connectionString: string): Promise<DatabaseConnection> => {
+  console.log(`[CP 6] Driver determined: ${isNeonDatabase(connectionString) ? 'NEON-HTTP' : 'POSTGRES'} - ` + new Date().toISOString());
   if (isNeonDatabase(connectionString)) {
     console.log('🚀 Initializing Neon HTTP driver (Serverless optimized)');
     const sql = neon(connectionString);
@@ -61,6 +62,8 @@ const createConnection = async (connectionString: string): Promise<DatabaseConne
 export const getDatabase = async (connectionString?: string): Promise<DatabaseConnection> => {
   // Always use DATABASE_URL from environment or provided connectionString
   let connStr = connectionString || process.env.DATABASE_URL;
+
+  console.log('[CP 5] DB initialization logic started - ' + new Date().toISOString());
 
   // Defensive: Strip surrounding quotes if present (fix for common .env issues)
   if (connStr && (connStr.startsWith('"') || connStr.startsWith("'"))) {

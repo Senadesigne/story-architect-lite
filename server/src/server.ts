@@ -21,6 +21,8 @@ import app from './api.js';
 import { getEnv, getDatabaseUrl } from './lib/env.js';
 import { initializeFirebaseAdmin } from './lib/firebase-admin.js';
 
+console.log('[CP 1] Server entry point reached - ' + new Date().toISOString());
+
 // Parse CLI arguments
 const parseCliArgs = () => {
   const args = process.argv.slice(2);
@@ -32,6 +34,7 @@ const parseCliArgs = () => {
 };
 
 const { port } = parseCliArgs();
+console.log(`[CP 2] Port config: ${port}, USE_NEON_HTTP: ${process.env.USE_NEON_HTTP} - ` + new Date().toISOString());
 
 // Extract PostgreSQL port from DATABASE_URL if it's a local embedded postgres connection
 // Neiskorištena funkcija - ostavljena za buduću upotrebu
@@ -51,10 +54,12 @@ const startServer = async () => {
 
   // Initialize Firebase Admin SDK (handles FIREBASE_PRIVATE_KEY transformation)
   try {
+    console.log('[CP 3] Starting Firebase Admin init - ' + new Date().toISOString());
     initializeFirebaseAdmin();
   } catch (error) {
     console.error('⚠️  Firebase Admin SDK initialization failed, continuing without it:', error);
   }
+  console.log('[CP 4] Firebase Admin init block finished - ' + new Date().toISOString());
 
   const dbUrl = getDatabaseUrl();
   if (dbUrl) {
