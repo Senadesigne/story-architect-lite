@@ -292,6 +292,9 @@ app.delete('/api/user', async (c) => {
 
 // Projects endpoint - Nova ruta za dohvaćanje korisnikovih projekata
 app.get('/api/projects', async (c) => {
+  // RADICAL DEBUGGING: Bypass everything
+  return new Response('TEST_OK', { status: 200 });
+
   const user = c.get('user');
 
   try {
