@@ -1,4 +1,19 @@
 import 'dotenv/config';
+import { setGlobalDispatcher, Agent } from 'undici';
+
+// Globalni Undici Dispatcher konfiguracija za Vercel / Node 22
+// Cilj: Spriječiti 504 Gateway Timeout i "zombie sockete"
+const agent = new Agent({
+  pipelining: 0, // Onemogući pipelining
+  keepAliveTimeout: 50, // Vrlo kratak keep-alive timeout
+  keepAliveMaxTimeout: 50,
+  headersTimeout: 500,
+  connect: {
+    keepAlive: false, // Potpuno onemogući keep-alive na razini konekcije
+    timeout: 30000,   // Connection timeout
+  }
+});
+setGlobalDispatcher(agent);
 
 // Svi ostali importi dolaze NAKON ovog bloka...
 import { serve } from '@hono/node-server';

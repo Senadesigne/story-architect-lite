@@ -15,6 +15,7 @@ import { getDatabase } from './lib/db.js';
 import { getDatabaseUrl } from './lib/env.js';
 import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema.js';
 import sessions from './routes/sessions.js';
+import debugRouter from './routes/debug.js';
 import { eq, sql } from 'drizzle-orm';
 import type {
   DatabaseUpdateData
@@ -237,6 +238,9 @@ app.use('/api/*', authMiddleware);
 
 // Mount sessions route
 app.route('/api/sessions', sessions);
+
+// Mount debug route
+app.route('/', debugRouter);
 
 // Mount editor route
 app.route('/api/editor', editor);
