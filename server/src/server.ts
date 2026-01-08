@@ -85,5 +85,115 @@ if (process.env.VERCEL) {
   startServer();
 }
 
-// Export for Vercel using standard adapter (Clean Node 22 compat with Hono 4.7+)
-export default handle(app);
+// --- MANUAL BRIDGE (Path C) for Vercel Node 22 ---
+// Fallback jer standardni adapteri ne konvertiraju ispravno IncomingMessage -> Request
+import { IncomingMessage, ServerResponse } from 'node:http';
+import { Readable } from 'node:stream';
+
+// Helper za konverziju Node Streama u Web ReadableStream
+const nodeStreamToWeb = (nodeStream: Readable): ReadableStream => {
+  return new ReadableStream({
+    start(controller) {
+      nodeStream.on('data', (chunk) => controller.enqueue(chunk));
+      nodeStream.on('end', () => controller.close());
+      nodeStream.on('error', (err) => controller.error(err));
+    },
+    cancel() {
+      nodeStream.destroy();
+    }
+  });
+};
+
+const bridgeHandler = async (req: IncomingMessage, res: ServerResponse) => {
+  try {
+    const protocol = (req.headers['x-forwarded-proto'] as string) || 'https'; // Vercel defaults to https
+    const host = req.headers.host || 'localhost';
+    const urlObj = new URL(req.url || '/', `${protocol}://${host}`);
+
+    // Reconstruct original URL from Vercel rewrite
+    const p = urlObj.searchParams.get("path");
+    if (p) {
+      urlObj.pathname = `/api/${p}`;
+      urlObj.searchParams.delete("path");
+    }
+
+    // [DIAGNOSTIC] Log rewritten URL
+    console.log('[BRIDGE] URL Rewrite:', req.url, '->', urlObj.toString());
+
+    const headers = new Headers();
+    for (const key in req.headers) {
+      const value = req.headers[key];
+      if (Array.isArray(value)) {
+        value.forEach(v => headers.append(key, v));
+      } else if (typeof value === 'string') {
+        headers.set(key, value);
+      }
+    }
+
+    const requestInit: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    // Body handling for non-GET/HEAD requests using ReadableStream
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      requestInit.body = nodeStreamToWeb(req);
+      // @ts-ignore - Required for Node.js environment to enable streaming
+      requestInit.duplex = 'half';
+    }
+
+    const request = new Request(urlObj, requestInit);
+
+    // [DIAGNOSTIC] Log to confirm type
+    console.log('[BRIDGE] Request created. Type:', request.constructor.name);
+
+    const response = await app.fetch(request);
+
+    // Copy status
+    res.statusCode = response.status;
+
+    // Copy headers (handle Set-Cookie specially)
+    response.headers.forEach((value, key) => {
+      if (key.toLowerCase() === 'set-cookie') {
+        // Hono/Fetch API merges redundant headers, but we might need to split them if comma-separated
+        // However, for typical single-cookie auth it's usually fine. 
+        // For array support we'd need access to raw headers which Fetch API abstracts.
+        // Node's setHeader supports arrays for multiple cookies.
+        res.setHeader(key, value);
+      } else {
+        res.setHeader(key, value);
+      }
+    });
+
+    // Check for multiple set-cookie (if headers.getSetCookie exists - Node 18+)
+    if (typeof (response.headers as any).getSetCookie === 'function') {
+      const cookies = (response.headers as any).getSetCookie();
+      if (cookies && cookies.length > 0) {
+        res.setHeader('set-cookie', cookies);
+      }
+    }
+
+    if (response.body) {
+      // Stream response body back to Node response
+      const reader = response.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+      res.end();
+    } else {
+      res.end();
+    }
+
+  } catch (error) {
+    console.error('[BRIDGE ERROR]', error);
+    if (!res.headersSent) {
+      res.statusCode = 500;
+      res.end('Internal Server Error (Vercel Bridge)');
+    }
+  }
+};
+
+// Export for Vercel
+export default bridgeHandler;

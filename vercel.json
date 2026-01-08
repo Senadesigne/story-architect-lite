@@ -4,11 +4,11 @@
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "/api"
+            "destination": "/api/bridge?path=$1"
         }
     ],
     "functions": {
-        "api/index.ts": {
+        "api/bridge.ts": {
             "maxDuration": 60
         }
     }
