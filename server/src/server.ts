@@ -1,22 +1,6 @@
 import 'dotenv/config';
-import { setGlobalDispatcher, Agent } from 'undici';
-
-// Globalni Undici Dispatcher konfiguracija za Vercel / Node 22
-// Cilj: Spriječiti 504 Gateway Timeout i "zombie sockete"
-const agent = new Agent({
-  pipelining: 0, // Onemogući pipelining
-  keepAliveTimeout: 50, // Vrlo kratak keep-alive timeout
-  keepAliveMaxTimeout: 50,
-  headersTimeout: 500,
-  connect: {
-    keepAlive: false, // Potpuno onemogući keep-alive na razini konekcije
-    timeout: 30000,   // Connection timeout
-  }
-});
-setGlobalDispatcher(agent);
-
-// Svi ostali importi dolaze NAKON ovog bloka...
 import { serve } from '@hono/node-server';
+import { handle } from '@hono/node-server/vercel';
 import app from './api.js';
 import { getEnv, getDatabaseUrl } from './lib/env.js';
 import { initializeFirebaseAdmin } from './lib/firebase-admin.js';
@@ -35,19 +19,6 @@ const parseCliArgs = () => {
 
 const { port } = parseCliArgs();
 console.log(`[CP 2] Port config: ${port}, USE_NEON_HTTP: ${process.env.USE_NEON_HTTP} - ` + new Date().toISOString());
-
-// Extract PostgreSQL port from DATABASE_URL if it's a local embedded postgres connection
-// Neiskorištena funkcija - ostavljena za buduću upotrebu
-// const getPostgresPortFromDatabaseUrl = (): number => {
-//   const dbUrl = getDatabaseUrl();
-//   if (dbUrl && (dbUrl.includes('localhost:') || dbUrl.includes('127.0.0.1:'))) {
-//     const match = dbUrl.match(/(?:localhost|127\.0\.0\.1):(\d+)/);
-//     if (match) {
-//       return parseInt(match[1]);
-//     }
-//   }
-//   return 5432; // fallback default (now using fixed port 5432)
-// };
 
 const startServer = async () => {
   console.log(`🚀 Starting backend server on port ${port}`);
@@ -77,7 +48,7 @@ const startServer = async () => {
   serve({
     fetch: app.fetch,
     port,
-    overrideGlobalObjects: false, // Fix for Node 22 + Undici: Use native globals instead of polyfills
+    // Node.js 22 native fetch is used, no global overrides needed
   });
 };
 
@@ -90,16 +61,27 @@ const shutdown = async () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-startServer();
-
 // Global error handlers to prevent crash on unhandled async errors
 process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-  // Do not exit the process, just log the error
 });
 
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
-  // Optional: graceful shutdown if critical, but for now keep running if possible
-  // shutdown(); 
-}); 
+});
+
+// --- HYBRID EXECUTION: Vercel vs Local ---
+if (process.env.VERCEL) {
+  // Vercel Environment: Init Firebase and export handler
+  try {
+    initializeFirebaseAdmin();
+  } catch (e) {
+    console.error('Vercel Firebase Init Error:', e);
+  }
+} else {
+  // Local Environment: Start server immediately
+  startServer();
+}
+
+// Export for Vercel
+export default handle(app);

@@ -1,4 +1,5 @@
 
+import { neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { drizzle as createDrizzlePostgres } from 'drizzle-orm/node-postgres';
 import { neon } from '@neondatabase/serverless';
@@ -7,6 +8,27 @@ import * as schema from '../schema/schema.js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+
+// --- NEON CONFIGURATION (Scoped Timeout) ---
+const NEON_CONNECT_TIMEOUT = 5000; // 5 seconds
+neonConfig.fetchConnectionCache = true;
+
+// Custom fetch implementation with timeout to protect server from hanging DB connections
+neonConfig.fetchFunction = (url: string, options: any) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+    console.error(`[Neon] DB Connection aborted after ${NEON_CONNECT_TIMEOUT}ms`);
+  }, NEON_CONNECT_TIMEOUT);
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+// -------------------------------------------
 
 export type DatabaseConnection =
   | NeonHttpDatabase<typeof schema>
