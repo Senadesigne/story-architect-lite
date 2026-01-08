@@ -83,4 +83,4 @@ if (process.env.VERCEL) {
 }
 
 // Export for Vercel using direct RequestListener adapter (bypasses fetch wrapper issues on Node 22)
-export default getRequestListener(app.fetch);
+export default getRequestListener(app.fetch, { overrideGlobalObjects: false });

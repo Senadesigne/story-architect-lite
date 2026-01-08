@@ -61,6 +61,20 @@ import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const app = new Hono();
 
+// DIAGNOSTIC MIDDLEWARE (To debug headers mismatch)
+app.use('*', async (c, next) => {
+  try {
+    const raw = c.req.raw;
+    const headers = raw.headers;
+    console.log('[DIAGNOSTIC] Request Type:', raw.constructor.name);
+    console.log('[DIAGNOSTIC] Headers Type:', headers ? headers.constructor.name : 'undefined');
+    console.log('[DIAGNOSTIC] Header has get():', headers && typeof (headers as any).get === 'function');
+  } catch (e) {
+    console.error('[DIAGNOSTIC] Error inspecting request:', e);
+  }
+  await next();
+});
+
 // Request Timeout Middleware (Soft Limit)
 app.use('*', requestTimeout());
 
