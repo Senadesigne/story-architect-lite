@@ -1,6 +1,5 @@
 import 'dotenv/config';
-import { serve } from '@hono/node-server';
-import { handle } from '@hono/node-server/vercel';
+import { serve, getRequestListener } from '@hono/node-server';
 import app from './api.js';
 import { getEnv, getDatabaseUrl } from './lib/env.js';
 import { initializeFirebaseAdmin } from './lib/firebase-admin.js';
@@ -83,5 +82,5 @@ if (process.env.VERCEL) {
   startServer();
 }
 
-// Export for Vercel
-export default handle(app);
+// Export for Vercel using direct RequestListener adapter (bypasses fetch wrapper issues on Node 22)
+export default getRequestListener(app.fetch);

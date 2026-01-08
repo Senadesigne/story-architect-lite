@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { authMiddleware } from './middleware/auth.js';
 import { performanceMonitor } from './middleware/performance.js';
+import { requestTimeout } from './middleware/timeout.js';
 import {
   errorHandler,
   requireValidUUID,
@@ -59,6 +60,9 @@ import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState }
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const app = new Hono();
+
+// Request Timeout Middleware (Soft Limit)
+app.use('*', requestTimeout());
 
 // Performance monitoring middleware (registriran globalno)
 app.use('*', performanceMonitor());

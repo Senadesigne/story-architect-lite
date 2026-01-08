@@ -40,6 +40,9 @@ let cachedConnectionString: string | null = null;
 let globalPool: Pool | null = null;
 
 const isNeonDatabase = (connectionString: string): boolean => {
+  // Force HTTP driver on Vercel to prevent TCP connection pooling issues (Zombie Sockets)
+  if (process.env.VERCEL) return true;
+
   return process.env.USE_NEON_HTTP === 'true' ||
     connectionString.includes('neon.tech') ||
     connectionString.includes('neon.database');
