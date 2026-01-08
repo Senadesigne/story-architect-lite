@@ -70,7 +70,7 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0(encoding@0.1.13)
       '@hono/node-server':
-        specifier: ^1.12.0
+        specifier: ^1.13.0
         version: 1.14.3(hono@4.7.10)
       '@langchain/anthropic':
         specifier: ^0.3.33
@@ -106,7 +106,7 @@ importers:
         specifier: ^11.2.0
         version: 11.3.0
       hono:
-        specifier: ^4.0.5
+        specifier: ^4.7.10
         version: 4.7.10
       jose:
         specifier: ^5.2.3
@@ -123,9 +123,6 @@ importers:
       postgres:
         specifier: ^3.4.7
         version: 3.4.7
-      undici:
-        specifier: ^7.18.2
-        version: 7.18.2
       zod:
         specifier: ^4.1.12
         version: 4.1.12
@@ -6754,10 +6751,6 @@ packages:
   undici@5.29.0:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
     engines: {node: '>=14.0'}
-
-  undici@7.18.2:
-    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
-    engines: {node: '>=20.18.1'}
 
   unenv@2.0.0-rc.17:
     resolution: {integrity: sha512-B06u0wXkEd+o5gOCMl/ZHl5cfpYbDZKAT+HWTL+Hws6jWu7dCiqBBXXXzMFcFVJb8D4ytAnYmxJA83uwOQRSsg==}
@@ -13909,8 +13902,6 @@ snapshots:
   undici@5.29.0:
     dependencies:
       '@fastify/busboy': 2.1.1
-
-  undici@7.18.2: {}
 
   unenv@2.0.0-rc.17:
     dependencies:

@@ -1,7 +1,10 @@
 import 'dotenv/config';
-import { serve, getRequestListener } from '@hono/node-server';
+import { serve } from '@hono/node-server';
+import { handle } from '@hono/node-server/vercel';
 import app from './api.js';
 import { getEnv, getDatabaseUrl } from './lib/env.js';
+
+// ... (imports remain)
 import { initializeFirebaseAdmin } from './lib/firebase-admin.js';
 
 console.log('[CP 1] Server entry point reached - ' + new Date().toISOString());
@@ -82,5 +85,5 @@ if (process.env.VERCEL) {
   startServer();
 }
 
-// Export for Vercel using direct RequestListener adapter (bypasses fetch wrapper issues on Node 22)
-export default getRequestListener(app.fetch, { overrideGlobalObjects: false });
+// Export for Vercel using standard adapter (Clean Node 22 compat with Hono 4.7+)
+export default handle(app);
