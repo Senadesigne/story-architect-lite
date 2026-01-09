@@ -24,9 +24,14 @@ async function fetchWithAuth(
   const token = await getAuthToken();
   const headers = new Headers(options.headers);
 
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+  if (!token) {
+    console.error(`[API] Missing auth token for ${endpoint}`);
+    throw new Error('Authentication required: User not logged in or token unavailable.');
   }
+
+  headers.set('Authorization', `Bearer ${token}`);
+  // Log header presence (do not log logic)
+  console.log(`[API] Request to ${endpoint} - Authorization header attached`);
 
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
