@@ -1,12 +1,34 @@
 
+import { neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { drizzle as createDrizzlePostgres } from 'drizzle-orm/node-postgres';
 import { neon } from '@neondatabase/serverless';
 import { Pool } from 'pg';
-import * as schema from '../schema/schema';
+import * as schema from '../schema/schema.js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { NeonHttpDatabase } from 'drizzle-orm/neon-http';
+
+// --- NEON CONFIGURATION (Scoped Timeout) ---
+const NEON_CONNECT_TIMEOUT = 5000; // 5 seconds
+neonConfig.fetchConnectionCache = true;
+
+// Custom fetch implementation with timeout to protect server from hanging DB connections
+neonConfig.fetchFunction = (url: string, options: any) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+    console.error(`[Neon] DB Connection aborted after ${NEON_CONNECT_TIMEOUT}ms`);
+  }, NEON_CONNECT_TIMEOUT);
+
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+// -------------------------------------------
 
 export type DatabaseConnection =
   | NeonHttpDatabase<typeof schema>
@@ -18,14 +40,23 @@ let cachedConnectionString: string | null = null;
 let globalPool: Pool | null = null;
 
 const isNeonDatabase = (connectionString: string): boolean => {
-  return connectionString.includes('neon.tech') || connectionString.includes('neon.database');
+  // Force HTTP driver on Vercel to prevent TCP connection pooling issues (Zombie Sockets)
+  if (process.env.VERCEL) return true;
+
+  return process.env.USE_NEON_HTTP === 'true' ||
+    connectionString.includes('neon.tech') ||
+    connectionString.includes('neon.database');
 };
 
 const createConnection = async (connectionString: string): Promise<DatabaseConnection> => {
+  console.log(`[CP 6] Driver determined: ${isNeonDatabase(connectionString) ? 'NEON-HTTP' : 'POSTGRES'} - ` + new Date().toISOString());
   if (isNeonDatabase(connectionString)) {
+    console.log('🚀 Initializing Neon HTTP driver (Serverless optimized)');
     const sql = neon(connectionString);
     return drizzle(sql, { schema });
   }
+
+  console.log('🐘 Initializing Node-Postgres driver (Persistent connection)');
 
   // Kreiraj ili koristi postojeći Pool za connection pooling
   if (!globalPool || globalPool.options.connectionString !== connectionString) {
@@ -57,6 +88,8 @@ export const getDatabase = async (connectionString?: string): Promise<DatabaseCo
   // Always use DATABASE_URL from environment or provided connectionString
   let connStr = connectionString || process.env.DATABASE_URL;
 
+  console.log('[CP 5] DB initialization logic started - ' + new Date().toISOString());
+
   // Defensive: Strip surrounding quotes if present (fix for common .env issues)
   if (connStr && (connStr.startsWith('"') || connStr.startsWith("'"))) {
     connStr = connStr.slice(1, -1);
@@ -77,8 +110,26 @@ export const getDatabase = async (connectionString?: string): Promise<DatabaseCo
   const maskedUrl = connStr.replace(/:([^:@]+)@/, ':****@');
   console.log(`🔌 Connecting to database: ${maskedUrl}`);
 
-  cachedConnection = await createConnection(connStr);
-  cachedConnectionString = connStr;
+  try {
+    cachedConnection = await Promise.race([
+      createConnection(connStr),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                `DB_CONNECTION_TIMEOUT: Baza se ne javlja na ${maskedUrl}`
+              )
+            ),
+          5000
+        )
+      ),
+    ]);
+    cachedConnectionString = connStr;
+  } catch (error) {
+    console.error('FULL DB CONNECTION ERROR:', error);
+    throw error;
+  }
 
   return cachedConnection;
 };

@@ -1,7 +1,7 @@
 import { StateGraph, START, END, StateGraphArgs } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
-import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state";
-import type { AgentState } from "./state";
+import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state.js";
+import type { AgentState } from "./state.js";
 import {
   retrieveContextNode,
   transformQueryNode,
@@ -13,7 +13,7 @@ import {
   refineDraftNode,
   modifyTextNode,
   finalOutputNode
-} from "./nodes";
+} from "./nodes.js";
 
 /**
  * LangGraph StateGraph inicijalizacija za Story Architect AI Orkestrator

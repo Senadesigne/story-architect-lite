@@ -1,24 +1,26 @@
 import { Hono } from 'hono';
 // Force git update
 import { cors } from 'hono/cors';
-import { authMiddleware } from './middleware/auth';
-import { performanceMonitor } from './middleware/performance';
+import { authMiddleware } from './middleware/auth.js';
+import { performanceMonitor } from './middleware/performance.js';
+import { requestTimeout } from './middleware/timeout.js';
 import {
   errorHandler,
   requireValidUUID,
   requireProjectOwnership,
   requireResourceOwnership,
   handleDatabaseOperation
-} from './middleware/errorHandler';
-import { validateBody, getValidatedBody } from './middleware/validation';
-import { getDatabase } from './lib/db';
-import { getDatabaseUrl } from './lib/env';
-import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema';
-import sessions from './routes/sessions';
+} from './middleware/errorHandler.js';
+import { validateBody, getValidatedBody } from './middleware/validation.js';
+import { getDatabase } from './lib/db.js';
+import { getDatabaseUrl } from './lib/env.js';
+import { users, projects, locations, characters, scenes, chapters, storyArchitectEmbeddings, chatMessages } from './schema/schema.js';
+import sessions from './routes/sessions.js';
+import debugRouter from './routes/debug.js';
 import { eq, sql } from 'drizzle-orm';
 import type {
   DatabaseUpdateData
-} from './types/api';
+} from './types/api.js';
 import {
   UpdateUserBodySchema,
   CreateProjectBodySchema,
@@ -33,7 +35,7 @@ import {
   UpdateChapterBodySchema,
   GenerateSceneSynopsisBodySchema,
   ChatRequestBodySchema
-} from './schemas/validation';
+} from './schemas/validation.js';
 import type {
   UpdateUserBody,
   CreateProjectBody,
@@ -48,16 +50,33 @@ import type {
   UpdateChapterBody,
   GenerateSceneSynopsisBody,
   ChatRequestBody
-} from './schemas/validation';
-import { createDefaultAIProvider } from './services/ai.service';
-import { ContextBuilder } from './services/context.builder';
-import { PromptService } from './services/prompt.service';
-import { aiRateLimiter } from './middleware/rateLimiter';
-import { getRelevantContext } from './services/ai/ai.retriever';
-import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph';
+} from './schemas/validation.js';
+import { createDefaultAIProvider } from './services/ai.service.js';
+import { ContextBuilder } from './services/context.builder.js';
+import { PromptService } from './services/prompt.service.js';
+import { aiRateLimiter } from './middleware/rateLimiter.js';
+import { getRelevantContext } from './services/ai/ai.retriever.js';
+import { runStoryArchitectGraph, createStoryArchitectGraph, createInitialState } from './services/ai/graph/graph.js';
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
 const app = new Hono();
+
+// DIAGNOSTIC MIDDLEWARE (To debug headers mismatch)
+app.use('*', async (c, next) => {
+  try {
+    const raw = c.req.raw;
+    const headers = raw.headers;
+    console.log('[DIAGNOSTIC] Request Type:', raw.constructor.name);
+    console.log('[DIAGNOSTIC] Headers Type:', headers ? headers.constructor.name : 'undefined');
+    console.log('[DIAGNOSTIC] Header has get():', headers && typeof (headers as any).get === 'function');
+  } catch (e) {
+    console.error('[DIAGNOSTIC] Error inspecting request:', e);
+  }
+  await next();
+});
+
+// Request Timeout Middleware (Soft Limit)
+app.use('*', requestTimeout());
 
 // Performance monitoring middleware (registriran globalno)
 app.use('*', performanceMonitor());
@@ -230,13 +249,16 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 });
 // ---------------------------------------------
 
-import { editor } from './routes/editor.routes';
+import { editor } from './routes/editor.routes.js';
 
 // Protected routes
 app.use('/api/*', authMiddleware);
 
 // Mount sessions route
 app.route('/api/sessions', sessions);
+
+// Mount debug route
+app.route('/', debugRouter);
 
 // Mount editor route
 app.route('/api/editor', editor);
@@ -288,6 +310,8 @@ app.delete('/api/user', async (c) => {
 
 // Projects endpoint - Nova ruta za dohvaćanje korisnikovih projekata
 app.get('/api/projects', async (c) => {
+
+
   const user = c.get('user');
 
   try {
@@ -1000,7 +1024,7 @@ app.post(
         m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
       ) || [];
 
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode, editorContent, langChainMessages, selection);
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode as 'planner' | 'brainstorming' | 'writer' | 'contextual-edit', editorContent, langChainMessages, selection);
       return state;
     });
 

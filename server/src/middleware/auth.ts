@@ -1,9 +1,9 @@
 import { MiddlewareHandler } from 'hono';
-import { verifyFirebaseToken } from '../lib/firebase-auth';
-import { getDatabase } from '../lib/db';
+import { verifyFirebaseToken } from '../lib/firebase-auth.js';
+import { getDatabase } from '../lib/db.js';
 import { eq } from 'drizzle-orm';
-import { users } from '../schema/schema';
-import { getFirebaseProjectId, getDatabaseUrl } from '../lib/env';
+import { users } from '../schema/schema.js';
+import { getFirebaseProjectId, getDatabaseUrl } from '../lib/env.js';
 
 declare module 'hono' {
   interface ContextVariableMap {

@@ -1,8 +1,8 @@
-import type { AgentState, AgentStateUpdate } from './state';
-import { getRelevantContext } from '../ai.retriever';
-import { createPreferredAIProvider, createManagerProvider, createWorkerProvider } from '../../ai.factory';
-import type { AIGenerationOptions } from '../../ai.service';
-import { getPlannerSystemPrompt } from '../planner.prompts';
+import type { AgentState, AgentStateUpdate } from './state.js';
+import { getRelevantContext } from '../ai.retriever.js';
+import { createPreferredAIProvider, createManagerProvider, createWorkerProvider } from '../../ai.factory.js';
+import type { AIGenerationOptions } from '../../ai.service.js';
+import { getPlannerSystemPrompt } from '../planner.prompts.js';
 
 /**
  * Ovaj modul sadrži implementacije čvorova koji se koriste u LangGraph grafu

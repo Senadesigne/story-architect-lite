@@ -1,12 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { AIProvider, AIGenerationOptions } from '../ai.service';
-import { 
-  AIProviderError, 
+import { AIProvider, AIGenerationOptions } from '../ai.service.js';
+import {
+  AIProviderError,
   AIInvalidResponseError,
   AITimeoutError,
-  mapAIError 
-} from '../ai.errors';
-import { retryWithBackoff, RetryConfigs } from '../../utils/retry';
+  mapAIError
+} from '../ai.errors.js';
+import { retryWithBackoff, RetryConfigs } from '../../utils/retry.js';
 
 // Konkretna implementacija Anthropic providera
 export class AnthropicProvider implements AIProvider {
@@ -28,7 +28,7 @@ export class AnthropicProvider implements AIProvider {
         // Postavi timeout (10 sekundi za validaciju - kraći od generateText)
         const timeoutMs = 10000;
         const controller = new AbortController();
-        
+
         // Postavi timeout koji će pozvati controller.abort()
         const timeoutId = setTimeout(() => {
           controller.abort();
@@ -49,17 +49,17 @@ export class AnthropicProvider implements AIProvider {
         } catch (error) {
           // Očisti timeout u slučaju greške
           clearTimeout(timeoutId);
-          
+
           // Provjeri je li greška AbortError (timeout)
           if (error instanceof Error && error.name === 'AbortError') {
             throw new AITimeoutError(this.getProviderName(), timeoutMs);
           }
-          
+
           // Proslijedi ostale greške dalje
           throw error;
         }
       }, RetryConfigs.FAST_OPERATION);
-      
+
       return true;
     } catch (error) {
       const mappedError = mapAIError(error, this.getProviderName());
@@ -77,7 +77,7 @@ export class AnthropicProvider implements AIProvider {
       // Postavi timeout (30 sekundi default)
       const timeoutMs = options?.timeout || 30000;
       const controller = new AbortController();
-      
+
       // Postavi timeout koji će pozvati controller.abort()
       const timeoutId = setTimeout(() => {
         controller.abort();
@@ -103,23 +103,23 @@ export class AnthropicProvider implements AIProvider {
         }
 
         throw new AIInvalidResponseError(
-          this.getProviderName(), 
+          this.getProviderName(),
           'No valid text content in response'
         );
       } catch (error) {
         // Očisti timeout u slučaju greške
         clearTimeout(timeoutId);
-        
+
         // Provjeri je li greška AbortError (timeout)
         if (error instanceof Error && error.name === 'AbortError') {
           throw new AITimeoutError(this.getProviderName(), timeoutMs);
         }
-        
+
         // Ako je već naša custom greška, proslijedi je dalje
         if (error instanceof AIProviderError) {
           throw error;
         }
-        
+
         // Mapiraj vanjsku grešku u našu custom grešku
         const mappedError = mapAIError(error, this.getProviderName());
         console.error('Anthropic AI generation failed:', mappedError);

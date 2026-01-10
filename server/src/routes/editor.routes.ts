@@ -1,8 +1,8 @@
 
 import { Hono } from 'hono';
-import { VertexAIService } from '../services/ai/VertexAIService';
-import { getDatabase } from '../lib/db';
-import { editorAnalyses } from '../schema/schema';
+import { VertexAIService } from '../services/ai/VertexAIService.js';
+import { getDatabase } from '../lib/db.js';
+import { editorAnalyses } from '../schema/schema.js';
 import { eq, desc } from 'drizzle-orm';
 
 const editor = new Hono();

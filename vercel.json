@@ -1,0 +1,15 @@
+{
+    "buildCommand": "cd ui && pnpm run build",
+    "outputDirectory": "ui/dist",
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/bridge?path=$1"
+        }
+    ],
+    "functions": {
+        "api/bridge.ts": {
+            "maxDuration": 60
+        }
+    }
+}

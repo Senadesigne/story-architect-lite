@@ -1,7 +1,7 @@
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { sql } from 'drizzle-orm';
-import { getDatabase } from '../../lib/db';
+import { getDatabase } from '../../lib/db.js';
 import { Pool, PoolConfig } from 'pg';
 import { registerType } from 'pgvector/pg';
 
@@ -25,7 +25,7 @@ let typesRegistered = false;
 const getPgPool = async (): Promise<Pool> => {
   if (!pgPool) {
     const connectionString = getConnectionString();
-    
+
     // Kreiraj Pool konfiguraciju
     const poolConfig: PoolConfig = {
       connectionString,
@@ -33,18 +33,18 @@ const getPgPool = async (): Promise<Pool> => {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
     };
-    
+
     pgPool = new Pool(poolConfig);
-    
+
     // Registriraj pgvector tipove jednom
     if (!typesRegistered) {
       try {
         const client = await pgPool.connect();
-        
+
         // Self-Healing: Osiguraj postojanje vector ekstenzije prije registracije tipova
         await client.query('CREATE EXTENSION IF NOT EXISTS vector');
         console.log('Ensured vector extension exists in database');
-        
+
         await registerType(client);
         client.release();
         typesRegistered = true;
@@ -55,7 +55,7 @@ const getPgPool = async (): Promise<Pool> => {
       }
     }
   }
-  
+
   return pgPool;
 };
 
@@ -74,7 +74,7 @@ const getVectorStore = async (): Promise<PGVectorStore> => {
   if (!vectorStore) {
     const pool = await getPgPool();
     const embeddings = getEmbeddings();
-    
+
     vectorStore = new PGVectorStore(embeddings, {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pool: pool as any, // Koristi konfigurirani pool s registriranim tipovima

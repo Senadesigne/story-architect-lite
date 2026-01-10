@@ -1,7 +1,7 @@
-import { AgentState } from './ai.state';
-import { getRelevantContext } from './ai.retriever';
+import { AgentState } from './ai.state.js';
+import { getRelevantContext } from './ai.retriever.js';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { createManagerProvider, createWorkerProvider } from './ai.factory';
+import { createManagerProvider, createWorkerProvider } from './ai.factory.js';
 
 /**
  * Čvor 1: Transformira korisnički upit u bolji upit za RAG.

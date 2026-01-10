@@ -1,9 +1,9 @@
 // Context Builder - Priprema konteksta za AI promptove
 // Zadatak 3.3.1 - Kreiran prema tehničkom planu
 
-import { getDatabase } from '../lib/db';
-import type { DatabaseConnection } from '../lib/db';
-import * as tables from '../schema/schema';
+import { getDatabase } from '../lib/db.js';
+import type { DatabaseConnection } from '../lib/db.js';
+import * as tables from '../schema/schema.js';
 import { and, eq } from 'drizzle-orm';
 import { HTTPException } from 'hono/http-exception';
 

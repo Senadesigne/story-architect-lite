@@ -1,5 +1,5 @@
 import { Context } from 'hono';
-import type { DatabaseConnection } from '../lib/db';
+import type { DatabaseConnection } from '../lib/db.js';
 
 // Custom error classes
 export class ValidationError extends Error {
@@ -88,7 +88,7 @@ export const requireValidUUID = (id: string, fieldName: string = 'ID'): void => 
 
 // Helper function to check project ownership
 export const requireProjectOwnership = async (db: DatabaseConnection, projectId: string, userId: string): Promise<void> => {
-  const { projects } = await import('../schema/schema');
+  const { projects } = await import('../schema/schema.js');
   const { eq, and } = await import('drizzle-orm');
 
   const [project] = await db
@@ -109,7 +109,7 @@ export const requireResourceOwnership = async (
   resourceId: string,
   userId: string
 ): Promise<void> => {
-  const { projects } = await import('../schema/schema');
+  const { projects } = await import('../schema/schema.js');
   const { eq, and } = await import('drizzle-orm');
 
   const [resource] = await db

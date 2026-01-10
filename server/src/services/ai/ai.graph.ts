@@ -1,6 +1,6 @@
 import { StateGraph, END, StateGraphArgs } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
-import { AgentState } from "./ai.state";
+import { AgentState } from "./ai.state.js";
 import {
   transformQueryNode,
   retrieveContextNode,
@@ -10,7 +10,7 @@ import {
   workerGenerationNode,
   critiqueDraftNode,
   refineDraftNode
-} from "./ai.nodes";
+} from "./ai.nodes.js";
 
 // Definiramo konfiguraciju za StateGraph
 // Za verziju 0.2.x, koristimo StateGraphArgs<AgentState>

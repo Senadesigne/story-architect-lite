@@ -14,15 +14,15 @@ export interface AIGenerationOptions {
 }
 
 // 3. Eksportiranje factory funkcija i tipova
-export type { AIProviderType, AIProviderConfig } from './ai.factory';
-export { createAIProvider, createDefaultAIProvider } from './ai.factory';
+export type { AIProviderType, AIProviderConfig } from './ai.factory.js';
+export { createAIProvider, createDefaultAIProvider } from './ai.factory.js';
 
 // 4. Eksportiranje konkretnih providera za direktnu upotrebu ako je potrebno
-export { AnthropicProvider } from './providers/anthropic.provider';
+export { AnthropicProvider } from './providers/anthropic.provider.js';
 
 // 5. Glavna AIService klasa (opcionalno, za kompleksniju logiku)
 export class AIService {
-  constructor(private provider: AIProvider) {}
+  constructor(private provider: AIProvider) { }
 
   async generateText(prompt: string, options?: AIGenerationOptions): Promise<string> {
     return this.provider.generateText(prompt, options);

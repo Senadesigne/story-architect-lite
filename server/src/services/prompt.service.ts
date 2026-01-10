@@ -1,7 +1,7 @@
 // Prompt Service - Upravljanje AI promptovima
 // Zadatak 3.3.3 - Kreiran prema tehničkom planu
 
-import { SceneContext, CharacterContext, ProjectContext } from './context.builder';
+import { SceneContext, CharacterContext, ProjectContext } from './context.builder.js';
 
 // Pomoćna funkcija za formatiranje liste
 function formatList(items: any[], placeholder = 'N/A'): string {

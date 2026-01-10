@@ -1,4 +1,15 @@
 import { relations, sql } from 'drizzle-orm';
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+  integer,
+  jsonb,
+  index,
+  vector
+} from 'drizzle-orm/pg-core';
 
 // Korisnici - Povezujemo se s Firebase Auth putem ID-a
 export const users = pgTable('users', {
