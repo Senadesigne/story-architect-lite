@@ -92,6 +92,10 @@ app.get('/', (c) => {
   return c.json({ message: 'API is running' });
 });
 
+// GLOBAL AUTH MIDDLEWARE
+// Štiti sve /api/* rute koje su definirane ispod ovoga
+app.use('/api/*', authMiddleware);
+
 // --- AI Test Route (Zadatak 3.4.3 i 3.4.4) ---
 // Ova ruta je ZASAD izvan /projects i ne zahtijeva auth
 // Služi samo za brzi "Proof of Concept" da AI servis radi.
@@ -134,7 +138,7 @@ app.get('/api/ai/test-rag', async (c) => {
     // Dohvati query parametar
     const query = c.req.query('query') || 'test query';
 
-    console.log('Testing RAG with query:', query);
+    console.log('Testing RAG with query: [SENSITIVE]');
 
     // Pozovi getRelevantContext funkciju
     const result = await getRelevantContext(query);
@@ -166,14 +170,14 @@ app.get('/api/ai/test-graph', async (c) => {
     // Dohvati query parametar
     const query = c.req.query('query') || 'Napiši kratku scenu gdje se glavni lik suočava s dilemom';
 
-    console.log('Testing Graph with query:', query);
+    console.log('Testing Graph with query: [SENSITIVE]');
 
     // Postavljamo prazan storyContext kako bi se AI oslanjao isključivo na RAG kontekst iz vektorske baze
     const initialState = createInitialState(query, "");
 
-    console.log('Created initial state:', {
-      userInput: initialState.userInput,
-      storyContext: initialState.storyContext.substring(0, 100) + '...',
+    console.log('Created initial state (sanitized):', {
+      userInputLength: initialState.userInput.length,
+      storyContextLength: initialState.storyContext.length,
       draftCount: initialState.draftCount
     });
 
@@ -217,7 +221,7 @@ app.get('/api/ai/test-graph', async (c) => {
 
 // POST /api/ai/test-agent
 // Ova ruta služi za testiranje cijelog AI grafa (Zadatak 3.11)
-app.post('/api/ai/test-agent', authMiddleware, async (c) => {
+app.post('/api/ai/test-agent', async (c) => {
   try {
     // Korisnik je potreban za auth, ali ga ne koristimo u logici
     c.get('user'); // Samo da se provjeri da je autenticiran
@@ -228,7 +232,7 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
       return c.json({ error: 'userInput je obavezan' }, 400);
     }
 
-    console.log("--- POKRETANJE AI AGENTA (Test) ---", { userInput, storyContext });
+    console.log("--- POKRETANJE AI AGENTA (Test) ---");
 
     // Pokreni graf koristeći novi runStoryArchitectGraph
     const finalState = await runStoryArchitectGraph(
@@ -251,8 +255,8 @@ app.post('/api/ai/test-agent', authMiddleware, async (c) => {
 
 import { editor } from './routes/editor.routes.js';
 
-// Protected routes
-app.use('/api/*', authMiddleware);
+// Protected routes (Auth middleware is now applied globally at the top)
+// app.use('/api/*', authMiddleware);
 
 // Mount sessions route
 app.route('/api/sessions', sessions);
