@@ -324,7 +324,10 @@ export function Phase4Form() {
               {characters.map((character) => (
                 <ContextMenu key={character.id}>
                   <ContextMenuTrigger>
-                    <Card className="relative">
+                    <Card
+                      className="relative cursor-pointer hover:bg-accent/50 transition-colors"
+                      onClick={() => handleEditCharacter(character)}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
                           <div>
