@@ -68,7 +68,9 @@ export function ProjectSidebar() {
   const { history, fetchHistory, selectAnalysis, setIsOpen, deleteAnalysis } = useChiefEditorStore();
 
   React.useEffect(() => {
-    if (projectId) {
+    // FIX: Check for token/auth before fetching to prevent 401 errors
+    const token = localStorage.getItem('authToken');
+    if (projectId && token) {
       fetchHistory(projectId);
     }
   }, [projectId]);

@@ -37,15 +37,28 @@ export const useChiefEditorStore = create<ChiefEditorState>((set, get) => ({
         set({ isHistoryLoading: true });
         try {
             await (window as any).getAuthToken?.(); // Pretpostavljamo da postoji helper ili firebase auth
-            // NAPOMENA: U stvarnosti treba koristiti pravi auth header iz nekog auth hooka ili servisa
-            // Ovdje ćemo pojednostaviti i pretpostaviti da fetch ima interceptor ili da je token dostupan
+
+            // 1. Token Check: Avoid sending request if no token is available
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                // Silent return - just log debug info if needed, but don't error
+                // console.debug('Skipping history fetch: No auth token found');
+                return;
+            }
 
             // FIX: Hardcoded fetch logic because axios might not be configured globally
             const response = await fetch(`/api/editor/history/${projectId}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}` // Pojednostavljeni auth
+                    'Authorization': `Bearer ${token}`
                 }
             });
+
+            if (response.status === 401) {
+                // 2. Silent Handling: Ignore 401 (user session might be expired or initializing)
+                console.debug('History fetch unauthorized (401) - waiting for re-auth');
+                return;
+            }
+
             const data = await response.json();
             if (data.success) {
                 set({ history: data.history });
