@@ -7,8 +7,6 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc --noEmit",
     "start": "tsx src/server.ts",
-    "deploy": "npm run deploy:cf",
-    "deploy:cf": "node scripts/deploy-cloudflare.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -62,7 +60,6 @@
     "supertest": "^7.1.4",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
-    "vitest": "^4.0.3",
-    "wrangler": "^4.16.0"
+    "vitest": "^4.0.3"
   }
 }

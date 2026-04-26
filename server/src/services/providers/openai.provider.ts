@@ -8,13 +8,13 @@ import {
 } from '../ai.errors.js';
 import { retryWithBackoff, RetryConfigs } from '../../utils/retry.js';
 
-// Konkretna implementacija OpenAI providera
 export class OpenAIProvider implements AIProvider {
     private client: OpenAI;
-    private model = 'gpt-4o-mini'; // Koristimo gpt-4o-mini kao ekvivalent Haiku modelu (brz i jeftin)
+    private model: string;
 
-    constructor(apiKey: string) {
+    constructor(apiKey: string, model?: string) {
         this.client = new OpenAI({ apiKey });
+        this.model = model ?? process.env.WORKER_MODEL ?? 'gpt-4o-mini';
     }
 
     public getProviderName(): string {

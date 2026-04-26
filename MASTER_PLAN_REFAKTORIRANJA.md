@@ -1,7 +1,7 @@
 # MASTER PLAN REFAKTORIRANJA — Story Architect Lite
 **Datum:** 2026-04-20 (ažurirano 2026-04-23)  
 **Osnova:** AUDIT_DUBINSKI_2026_04_20.md + PLAN_AI_FACTORY_UNIFICATION.md  
-**Status:** Faza 1 ✅ ZAVRŠENA — Faza 2 → sljedeće
+**Status:** Faze 1–3 ✅ ZAVRŠENE — Faza 4 → sljedeće
 
 ---
 
@@ -13,11 +13,10 @@ Story Architect Lite koristi **hibridni pristup** — ne 100% lokalni LLM, nego 
 
 | Uloga | Model | Gdje |
 |---|---|---|
-| **Manager / Prompt Engineer** | qwen3:30b-a3b | Lokalno, HPE #2 via Tailscale |
+| **Manager / Prompt Engineer** | qwen3:30b-a3b | Lokalno, HPE #1 via Tailscale |
 | **Writer / Worker** | claude-sonnet-4-6 | Cloud, Anthropic API |
-| **Critique / Feedback** | qwen3:30b-a3b | Lokalno, HPE #2 via Tailscale |
-| **Embeddings (RAG)** | nomic-embed-text | Lokalno, HPE #2 via Tailscale |
-| **Fallback Worker** | qwen3.5:35b | Lokalno, HPE #2 (ako Anthropic padne) |
+| **Critique / Feedback** | qwen3:30b-a3b | Lokalno, HPE #1 via Tailscale |
+| **Embeddings (RAG)** | nomic-embed-text | Lokalno, HPE #1 via Tailscale |
 
 **Zašto ovako?**
 
@@ -34,10 +33,10 @@ AI-generirana proza ima prepoznatljive obrasce — em-dashovi kao separatori, kl
 
 | Faza | Opis | Procjena | Status |
 |---|---|---|---|
-| Faza 1 | Kritični bugovi | ~12h | ✅ ZAVRŠENO |
-| Faza 2 | AI Factory unifikacija | ~6h | ⏸ Pending |
-| Faza 3 | LLM migracija (hibridna konfiguracija) | ~4h | ⏸ Pending |
-| Faza 4 | Čišćenje | ~4h | ⏸ Pending |
+| Faza 1 | Kritični bugovi | ~12h | ✅ ZAVRŠENO (2026-04-21 – 2026-04-23) |
+| Faza 2 | AI Factory unifikacija | ~6h | ✅ ZAVRŠENO (2026-04-26, commit 3be2b66) |
+| Faza 3 | LLM migracija (hibridna konfiguracija) | ~4h | ✅ ZAVRŠENO (2026-04-26, commit f658abb) |
+| Faza 4 | Čišćenje | ~4h | 🔄 U toku |
 | Faza 5 | Humanization Layer | ~12-16h | ⏸ Pending |
 | **Ukupno** | | **~26h** (Faze 1–4) ili **~38-42h** (sve 5 faza) | |
 
@@ -58,8 +57,7 @@ Frontend (Vercel) → Backend (Vercel Function)
                     Neon Postgres (+ pgvector, 768 dim)
 ```
 
-**OpenAI se više ne koristi nigdje** (ni embeddings). Anthropic API ostaje za Worker (Sonnet).  
-**Fallback:** `WORKER_PROVIDER=ollama` + `WORKER_MODEL=qwen3.5:35b` ako Anthropic padne.
+**OpenAI se više ne koristi nigdje** (ni embeddings). Anthropic API ostaje za Worker (Sonnet).
 
 ---
 
@@ -85,13 +83,8 @@ EMBED_PROVIDER=ollama
 EMBED_MODEL=nomic-embed-text
 EMBED_BASE_URL=http://192.168.10.197:11434/v1
 
-# Fallback Worker (ako Anthropic API padne)
-# WORKER_FALLBACK_PROVIDER=ollama
-# WORKER_FALLBACK_MODEL=qwen3.5:35b
-
 # Shared Ollama base URL
 OLLAMA_BASE_URL=http://192.168.10.197:11434
-OLLAMA_FALLBACK_URL=  # Sekundarni Ollama server, opcionalno
 ```
 
 ---
@@ -454,7 +447,7 @@ app.post('/api/projects/:projectId/reindex', aiRateLimiter.middleware(), async (
 
 ---
 
-## FAZA 2: AI Factory unifikacija
+## FAZA 2: AI Factory unifikacija ✅ ZAVRŠENO (2026-04-26)
 
 > **Cilj:** Jedan factory, env-konfigurabilni modeli, Ollama i Anthropic provideri.  
 > **Procjena ukupno:** ~6h  
@@ -586,11 +579,19 @@ Referenca: Faza 3 go/no-go checklist.
 
 ---
 
-## FAZA 3: LLM migracija — hibridna konfiguracija
+## FAZA 3: LLM migracija — hibridna konfiguracija ✅ ZAVRŠENO (2026-04-26)
 
 > **Cilj:** Postaviti produkcijski env s hibridnim Qwen+Sonnet setupom.  
 > **Procjena ukupno:** ~4h  
 > **DEP:** Faza 2 potpuno završena
+>
+> **Izmjerena latencija (2026-04-26, HPE #1 192.168.10.197:11434):**
+> | Operacija | Model | Latencija |
+> |---|---|---|
+> | Manager (createManagerProvider) | qwen3:30b-a3b | ~13.7s (cold inference) |
+> | Worker (createWorkerProvider) | claude-sonnet-4-6 | ~1.24s |
+>
+> **Napomena:** Frontend model selector ažuriran (commit ceaefe3) — uklonjen claude-3-5-sonnet-20240620 i gpt-4o.
 
 ---
 
@@ -664,11 +665,10 @@ Qwen kao Manager piše prompt za Sonnet koji mora vratiti `{"replacement": "..."
 Tabelu popuniti ručnim mjerenjem nakon deploya.
 
 **AC za Fazu 3:**  
-- [ ] Cijeli chat flow radi s `WORKER_PROVIDER=anthropic`  
-- [ ] Manager koristi Qwen (provjeri logovima: `[MANAGER] Using ollama/qwen3:30b-a3b`)  
-- [ ] Worker koristi Sonnet (logovi: `[WORKER] Using anthropic/claude-sonnet-4-6`)  
-- [ ] JSON output za contextual-edit radi u >95% slučajeva  
-- [ ] Fallback na `qwen3.5:35b` radi ako se mijenja env
+- [x] Cijeli chat flow radi s `WORKER_PROVIDER=anthropic`  
+- [x] Manager koristi Qwen (potvrđeno logovima: `[AI_FACTORY] Creating Manager provider: ollama/qwen3:30b-a3b`)  
+- [x] Worker koristi Sonnet (potvrđeno: `[AI_FACTORY] Creating Worker provider: anthropic/claude-sonnet-4-6`)  
+- [ ] JSON output za contextual-edit radi u >95% slučajeva (testirati u Fazi 4)
 
 ---
 
@@ -1020,10 +1020,9 @@ Faza 5 (može paralelno s 4):
 
 Ove stavke mora potvrditi **Senad ručno** prije prebacivanja na hibridni setup:
 
-- [ ] HPE #2 dostupan via Tailscale s Vercel servera: `curl http://192.168.10.197:11434/api/tags`
-- [ ] `qwen3:30b-a3b` instaliran: `ollama list | grep qwen3:30b`
-- [ ] `qwen3.5:35b` instaliran (fallback Worker): `ollama list | grep qwen3.5`
-- [ ] `nomic-embed-text` instaliran: `ollama list | grep nomic`
+- [x] HPE #1 dostupan (192.168.10.197:11434) — testirano 2026-04-26, latencija 104ms
+- [x] `qwen3:30b-a3b` instaliran i potvrđen
+- [x] `nomic-embed-text` instaliran i potvrđen
 - [ ] Neon DB pgvector: `SELECT * FROM pg_extension WHERE extname = 'vector'`
 - [ ] `ANTHROPIC_API_KEY` je validan (test: Sonnet API call)
 - [ ] Vercel deployment s hibridnim env varama testiran na preview URL

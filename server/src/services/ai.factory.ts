@@ -21,7 +21,7 @@ export async function createAIProvider(
     }
     case 'openai': {
       const { OpenAIProvider } = await import('./providers/openai.provider.js');
-      return new OpenAIProvider(config.apiKey);
+      return new OpenAIProvider(config.apiKey, config.model);
     }
     case 'ollama': {
       const { OllamaProvider } = await import('./providers/ollama.provider.js');
