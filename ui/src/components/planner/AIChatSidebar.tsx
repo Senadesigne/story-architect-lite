@@ -189,11 +189,9 @@ export const AIChatSidebar: React.FC = () => {
                         <select
                             className="w-full p-1.5 text-xs rounded-md border border-input bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                             onChange={(e) => usePlannerAIStore.getState().setWorkerModel(e.target.value)}
-                            defaultValue="claude-3-5-sonnet-20240620"
+                            defaultValue="claude-sonnet-4-6"
                         >
-                            <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (Writer)</option>
-                            <option value="gpt-4o">GPT-4o (Writer)</option>
-                            <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fast)</option>
+                            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (Writer)</option>
                         </select>
                     </div>
                 </div>

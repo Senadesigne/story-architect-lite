@@ -33,7 +33,7 @@ interface PlannerAIState {
   activeView: 'planner' | 'studio'; // Prati gdje se korisnik nalazi
 
   // Model Selector
-  workerModel: string; // ID modela za Workera (npr. "claude-3-5-sonnet-20240620")
+  workerModel: string;
 
   isLoading: boolean;
   aiPhase: AIPhase;
@@ -93,7 +93,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   projectId: null,
   mode: 'planner', // Default mode
   activeView: 'planner',
-  workerModel: 'claude-3-5-sonnet-20240620', // Default model
+  workerModel: 'claude-sonnet-4-6',
   pendingApplication: null,
   editorContent: null,
   pendingGhostText: null,
