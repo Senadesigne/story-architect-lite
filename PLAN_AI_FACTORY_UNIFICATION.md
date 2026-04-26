@@ -1,7 +1,12 @@
+⚠️ IMPLEMENTIRANO u Fazi 2 (commit 3be2b66). Ovaj dokument je arhiviran.
+Aktualna referenca: MASTER_PLAN_REFAKTORIRANJA.md — Faza 2.
+
+---
+
 # Plan: Unifikacija AI Factory Sustava
 
 **Datum:** 2026-04-20  
-**Status:** PLAN (nije implementirano)  
+**Status:** ✅ IMPLEMENTIRANO (commit 3be2b66, 2026-04-26)  
 **Cilj:** Ukloniti duplikaciju, dodati env-konfigurabilne modele i Ollama podršku, refaktorirati nodes.ts.
 
 ---

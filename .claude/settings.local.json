@@ -15,7 +15,9 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(git -C C:/Users/Senad/story-architect-lite status --short server/src/services/ai.service.ts)",
       "Bash(git *)",
-      "Bash(timeout 20 node scripts/run-dev.js)"
+      "Bash(timeout 20 node scripts/run-dev.js)",
+      "Bash(echo \"TSC_EXIT:$?\")",
+      "Bash(echo \"BUILD_EXIT:$?\")"
     ]
   }
 }

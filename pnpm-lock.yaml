@@ -72,9 +72,6 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.0
         version: 1.14.3(hono@4.7.10)
-      '@langchain/anthropic':
-        specifier: ^0.3.33
-        version: 0.3.33(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(zod@4.1.12)
       '@langchain/community':
         specifier: ^0.3.57
         version: 0.3.57(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@browserbasehq/stagehand@1.14.0(@playwright/test@1.56.1)(deepmerge@4.3.1)(dotenv@16.5.0)(encoding@0.1.13)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))(zod@4.1.12))(@google-cloud/storage@7.16.0(encoding@0.1.13))(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/anthropic@0.3.33(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(zod@4.1.12))(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(@langchain/ollama@1.2.6(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))))(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(axios@1.13.2)(encoding@0.1.13)(fast-xml-parser@4.5.3)(firebase-admin@12.7.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(ibm-cloud-sdk-core@5.4.3)(ignore@5.3.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))(pg@8.16.3)(playwright@1.56.1)(weaviate-client@3.9.0(encoding@0.1.13))(ws@8.18.3)
@@ -84,9 +81,6 @@ importers:
       '@langchain/langgraph':
         specifier: ^0.2.74
         version: 0.2.74(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(zod-to-json-schema@3.25.0(zod@4.1.12))
-      '@langchain/openai':
-        specifier: ^1.0.0
-        version: 1.0.0(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(ws@8.18.3)
       '@neondatabase/serverless':
         specifier: ^0.9.0
         version: 0.9.5
@@ -120,16 +114,10 @@ importers:
       pgvector:
         specifier: ^0.2.1
         version: 0.2.1
-      postgres:
-        specifier: ^3.4.7
-        version: 3.4.7
       zod:
         specifier: ^4.1.12
         version: 4.1.12
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: ^4.20240208.0
-        version: 4.20250525.0
       '@eslint/js':
         specifier: ^9.25.0
         version: 9.27.0
@@ -1944,12 +1932,6 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@langchain/core': '>=0.3.68 <0.4.0'
-
-  '@langchain/openai@1.0.0':
-    resolution: {integrity: sha512-olKEUIjb3HBOiD/NR056iGJz4wiN6HhQ/u65YmGWYadWWoKOcGwheBw/FE0x6SH4zDlI3QmP+vMhuQoaww19BQ==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@langchain/core': ^1.0.0
 
   '@langchain/textsplitters@0.1.0':
     resolution: {integrity: sha512-djI4uw9rlkAb5iMhtLED+xJebDdAG935AdP4eRTB02R7OB/act55Bj9wsskhZsvuyQRpO4O1wQOp85s6T6GWmw==}
@@ -7229,6 +7211,7 @@ snapshots:
       json-schema-to-ts: 3.1.1
     optionalDependencies:
       zod: 4.1.12
+    optional: true
 
   '@anthropic-ai/sdk@0.68.0(zod@4.1.12)':
     dependencies:
@@ -7412,7 +7395,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20250508.0':
     optional: true
 
-  '@cloudflare/workers-types@4.20250525.0': {}
+  '@cloudflare/workers-types@4.20250525.0':
+    optional: true
 
   '@colors/colors@1.5.0':
     optional: true
@@ -8360,6 +8344,7 @@ snapshots:
       fast-xml-parser: 4.5.3
     transitivePeerDependencies:
       - zod
+    optional: true
 
   '@langchain/community@0.3.57(@browserbasehq/sdk@2.6.0(encoding@0.1.13))(@browserbasehq/stagehand@1.14.0(@playwright/test@1.56.1)(deepmerge@4.3.1)(dotenv@16.5.0)(encoding@0.1.13)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))(zod@4.1.12))(@google-cloud/storage@7.16.0(encoding@0.1.13))(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/anthropic@0.3.33(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(zod@4.1.12))(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(@langchain/ollama@1.2.6(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))))(@neondatabase/serverless@0.9.5)(@opentelemetry/api@1.9.0)(axios@1.13.2)(encoding@0.1.13)(fast-xml-parser@4.5.3)(firebase-admin@12.7.0(encoding@0.1.13))(google-auth-library@9.15.1(encoding@0.1.13))(ibm-cloud-sdk-core@5.4.3)(ignore@5.3.2)(jsonwebtoken@9.0.2)(lodash@4.17.21)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))(pg@8.16.3)(playwright@1.56.1)(weaviate-client@3.9.0(encoding@0.1.13))(ws@8.18.3)':
     dependencies:
@@ -8475,15 +8460,6 @@ snapshots:
       js-tiktoken: 1.0.21
       openai: 5.12.2(ws@8.18.3)(zod@3.25.76)
       zod: 3.25.76
-    transitivePeerDependencies:
-      - ws
-
-  '@langchain/openai@1.0.0(@langchain/core@0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12)))(ws@8.18.3)':
-    dependencies:
-      '@langchain/core': 0.3.79(@opentelemetry/api@1.9.0)(openai@6.9.1(ws@8.18.3)(zod@4.1.12))
-      js-tiktoken: 1.0.21
-      openai: 6.7.0(ws@8.18.3)(zod@4.1.12)
-      zod: 4.1.12
     transitivePeerDependencies:
       - ws
 
@@ -10923,6 +10899,7 @@ snapshots:
   fast-xml-parser@4.5.3:
     dependencies:
       strnum: 1.1.2
+    optional: true
 
   fastq@1.19.1:
     dependencies:
@@ -11509,7 +11486,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.2)
+      retry-axios: 2.6.0(axios@1.13.2(debug@4.4.3))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -13334,7 +13311,7 @@ snapshots:
 
   ret@0.1.15: {}
 
-  retry-axios@2.6.0(axios@1.13.2):
+  retry-axios@2.6.0(axios@1.13.2(debug@4.4.3)):
     dependencies:
       axios: 1.13.2(debug@4.4.3)
 
@@ -13656,7 +13633,8 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strnum@1.1.2: {}
+  strnum@1.1.2:
+    optional: true
 
   strtok3@6.3.0:
     dependencies:

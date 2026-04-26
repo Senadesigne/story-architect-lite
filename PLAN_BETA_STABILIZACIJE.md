@@ -1,3 +1,6 @@
+> ⚠️ DJELOMIČNO ZASTARJELO (2026-04-26): Backend je prebačen s Rendera na Vercel.
+> Faze A i B (Render) su zamijenjene Vercel deploymentom. Faze C i D su završene.
+
 # 🛠️ PLAN BETA STABILIZACIJE: RENDER/VERCEL DEPLOYMENT
 
 Cilj: Postići stabilan online pristup Beta verziji projekta (`develop` grana) na Renderu i Vercelu.
@@ -19,23 +22,23 @@ Ova faza zahtijeva ručnu intervenciju na Renderu. Pokreće se **nakon** što je
 
 | ID | Status | Zadatak | Cilj i Detalji | Izvršitelj |
 | :--- | :--- | :--- | :--- | :--- |
-| **B.1** | ❌ TO DO | **Promjena Grane** | U postavkama Render Web Servisa (Settings) **promijeniti povezanu granu iz `main` u `develop`**. | Korisnik |
-| **B.2** | ❌ TO DO | **Ponovni Unos Ključa** | U Render Dashboardu, u 'Environment Variables', **izbrisati i ponovno unijeti** kompletan `FIREBASE_PRIVATE_KEY` i `FIREBASE_CLIENT_EMAIL`. | Korisnik |
-| **B.3** | ❌ TO DO | **Pokretanje Deploya** | Ručno pokrenuti novi `Deploy` ili pričekati automatski deploy. | Korisnik |
-| **B.4** | ❌ TO DO | **Provjera Logova** | Potvrditi da se **NE** pojavljuje `TypeError: Cannot read properties of undefined` i da je servis uspješno pokrenut. | Korisnik |
+| **B.1** | ~~❌ TO DO~~ | ~~Promjena Grane~~ | ZASTARJELO — Render zamijenjen Vercelom. | — |
+| **B.2** | ~~❌ TO DO~~ | ~~Ponovni Unos Ključa~~ | ZASTARJELO | — |
+| **B.3** | ~~❌ TO DO~~ | ~~Pokretanje Deploya~~ | ZASTARJELO | — |
+| **B.4** | ~~❌ TO DO~~ | ~~Provjera Logova~~ | ZASTARJELO | — |
 
 ## Faza C: Konfiguracija Frontenda (Vercel)
 
 | ID | Status | Zadatak | Cilj i Detalji | Izvršitelj |
 | :--- | :--- | :--- | :--- | :--- |
-| **C.1** | ❌ TO DO | **Re-kreacija Projekta** | Ponovo uvesti Git repozitorij (`story-architect-lite`) na Vercel. Postaviti **Root Directory na `ui`**. | Korisnik |
-| **C.2** | ❌ TO DO | **Unos Env Varijabli** | Unijeti **svih 8 VITE varijabli** u Vercel. | Korisnik |
-| **C.3** | ❌ TO DO | **Finalni Deploy** | Pokrenuti Vercel deploy. | Korisnik |
+| **C.1** | ✅ DONE | **Re-kreacija Projekta** | Ponovo uvesti Git repozitorij (`story-architect-lite`) na Vercel. Postaviti **Root Directory na `ui`**. | Korisnik |
+| **C.2** | ✅ DONE | **Unos Env Varijabli** | Unijeti **svih 8 VITE varijabli** u Vercel. | Korisnik |
+| **C.3** | ✅ DONE | **Finalni Deploy** | Pokrenuti Vercel deploy. | Korisnik |
 
 ## Faza D: Testiranje i Predaja
 
 | ID | Status | Zadatak | Cilj i Detalji | Izvršitelj |
 | :--- | :--- | :--- | :--- | :--- |
-| **D.1** | ❌ TO DO | **End-to-End Test** | Otvoriti Vercel URL, testirati **registraciju/logiranje** i **kreiranje novog projekta**. | Korisnik |
-| **D.2** | ❌ TO DO | **Predaja** | Ako **D.1** prođe, Beta verzija je spremna za kolegicu. | Korisnik |
+| **D.1** | ✅ DONE | **End-to-End Test** | Otvoriti Vercel URL, testirati **registraciju/logiranje** i **kreiranje novog projekta**. | Korisnik |
+| **D.2** | ✅ DONE | **Predaja** | Ako **D.1** prođe, Beta verzija je spremna za kolegicu. | Korisnik |
 

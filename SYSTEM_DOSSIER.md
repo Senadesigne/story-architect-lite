@@ -1,3 +1,8 @@
+⚠️ ARHIV — zamijenjen aktualnim README.md i MASTER_PLAN_REFAKTORIRANJA.md.
+Incident opisan ovdje je riješen. Dokument ostaje kao historijska referenca.
+
+---
+
 # SYSTEM DOSSIER: Story Architect Lite - Production Incident Report
 
 **Datum:** 4. Siječanj 2026.
