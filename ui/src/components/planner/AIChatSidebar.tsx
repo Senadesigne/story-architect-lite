@@ -14,6 +14,7 @@ export const AIChatSidebar: React.FC = () => {
         studioBrainstormingMessages,
         sendMessage,
         isLoading,
+        aiPhase,
         mode,
         setMode,
         context,
@@ -284,7 +285,13 @@ export const AIChatSidebar: React.FC = () => {
                                     <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                                     <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce"></div>
                                 </div>
-                                <span className="text-xs text-muted-foreground">AI is thinking...</span>
+                                <span className="text-xs text-muted-foreground">
+                                    {aiPhase === 'analyzing' && 'Analiziram kontekst...'}
+                                    {aiPhase === 'routing' && 'Pronalažem pristup...'}
+                                    {aiPhase === 'generating' && 'Pišem...'}
+                                    {aiPhase === 'reviewing' && 'Provjeravam kvalitetu...'}
+                                    {(aiPhase === 'idle' || aiPhase === 'done') && 'AI razmišlja...'}
+                                </span>
                             </div>
                         )}
                         <div ref={messagesEndRef} />

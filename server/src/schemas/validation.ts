@@ -104,6 +104,7 @@ export const UpdateChapterBodySchema = z.object({
 export const CreateSceneBodySchema = z.object({
   title: z.string().min(1, 'Title is required').trim(),
   summary: z.string().optional(),
+  content: z.string().optional(),
   order: z.number().int().min(0).optional(),
   locationId: z.string().optional(), // TS2554 Fix
   chapterId: z.string().optional(), // TS2554 Fix
@@ -112,6 +113,7 @@ export const CreateSceneBodySchema = z.object({
 export const UpdateSceneBodySchema = z.object({
   title: z.string().min(1, 'Title cannot be empty').trim().optional(),
   summary: z.string().optional(),
+  content: z.string().optional(),
   order: z.number().int().min(0).optional(),
   locationId: z.string().optional(), // TS2554 Fix
   chapterId: z.string().optional(), // TS2554 Fix
@@ -133,6 +135,7 @@ export const ChatRequestBodySchema = z.object({
   mode: z.string().optional(), // TS2554 Fix: z.enum failing
   editorContent: z.string().optional(),
   selection: z.string().optional(),
+  workerModel: z.string().optional(),
   messages: z.array(
     z.object({
       role: z.string(), // TS2554 Fix: z.enum failing

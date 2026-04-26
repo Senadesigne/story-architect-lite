@@ -1,5 +1,5 @@
 import { PGVectorStore } from "@langchain/community/vectorstores/pgvector";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../../lib/db.js';
 import { Pool, PoolConfig } from 'pg';
@@ -60,10 +60,10 @@ const getPgPool = async (): Promise<Pool> => {
 };
 
 // 2. Konfiguriraj Embeddings model
-const getEmbeddings = (): OpenAIEmbeddings => {
-  return new OpenAIEmbeddings({
-    apiKey: process.env.OPENAI_API_KEY, // Morat ćemo dodati OPENAI_API_KEY u .env
-    model: "text-embedding-3-small"
+const getEmbeddings = (): OllamaEmbeddings => {
+  return new OllamaEmbeddings({
+    baseUrl: process.env.OLLAMA_BASE_URL || "http://192.168.10.197:11434",
+    model: process.env.EMBED_MODEL || "nomic-embed-text",
   });
 };
 

@@ -74,6 +74,7 @@ export interface LegacyUpdateCharacterBody {
 export interface LegacyCreateSceneBody {
   title: string;
   summary?: string;
+  content?: string;
   order?: number;
   locationId?: string;
 }
@@ -82,6 +83,7 @@ export interface LegacyCreateSceneBody {
 export interface LegacyUpdateSceneBody {
   title?: string;
   summary?: string;
+  content?: string;
   order?: number;
   locationId?: string;
 }

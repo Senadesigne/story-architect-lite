@@ -95,7 +95,7 @@ export class VertexAIService {
                 currentChapterId = scene.chapter.id;
             }
             bookContext += `### SCENA: ${scene.title}\n`;
-            bookContext += `${scene.summary || "(Nema teksta scene)"}\n\n`;
+            bookContext += `${(scene as any).content || scene.summary || "(Nema teksta scene)"}\n\n`;
         });
 
         return bookContext;

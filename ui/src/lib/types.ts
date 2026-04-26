@@ -68,6 +68,7 @@ export interface Scene {
   id: string;
   title: string;
   summary?: string;
+  content?: string;
   order: number;
   projectId: string;
   locationId?: string;

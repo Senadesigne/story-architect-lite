@@ -167,7 +167,8 @@ Publika: ${project.audience || 'Nije definirano'}
       const sortedScenes = [...scenes].sort((a, b) => (a.order || 0) - (b.order || 0));
       sortedScenes.forEach(scene => {
         storyContext += `- Naslov: ${scene.title}`;
-        if (scene.summary) storyContext += `, Sažetak: ${scene.summary}`;
+        const sceneText = (scene as any).content || scene.summary;
+        if (sceneText) storyContext += `, Sažetak: ${sceneText}`;
         if (scene.order !== null) storyContext += `, Redoslijed: ${scene.order}`;
         storyContext += `\n`;
       });

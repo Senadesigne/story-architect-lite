@@ -118,6 +118,10 @@ function formatSceneDoc(scene: SceneType): Document {
 
   if (scene.title) contentParts.push(`Naslov: ${scene.title}`);
   if (scene.summary) contentParts.push(`Sažetak: ${scene.summary}`);
+  if (scene.content) {
+    const plainText = scene.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (plainText) contentParts.push(`Sadržaj: ${plainText}`);
+  }
 
   const pageContent = contentParts.join('\n\n');
 
@@ -142,10 +146,6 @@ async function main(): Promise<void> {
     // Korak 1: Provjeri environment varijable
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set!');
-    }
-
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY environment variable is not set!');
     }
 
     console.log('✅ Environment varijable provjerene');

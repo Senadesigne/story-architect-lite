@@ -38,7 +38,7 @@ async function fetchWithAuth(
       ...options,
       headers,
       // NOVO: Timeout za sprječavanje beskonačnog čekanja
-      signal: AbortSignal.timeout(30000) // 30 sekundi
+      signal: AbortSignal.timeout(120000) // 2 minute
     });
 
     if (!response.ok) {
@@ -248,7 +248,7 @@ export async function getScenes(projectId: string) {
   return response.json();
 }
 
-export async function createScene(projectId: string, sceneData: { title: string; summary?: string; order?: number; locationId?: string; chapterId?: string }) {
+export async function createScene(projectId: string, sceneData: { title: string; summary?: string; content?: string; order?: number; locationId?: string; chapterId?: string }) {
   const response = await fetchWithAuth(`/api/projects/${projectId}/scenes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -257,7 +257,7 @@ export async function createScene(projectId: string, sceneData: { title: string;
   return response.json();
 }
 
-export async function updateScene(sceneId: string, sceneData: { title?: string; summary?: string; order?: number; locationId?: string; chapterId?: string }) {
+export async function updateScene(sceneId: string, sceneData: { title?: string; summary?: string; content?: string; order?: number; locationId?: string; chapterId?: string }) {
   const response = await fetchWithAuth(`/api/scenes/${sceneId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

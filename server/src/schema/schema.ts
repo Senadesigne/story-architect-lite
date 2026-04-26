@@ -115,6 +115,7 @@ export const scenes = pgTable('scenes', {
   id: uuid('id').primaryKey().defaultRandom(),
   title: varchar('title', { length: 256 }).notNull(),
   summary: text('summary'),
+  content: text('content'),
   order: integer('order').notNull().default(0),
   projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
   locationId: uuid('location_id').references(() => locations.id),
@@ -178,7 +179,7 @@ export const storyArchitectEmbeddings = pgTable('story_architect_embeddings', {
     sourceType?: 'character' | 'scene' | 'location' | 'project';
     [key: string]: any;
   }>(),
-  vector: vector('vector', { dimensions: 1536 }).notNull(),
+  vector: vector('vector', { dimensions: 768 }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 }, (table) => ({
   // Vektorski indeks za brzu pretragu sličnosti

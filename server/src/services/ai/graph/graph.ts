@@ -84,6 +84,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
     managerAnalysis: {
       value: (x, y) => y ?? x,
     },
+    workerModel: {
+      value: (x, y) => y ?? x,
+    },
   },
 };
 
@@ -199,11 +202,12 @@ export async function runStoryArchitectGraph(
   mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
   editorContent?: string,
   messages: BaseMessage[] = [],
-  selection?: string
+  selection?: string,
+  workerModel?: string
 ): Promise<AgentState> {
 
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages, selection);
+  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages, selection, workerModel);
 
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,

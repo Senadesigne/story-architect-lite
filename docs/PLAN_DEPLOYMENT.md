@@ -214,6 +214,8 @@ Već postoji: `pnpm run build`
 
 4. **Environment Variables** (dodaj sve iz 6.2)
 
+> **Vercel serverless timeout:** Hobby plan ograničava serverless funkcije na **60 sekundi** (`vercel.json: maxDuration: 60`). Ako AI generira duže tekstove (npr. Sonnet za cijelu scenu može trebati 60–90s), razmisli o upgrade-u na Pro plan (`maxDuration` do 300s) ili implementaciji streaming response-a (SSE/ReadableStream) koji ne ovisi o jednom dugom HTTP pozivu.
+
 ### **Faza 6: Testiranje**
 1. **Provjeri backend health**: `https://your-backend.onrender.com/health`
 2. **Otvori frontend**: `https://your-app.vercel.app`

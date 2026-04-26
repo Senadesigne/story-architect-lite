@@ -848,7 +848,7 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
   const db = await getDatabase(databaseUrl);
 
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId, chapterId } = getValidatedBody<CreateSceneBody>(c);
+  const { title, summary, content, order, locationId, chapterId } = getValidatedBody<CreateSceneBody>(c);
 
   await requireProjectOwnership(db, projectId, user.id);
 
@@ -858,6 +858,7 @@ app.post('/api/projects/:projectId/scenes', validateBody(CreateSceneBodySchema),
       .values({
         title: title,
         summary: summary || null,
+        content: content || null,
         order: order || 0,
         locationId: locationId || null,
         chapterId: chapterId || null,
@@ -882,7 +883,7 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
   const db = await getDatabase(databaseUrl);
 
   // Dohvaćanje validirane podatke
-  const { title, summary, order, locationId, chapterId } = getValidatedBody<UpdateSceneBody>(c);
+  const { title, summary, content, order, locationId, chapterId } = getValidatedBody<UpdateSceneBody>(c);
 
   await requireResourceOwnership(db, scenes, sceneId, user.id);
 
@@ -890,6 +891,7 @@ app.put('/api/scenes/:sceneId', validateBody(UpdateSceneBodySchema), async (c) =
   const updateData: DatabaseUpdateData = {};
   if (title !== undefined) updateData.title = title;
   if (summary !== undefined) updateData.summary = summary || null;
+  if (content !== undefined) updateData.content = content || null;
   if (order !== undefined) updateData.order = order;
   if (locationId !== undefined) updateData.locationId = locationId || null;
   if (chapterId !== undefined) updateData.chapterId = chapterId || null;
@@ -983,7 +985,7 @@ app.post(
   async (c) => {
     const user = c.get('user');
     const { projectId } = c.req.param();
-    const { userInput, plannerContext, messages, mode, editorContent, selection, sessionId } = getValidatedBody<ChatRequestBody>(c);
+    const { userInput, plannerContext, messages, mode, editorContent, selection, sessionId, workerModel } = getValidatedBody<ChatRequestBody>(c);
 
     requireValidUUID(projectId, 'project ID');
 
@@ -1028,7 +1030,7 @@ app.post(
         m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
       ) || [];
 
-      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode as 'planner' | 'brainstorming' | 'writer' | 'contextual-edit', editorContent, langChainMessages, selection);
+      const state = await runStoryArchitectGraph(userInput, storyContext, plannerContext, mode as 'planner' | 'brainstorming' | 'writer' | 'contextual-edit', editorContent, langChainMessages, selection, workerModel);
       return state;
     });
 

@@ -1,42 +1,39 @@
 import { AIProvider } from './ai.service.js';
 
-// Tipovi za factory pattern
-export type AIProviderType = 'anthropic' | 'openai';
+export type AIProviderType = 'anthropic' | 'openai' | 'ollama';
 
 export interface AIProviderConfig {
   apiKey: string;
+  model?: string;
+  baseUrl?: string;
   timeout?: number;
   maxRetries?: number;
 }
 
-// Factory funkcija za kreiranje AI providera
 export async function createAIProvider(
   type: AIProviderType,
   config: AIProviderConfig
 ): Promise<AIProvider> {
   switch (type) {
-    case 'anthropic':
-      // Dinamički import AnthropicProvider-a
+    case 'anthropic': {
       const { AnthropicProvider } = await import('./providers/anthropic.provider.js');
-      return new AnthropicProvider(config.apiKey);
-
-    case 'openai':
-      // Dinamički import OpenAIProvider-a
+      return new AnthropicProvider(config.apiKey, config.model);
+    }
+    case 'openai': {
       const { OpenAIProvider } = await import('./providers/openai.provider.js');
       return new OpenAIProvider(config.apiKey);
-
+    }
+    case 'ollama': {
+      const { OllamaProvider } = await import('./providers/ollama.provider.js');
+      if (!config.baseUrl) throw new Error('OLLAMA_BASE_URL is required for ollama provider');
+      return new OllamaProvider(config.baseUrl, config.model ?? 'qwen3:30b-a3b');
+    }
     default:
       throw new Error(`Unknown AI provider type: ${type}`);
   }
 }
 
-/**
- * Kreira AI providera na temelju preferencije, uz automatski fallback.
- * 
- * @param preference - Preferirani provider ('anthropic' ili 'openai')
- * @returns Instanca AI providera
- */
-export async function createPreferredAIProvider(preference: AIProviderType = 'anthropic'): Promise<AIProvider> {
+export async function createPreferredAIProvider(preference: AIProviderType = 'anthropic', model?: string): Promise<AIProvider> {
   const { getAIConfig } = await import('../lib/config.js');
   const config = getAIConfig();
 
@@ -48,13 +45,13 @@ export async function createPreferredAIProvider(preference: AIProviderType = 'an
     anthropicKeyLength: config.anthropicApiKey?.length,
     hasOpenAIKey: !!config.openaiApiKey,
     openAIKeyLength: config.openaiApiKey?.length,
-    preference
+    preference,
+    model,
   });
 
-  // 1. Pokušaj kreirati preferiranog providera
   if (preference === 'anthropic' && config.anthropicApiKey) {
     console.log('[AI_FACTORY] Using preferred provider: Anthropic');
-    return createAIProvider('anthropic', { apiKey: config.anthropicApiKey, timeout, maxRetries });
+    return createAIProvider('anthropic', { apiKey: config.anthropicApiKey, model, timeout, maxRetries });
   }
 
   if (preference === 'openai' && config.openaiApiKey) {
@@ -62,10 +59,9 @@ export async function createPreferredAIProvider(preference: AIProviderType = 'an
     return createAIProvider('openai', { apiKey: config.openaiApiKey, timeout, maxRetries });
   }
 
-  // 2. Fallback logika
   if (config.anthropicApiKey) {
     console.log(`[AI_FACTORY] Fallback to Anthropic (preferred '${preference}' not available)`);
-    return createAIProvider('anthropic', { apiKey: config.anthropicApiKey, timeout, maxRetries });
+    return createAIProvider('anthropic', { apiKey: config.anthropicApiKey, model, timeout, maxRetries });
   }
 
   if (config.openaiApiKey) {
@@ -76,28 +72,32 @@ export async function createPreferredAIProvider(preference: AIProviderType = 'an
   throw new Error('No valid AI API keys found in configuration.');
 }
 
-// Convenience funkcija koja koristi environment config (zadržana radi kompatibilnosti)
 export async function createDefaultAIProvider(): Promise<AIProvider> {
-  // Default ponašanje je preferirati Anthropic
   return createPreferredAIProvider('anthropic');
 }
 
-/**
- * Kreira providera za Manager ulogu (Context, Prompting, Critique).
- * Čita iz MANAGER_AI_PROVIDER env varijable ili koristi default (Anthropic Haiku).
- */
 export async function createManagerProvider(): Promise<AIProvider> {
-  const providerType = (process.env.MANAGER_AI_PROVIDER as AIProviderType) || 'anthropic';
-  console.log(`[AI_FACTORY] Creating Manager provider: ${providerType}`);
-  return createPreferredAIProvider(providerType);
+  const providerType = (process.env.MANAGER_PROVIDER as AIProviderType) || 'anthropic';
+  const model = process.env.MANAGER_MODEL ?? 'claude-sonnet-4-6';
+  console.log(`[AI_FACTORY] Creating Manager provider: ${providerType}/${model}`);
+  if (providerType === 'ollama') {
+    const baseUrl = process.env.OLLAMA_BASE_URL;
+    if (!baseUrl) throw new Error('OLLAMA_BASE_URL is required when MANAGER_PROVIDER=ollama');
+    const { OllamaProvider } = await import('./providers/ollama.provider.js');
+    return new OllamaProvider(baseUrl, model);
+  }
+  return createPreferredAIProvider(providerType, model);
 }
 
-/**
- * Kreira providera za Worker ulogu (Generation).
- * Čita iz WORKER_AI_PROVIDER env varijable ili koristi default (Anthropic Sonnet).
- */
-export async function createWorkerProvider(): Promise<AIProvider> {
-  const providerType = (process.env.WORKER_AI_PROVIDER as AIProviderType) || 'anthropic';
-  console.log(`[AI_FACTORY] Creating Worker provider: ${providerType}`);
-  return createPreferredAIProvider(providerType);
+export async function createWorkerProvider(modelOverride?: string): Promise<AIProvider> {
+  const providerType = (process.env.WORKER_PROVIDER as AIProviderType) || 'anthropic';
+  const model = modelOverride ?? process.env.WORKER_MODEL ?? 'claude-sonnet-4-6';
+  console.log(`[AI_FACTORY] Creating Worker provider: ${providerType}/${model}`);
+  if (providerType === 'ollama') {
+    const baseUrl = process.env.OLLAMA_BASE_URL;
+    if (!baseUrl) throw new Error('OLLAMA_BASE_URL is required when WORKER_PROVIDER=ollama');
+    const { OllamaProvider } = await import('./providers/ollama.provider.js');
+    return new OllamaProvider(baseUrl, model);
+  }
+  return createPreferredAIProvider(providerType, model);
 }

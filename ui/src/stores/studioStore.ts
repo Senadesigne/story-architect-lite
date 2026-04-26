@@ -137,7 +137,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
       const scene = state.scenes.find(s => s.id === sceneId);
       return {
         activeSceneId: sceneId,
-        editorContent: scene ? scene.summary || '' : ''
+        editorContent: scene ? scene.content || scene.summary || '' : ''
       };
     });
   },
@@ -181,7 +181,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
     set((state) => ({
       scenes: [...state.scenes, scene],
       activeSceneId: scene.id,
-      editorContent: scene.summary || ''
+      editorContent: scene.content || scene.summary || ''
     }));
   },
 
@@ -198,7 +198,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         return {
           scenes,
           activeSceneId: firstScene.id,
-          editorContent: firstScene.summary || ''
+          editorContent: firstScene.content || firstScene.summary || ''
         };
       }
 
@@ -224,7 +224,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
           // Postavi prvu dostupnu scenu kao aktivnu
           const firstScene = updatedScenes[0];
           newActiveSceneId = firstScene.id;
-          newEditorContent = firstScene.summary || '';
+          newEditorContent = firstScene.content || firstScene.summary || '';
         } else {
           // Nema više scena
           newActiveSceneId = null;
@@ -251,7 +251,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
       if (wasActive) {
         newActiveSceneId = scene.id;
-        newEditorContent = scene.summary || '';
+        newEditorContent = scene.content || scene.summary || '';
       }
 
       return {
@@ -282,8 +282,8 @@ export const useStudioStore = create<StudioState>((set, get) => ({
 
       // Ako je ažurirana scena trenutno aktivna, ažuriraj i editorContent
       let newEditorContent = state.editorContent;
-      if (state.activeSceneId === sceneId && updates.summary !== undefined) {
-        newEditorContent = updates.summary || '';
+      if (state.activeSceneId === sceneId && (updates.content !== undefined || updates.summary !== undefined)) {
+        newEditorContent = updates.content ?? updates.summary ?? '';
       }
 
       return {
@@ -343,12 +343,16 @@ export const useStudioStore = create<StudioState>((set, get) => ({
         // Osiguraj da šaljemo string, makar i prazan
         const contentToSave = state.editorContent || '';
         return await api.updateScene(state.activeSceneId!, {
-          summary: contentToSave
+          content: contentToSave
         });
       }, 3, 2000); // 3 pokušaja, početni delay 2s
 
-      // Ažuriraj scenu u store-u s novim sadržajem
-      get().updateSceneSummaryInStore(state.activeSceneId, contentBeingSaved);
+      // Ažuriraj scenu u store-u s novim content sadržajem
+      set((state) => ({
+        scenes: state.scenes.map(s =>
+          s.id === state.activeSceneId ? { ...s, content: contentBeingSaved } : s
+        )
+      }));
 
       // FORCE MINIMUM SPINNER DURATION: 2000ms
       const elapsed = Date.now() - startTime;

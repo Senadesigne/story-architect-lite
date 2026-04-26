@@ -11,9 +11,10 @@ import { retryWithBackoff, RetryConfigs } from '../../utils/retry.js';
 // Konkretna implementacija Anthropic providera
 export class AnthropicProvider implements AIProvider {
   private client: Anthropic;
-  private model = 'claude-3-haiku-20240307'; // Koristimo Haiku, najbrži model
+  private model: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: string) {
+    this.model = model ?? process.env.WORKER_MODEL ?? 'claude-sonnet-4-6';
     this.client = new Anthropic({ apiKey });
   }
 

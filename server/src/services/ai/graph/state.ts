@@ -46,6 +46,11 @@ export interface AgentState {
    */
   selection?: string;
 
+  /**
+   * Override za Worker model (šalje se s frontenda)
+   */
+  workerModel?: string;
+
   // === FAZA RAG-A I USMJERAVANJA ===
 
   /**
@@ -137,7 +142,8 @@ export function createInitialState(
   mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
   editorContent?: string,
   messages: BaseMessage[] = [],
-  selection?: string
+  selection?: string,
+  workerModel?: string
 ): AgentState {
   return {
     userInput,
@@ -146,6 +152,7 @@ export function createInitialState(
     mode,
     editorContent,
     selection,
+    workerModel,
     draftCount: 0,
     messages: messages
   };

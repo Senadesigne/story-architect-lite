@@ -89,7 +89,7 @@ export function Studio() {
 
       if (backup && isBackupNewer(
         activeSceneId,
-        scene.summary || '',
+        scene.content || scene.summary || '',
         Date.now() - 60000 // Usporedi s prije 1 minutu
       )) {
         setShowRestoreDialog(true);

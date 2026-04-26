@@ -7,6 +7,8 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
+export type AIPhase = 'idle' | 'analyzing' | 'routing' | 'generating' | 'reviewing' | 'done';
+
 interface PlannerAIState {
   // Modal/Sidebar stanje
   isOpen: boolean;
@@ -34,6 +36,7 @@ interface PlannerAIState {
   workerModel: string; // ID modela za Workera (npr. "claude-3-5-sonnet-20240620")
 
   isLoading: boolean;
+  aiPhase: AIPhase;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
   projectLastUpdated: number; // Timestamp zadnjeg ažuriranja projekta (za sinkronizaciju)
 
@@ -62,6 +65,7 @@ interface PlannerAIState {
   setEditorContent: (content: string | null) => void;
   setPendingGhostText: (content: string | null) => void;
   setGhostTextAction: (action: 'idle' | 'accept' | 'reject') => void;
+  setAiPhase: (phase: AIPhase) => void;
   sendMessage: (content: string, currentEditorContent?: string, selection?: string) => Promise<void>;
   saveToResearch: (content: string) => Promise<void>;
   clearMessages: () => void;
@@ -106,6 +110,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   studioBrainstormingMessages: [],
 
   isLoading: false,
+  aiPhase: 'idle',
   lastResponse: null,
   projectLastUpdated: 0,
 
@@ -265,6 +270,10 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     set({ workerModel: modelId });
   },
 
+  setAiPhase: (phase) => {
+    set({ aiPhase: phase });
+  },
+
   setPendingApplication: (content) => {
     set({ pendingApplication: content });
   },
@@ -323,7 +332,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
     // Optimistično ažuriranje UI-a
     set((prevState) => {
-      const updates: Partial<PlannerAIState> = { isLoading: true };
+      const updates: Partial<PlannerAIState> = { isLoading: true, aiPhase: 'analyzing' };
 
       if (currentMode === 'planner') updates.plannerMessages = [...prevState.plannerMessages, userMessage];
       else if (currentMode === 'writer') updates.writerMessages = [...prevState.writerMessages, userMessage];
@@ -337,6 +346,9 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
 
       return updates as PlannerAIState;
     });
+
+    const phaseTimer1 = setTimeout(() => set({ aiPhase: 'routing' }), 4000);
+    const phaseTimer2 = setTimeout(() => set({ aiPhase: 'generating' }), 8000);
 
     try {
       // Pozovi API s plannerContext, messages i MODE parametrom
@@ -354,6 +366,9 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
         })),
       });
 
+      clearTimeout(phaseTimer1);
+      clearTimeout(phaseTimer2);
+
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: finalState.finalOutput || 'Greška: Nema odgovora od AI-a.',
@@ -363,6 +378,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       set((prevState) => {
         const updates: Partial<PlannerAIState> = {
           isLoading: false,
+          aiPhase: 'done',
           lastResponse: finalState.finalOutput || null,
           pendingApplication: finalState.finalOutput || null,
           pendingGhostText: freshState.mode === 'writer' ? (finalState.finalOutput || null) : null,
@@ -383,6 +399,8 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       });
 
     } catch (error) {
+      clearTimeout(phaseTimer1);
+      clearTimeout(phaseTimer2);
       console.error('❌ Greška prilikom slanja poruke:', error);
 
       const errorMessage: ChatMessage = {
@@ -394,6 +412,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       set((prevState) => {
         const updates: Partial<PlannerAIState> = {
           isLoading: false,
+          aiPhase: 'idle',
           lastResponse: null,
           pendingApplication: null,
           pendingGhostText: null,
@@ -483,6 +502,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       plannerBrainstormingMessages: [],
       studioBrainstormingMessages: [],
       isLoading: false,
+      aiPhase: 'idle',
       lastResponse: null,
       currentSessionId: null,
       sessions: [],

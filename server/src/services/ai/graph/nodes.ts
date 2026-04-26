@@ -1,6 +1,6 @@
 import type { AgentState, AgentStateUpdate } from './state.js';
 import { getRelevantContext } from '../ai.retriever.js';
-import { createPreferredAIProvider, createManagerProvider, createWorkerProvider } from '../../ai.factory.js';
+import { createManagerProvider, createWorkerProvider } from '../../ai.factory.js';
 import type { AIGenerationOptions } from '../../ai.service.js';
 import { getPlannerSystemPrompt } from '../planner.prompts.js';
 
@@ -56,7 +56,7 @@ export async function transformQueryNode(state: AgentState): Promise<AgentStateU
       return { transformedQuery: "" };
     }
 
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    const aiProvider = await createManagerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.3,
       maxTokens: 200,
@@ -110,7 +110,7 @@ export async function routeTaskNode(state: AgentState): Promise<AgentStateUpdate
     }
 
     // 2. AI Klasifikacija za ostale modove (npr. planner ili default)
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    const aiProvider = await createManagerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.1,
       maxTokens: 50,
@@ -154,7 +154,7 @@ export async function handleSimpleRetrievalNode(state: AgentState): Promise<Agen
   console.log("[HANDLE_SIMPLE_RETRIEVAL] Starting");
 
   try {
-    const aiProvider = await createPreferredAIProvider('anthropic');
+    const aiProvider = await createManagerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.3,
       maxTokens: 500,
@@ -352,7 +352,7 @@ export async function workerGenerationNode(state: AgentState): Promise<AgentStat
   console.log("[WORKER_GENERATION] Starting");
 
   try {
-    const aiProvider = await createWorkerProvider();
+    const aiProvider = await createWorkerProvider(state.workerModel);
     const options: AIGenerationOptions = {
       temperature: 0.7,
       maxTokens: 2000,
@@ -472,7 +472,7 @@ export async function refineDraftNode(state: AgentState): Promise<AgentStateUpda
     }
 
     // Worker radi poboljšanje
-    const aiProvider = await createWorkerProvider();
+    const aiProvider = await createWorkerProvider(state.workerModel);
     const options: AIGenerationOptions = {
       temperature: 0.6,
       maxTokens: 1000,
@@ -509,7 +509,7 @@ export async function modifyTextNode(state: AgentState): Promise<AgentStateUpdat
 
   try {
     // Worker radi modifikaciju
-    const aiProvider = await createWorkerProvider();
+    const aiProvider = await createWorkerProvider(state.workerModel);
     const options: AIGenerationOptions = {
       temperature: 0.3,
       maxTokens: 1000,
