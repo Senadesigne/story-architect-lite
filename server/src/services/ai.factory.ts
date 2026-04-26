@@ -84,7 +84,15 @@ export async function createManagerProvider(): Promise<AIProvider> {
     const baseUrl = process.env.OLLAMA_BASE_URL;
     if (!baseUrl) throw new Error('OLLAMA_BASE_URL is required when MANAGER_PROVIDER=ollama');
     const { OllamaProvider } = await import('./providers/ollama.provider.js');
-    return new OllamaProvider(baseUrl, model);
+    const primary = new OllamaProvider(baseUrl, model);
+    if (await primary.validateConnection()) return primary;
+    const fallbackUrl = process.env.OLLAMA_FALLBACK_URL;
+    if (fallbackUrl) {
+      console.warn(`[AI_FACTORY] HPE #1 unreachable, trying fallback: ${fallbackUrl}`);
+      const fallback = new OllamaProvider(fallbackUrl, model);
+      if (await fallback.validateConnection()) return fallback;
+    }
+    throw new Error(`Ollama HPE #1 (${baseUrl}) not reachable. Check Tailscale.`);
   }
   return createPreferredAIProvider(providerType, model);
 }

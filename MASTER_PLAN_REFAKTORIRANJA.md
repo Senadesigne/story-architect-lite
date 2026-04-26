@@ -49,11 +49,11 @@ AI-generirana proza ima prepoznatljive obrasce — em-dashovi kao separatori, kl
 Frontend (Vercel) → Backend (Vercel Function)
                          │
                     LangGraph Graph
-                    ├── Manager     → qwen3:30b-a3b       (HPE #2, 192.168.10.142:11434)
+                    ├── Manager     → qwen3:30b-a3b       (HPE #1, 192.168.10.197:11434)
                     ├── Worker      → claude-sonnet-4-6    (Anthropic API, cloud)
-                    ├── Critique    → qwen3:30b-a3b        (HPE #2, 192.168.10.142:11434)
-                    ├── Humanizer   → qwen3:30b-a3b        (HPE #2, 192.168.10.142:11434)
-                    └── Embeddings  → nomic-embed-text     (HPE #2, 192.168.10.142:11434)
+                    ├── Critique    → qwen3:30b-a3b        (HPE #1, 192.168.10.197:11434)
+                    ├── Humanizer   → qwen3:30b-a3b        (HPE #1, 192.168.10.197:11434)
+                    └── Embeddings  → nomic-embed-text     (HPE #1, 192.168.10.197:11434)
                          │
                     Neon Postgres (+ pgvector, 768 dim)
 ```
@@ -69,7 +69,7 @@ Frontend (Vercel) → Backend (Vercel Function)
 # Manager — lokalni Qwen (rutiranje, analiza, prompt engineering)
 MANAGER_PROVIDER=ollama
 MANAGER_MODEL=qwen3:30b-a3b
-MANAGER_BASE_URL=http://192.168.10.142:11434/v1
+MANAGER_BASE_URL=http://192.168.10.197:11434/v1
 
 # Worker — Sonnet (kreativno pisanje, visoka kvaliteta)
 WORKER_PROVIDER=anthropic
@@ -83,14 +83,14 @@ CRITIQUE_MODEL=qwen3:30b-a3b
 # Embeddings — lokalni nomic-embed-text (768 dim, ne 1536!)
 EMBED_PROVIDER=ollama
 EMBED_MODEL=nomic-embed-text
-EMBED_BASE_URL=http://192.168.10.142:11434/v1
+EMBED_BASE_URL=http://192.168.10.197:11434/v1
 
 # Fallback Worker (ako Anthropic API padne)
 # WORKER_FALLBACK_PROVIDER=ollama
 # WORKER_FALLBACK_MODEL=qwen3.5:35b
 
 # Shared Ollama base URL
-OLLAMA_BASE_URL=http://192.168.10.142:11434
+OLLAMA_BASE_URL=http://192.168.10.197:11434
 OLLAMA_FALLBACK_URL=  # Sekundarni Ollama server, opcionalno
 ```
 
@@ -359,7 +359,7 @@ import { OllamaEmbeddings } from "@langchain/community/embeddings/ollama";
 
 const getEmbeddings = () => {
   return new OllamaEmbeddings({
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://192.168.10.142:11434',
+    baseUrl: process.env.OLLAMA_BASE_URL || 'http://192.168.10.197:11434',
     model: process.env.EMBED_MODEL || 'nomic-embed-text',  // 768 dim
   });
 };
@@ -604,7 +604,7 @@ MANAGER_MODEL=qwen3:30b-a3b
 WORKER_PROVIDER=anthropic
 WORKER_MODEL=claude-sonnet-4-6
 ANTHROPIC_API_KEY=sk-ant-...
-OLLAMA_BASE_URL=http://192.168.10.142:11434
+OLLAMA_BASE_URL=http://192.168.10.197:11434
 EMBED_MODEL=nomic-embed-text
 
 # Fallback: ako Anthropic padne, komentirati gornje WORKER_ linije i odkomentirati:
@@ -1020,7 +1020,7 @@ Faza 5 (može paralelno s 4):
 
 Ove stavke mora potvrditi **Senad ručno** prije prebacivanja na hibridni setup:
 
-- [ ] HPE #2 dostupan via Tailscale s Vercel servera: `curl http://192.168.10.142:11434/api/tags`
+- [ ] HPE #2 dostupan via Tailscale s Vercel servera: `curl http://192.168.10.197:11434/api/tags`
 - [ ] `qwen3:30b-a3b` instaliran: `ollama list | grep qwen3:30b`
 - [ ] `qwen3.5:35b` instaliran (fallback Worker): `ollama list | grep qwen3.5`
 - [ ] `nomic-embed-text` instaliran: `ollama list | grep nomic`

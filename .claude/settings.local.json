@@ -14,7 +14,8 @@
       "Bash(pnpm vitest *)",
       "Bash(echo \"EXIT:$?\")",
       "Bash(git -C C:/Users/Senad/story-architect-lite status --short server/src/services/ai.service.ts)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(timeout 20 node scripts/run-dev.js)"
     ]
   }
 }
