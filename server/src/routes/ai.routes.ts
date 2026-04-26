@@ -197,7 +197,8 @@ aiRouter.post(
     const { projectId } = c.req.param();
     const {
       userInput, plannerContext, messages, mode,
-      editorContent, selection, sessionId, workerModel
+      editorContent, selection, sessionId, workerModel,
+      humanizationEnabled
     } = getValidatedBody<ChatRequestBody>(c);
 
     requireValidUUID(projectId, 'project ID');
@@ -234,11 +235,13 @@ aiRouter.post(
     const finalState = await handleDatabaseOperation(async () => {
       const projectContext = await ContextBuilder.buildProjectContext(projectId, db);
       const storyContext = ContextBuilder.formatProjectContextToString(projectContext);
+      const audienceHint = projectContext.project.audience ?? null;
 
       const langChainMessages = messages?.map(m =>
         m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
       ) || [];
 
+      // styleFingerprint lookup added in Korak 7 (requires style.routes.ts + DB table)
       return await runStoryArchitectGraph(
         userInput,
         storyContext,
@@ -247,7 +250,10 @@ aiRouter.post(
         editorContent,
         langChainMessages,
         selection,
-        workerModel
+        workerModel,
+        humanizationEnabled ?? false,
+        null,
+        audienceHint
       );
     });
 

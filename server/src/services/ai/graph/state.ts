@@ -1,5 +1,6 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { MessagesAnnotation, Annotation } from "@langchain/langgraph";
+import type { StyleFingerprint } from '../prompts/humanization.prompt.js';
 
 /**
  * AgentState - Centralizirano stanje za LangGraph multi-agentni sustav
@@ -50,6 +51,21 @@ export interface AgentState {
    * Override za Worker model (šalje se s frontenda)
    */
   workerModel?: string;
+
+  /**
+   * Uključuje Humanization node u pipeline (šalje se s frontenda)
+   */
+  humanizationEnabled?: boolean;
+
+  /**
+   * Analizirani stil korisnika iz writing samplea (null = nema uploadanih samplea)
+   */
+  styleFingerprint?: StyleFingerprint | null;
+
+  /**
+   * Ciljana publika iz projekta (project.audience) — prosljeđuje se humanizeru
+   */
+  audienceHint?: string | null;
 
   // === FAZA RAG-A I USMJERAVANJA ===
 
@@ -143,7 +159,10 @@ export function createInitialState(
   editorContent?: string,
   messages: BaseMessage[] = [],
   selection?: string,
-  workerModel?: string
+  workerModel?: string,
+  humanizationEnabled?: boolean,
+  styleFingerprint?: StyleFingerprint | null,
+  audienceHint?: string | null
 ): AgentState {
   return {
     userInput,
@@ -153,6 +172,9 @@ export function createInitialState(
     editorContent,
     selection,
     workerModel,
+    humanizationEnabled,
+    styleFingerprint,
+    audienceHint,
     draftCount: 0,
     messages: messages
   };

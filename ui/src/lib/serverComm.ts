@@ -292,6 +292,7 @@ export async function chat(
     plannerContext?: string;
     mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit';
     workerModel?: string;
+    humanizationEnabled?: boolean;
     editorContent?: string;
     selection?: string;
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -304,6 +305,44 @@ export async function chat(
     },
     body: JSON.stringify(data),
   });
+  return response.json();
+}
+
+// Style Profile API
+export async function getWritingSamples(): Promise<Array<{ id: string; wordCount: number | null; createdAt: string }>> {
+  const response = await fetchWithAuth('/api/users/writing-samples');
+  return response.json();
+}
+
+export async function uploadWritingSample(text: string): Promise<{ id: string; wordCount: number | null; createdAt: string }> {
+  const response = await fetchWithAuth('/api/users/writing-samples', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  return response.json();
+}
+
+export async function deleteWritingSample(id: string): Promise<void> {
+  await fetchWithAuth(`/api/users/writing-samples/${id}`, { method: 'DELETE' });
+}
+
+export async function getStyleFingerprint(): Promise<{
+  userId: string;
+  avgSentenceLength: number | null;
+  tone: { formal: number; casual: number; poetic: number } | null;
+  signaturePhrases: string[] | null;
+  sentencePatterns: string | null;
+  vocabularyLevel: string | null;
+  sampleCount: number;
+  updatedAt: string;
+} | null> {
+  const response = await fetchWithAuth('/api/users/style-fingerprint');
+  return response.json();
+}
+
+export async function analyzeStyle(): Promise<{ status: string; fingerprint: unknown }> {
+  const response = await fetchWithAuth('/api/users/style-fingerprint/analyze', { method: 'POST' });
   return response.json();
 }
 
@@ -387,6 +426,11 @@ export const api = {
   createSession,
   getSession,
   deleteSession,
+  getWritingSamples,
+  uploadWritingSample,
+  deleteWritingSample,
+  getStyleFingerprint,
+  analyzeStyle,
 };
 
 export const clearTokenCache = () => {

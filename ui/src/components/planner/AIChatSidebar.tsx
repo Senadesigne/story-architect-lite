@@ -21,6 +21,8 @@ export const AIChatSidebar: React.FC = () => {
         pendingApplication,
         setGhostTextAction,
         setActiveView,
+        humanizationEnabled,
+        toggleHumanization,
         // Session Management
         sessions,
         loadSessions,
@@ -194,6 +196,25 @@ export const AIChatSidebar: React.FC = () => {
                             <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (Writer)</option>
                         </select>
                     </div>
+
+                    {/* Humanization Toggle — samo za writer/planner mode */}
+                    {(mode === 'writer' || mode === 'planner') && (
+                        <div className="flex items-center justify-between px-1">
+                            <span className="text-xs text-muted-foreground">Humanizacija (Qwen)</span>
+                            <button
+                                onClick={toggleHumanization}
+                                className={cn(
+                                    "text-xs px-2 py-0.5 rounded transition-colors border",
+                                    humanizationEnabled
+                                        ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                                        : "text-stone-500 border-transparent hover:text-stone-400"
+                                )}
+                                title={humanizationEnabled ? "Humanizacija uključena" : "Humanizacija isključena"}
+                            >
+                                {humanizationEnabled ? '✦ ON' : '○ OFF'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 

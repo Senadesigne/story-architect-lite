@@ -36,6 +36,13 @@
       "when": 1745395200000,
       "tag": "0004_embed_nomic_768",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777230391209,
+      "tag": "0005_tiresome_slapstick",
+      "breakpoints": true
     }
   ]
 }

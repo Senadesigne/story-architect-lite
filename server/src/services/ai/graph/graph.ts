@@ -2,6 +2,7 @@ import { StateGraph, START, END, StateGraphArgs } from "@langchain/langgraph";
 import { BaseMessage } from "@langchain/core/messages";
 import { createInitialState, MAX_DRAFT_ITERATIONS } from "./state.js";
 import type { AgentState } from "./state.js";
+import type { StyleFingerprint } from '../prompts/humanization.prompt.js';
 import {
   retrieveContextNode,
   transformQueryNode,
@@ -86,6 +87,15 @@ const graphConfig: StateGraphArgs<AgentState> = {
     },
     workerModel: {
       value: (x, y) => y ?? x,
+    },
+    humanizationEnabled: {
+      value: (x, y) => (y !== undefined ? y : x),
+    },
+    styleFingerprint: {
+      value: (x, y) => (y !== undefined ? y : x),
+    },
+    audienceHint: {
+      value: (x, y) => (y !== undefined ? y : x),
     },
   },
 };
@@ -203,11 +213,18 @@ export async function runStoryArchitectGraph(
   editorContent?: string,
   messages: BaseMessage[] = [],
   selection?: string,
-  workerModel?: string
+  workerModel?: string,
+  humanizationEnabled?: boolean,
+  styleFingerprint?: StyleFingerprint | null,
+  audienceHint?: string | null
 ): Promise<AgentState> {
 
   // Kreiranje početnog stanja
-  const initialState = createInitialState(userInput, storyContext, plannerContext, mode, editorContent, messages, selection, workerModel);
+  const initialState = createInitialState(
+    userInput, storyContext, plannerContext, mode, editorContent,
+    messages, selection, workerModel,
+    humanizationEnabled, styleFingerprint, audienceHint
+  );
 
   console.log("🚀 Starting Story Architect Graph execution with:", {
     userInput: initialState.userInput,

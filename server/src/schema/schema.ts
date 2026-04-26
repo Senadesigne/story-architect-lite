@@ -231,6 +231,39 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
 }));
 
 
+// ------------------------------------------------------------------
+// STYLE PROFILE — Writing samples i analizirani stil korisnika
+// ------------------------------------------------------------------
+
+export const userWritingSamples = pgTable('user_writing_samples', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  wordCount: integer('word_count'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('idx_writing_samples_user_id').on(table.userId),
+}));
+
+export const userStyleFingerprints = pgTable('user_style_fingerprints', {
+  userId: text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  avgSentenceLength: integer('avg_sentence_length'),
+  tone: jsonb('tone').$type<{ formal: number; casual: number; poetic: number }>(),
+  signaturePhrases: text('signature_phrases').array(),
+  sentencePatterns: text('sentence_patterns'),
+  vocabularyLevel: text('vocabulary_level').$type<'simple' | 'moderate' | 'sophisticated'>(),
+  sampleCount: integer('sample_count').notNull().default(0),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const userWritingSamplesRelations = relations(userWritingSamples, ({ one }) => ({
+  user: one(users, { fields: [userWritingSamples.userId], references: [users.id] }),
+}));
+
+export const userStyleFingerprintsRelations = relations(userStyleFingerprints, ({ one }) => ({
+  user: one(users, { fields: [userStyleFingerprints.userId], references: [users.id] }),
+}));
+
 export const editorAnalyses = pgTable('editor_analyses', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),

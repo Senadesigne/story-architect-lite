@@ -14,6 +14,7 @@ import { charactersRouter } from './routes/characters.routes.js';
 import { chaptersRouter } from './routes/chapters.routes.js';
 import { scenesRouter } from './routes/scenes.routes.js';
 import { aiRouter } from './routes/ai.routes.js';
+import { styleRouter } from './routes/style.routes.js';
 
 const app = new Hono();
 
@@ -37,5 +38,6 @@ app.route('/api', charactersRouter);
 app.route('/api', chaptersRouter);
 app.route('/api', scenesRouter);
 app.route('/api', aiRouter);
+app.route('/api', styleRouter);
 
 export default app;

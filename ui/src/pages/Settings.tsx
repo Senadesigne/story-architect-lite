@@ -1,5 +1,6 @@
 import { Separator } from '@/components/ui/separator';
 import { UserProfileForm } from '@/components/UserProfileForm';
+import { WritingSamplesManager } from '@/components/profile/WritingSamplesManager';
 
 export function Settings() {
   return (
@@ -15,6 +16,20 @@ export function Settings() {
         <Separator />
 
         <UserProfileForm />
+
+        <Separator />
+
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold">Writing Style Profile</h2>
+            <p className="text-muted-foreground text-sm mt-1">
+              Dodaj uzorke svog pisanja da AI asistent nauči tvoj glas i stil.
+              Humanization Agent koristi ove uzorke pri generiranju teksta kad je
+              humanizacija uključena u AI sidebaru.
+            </p>
+          </div>
+          <WritingSamplesManager />
+        </div>
       </div>
     </div>
   );

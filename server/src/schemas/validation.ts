@@ -136,6 +136,7 @@ export const ChatRequestBodySchema = z.object({
   editorContent: z.string().optional(),
   selection: z.string().optional(),
   workerModel: z.string().optional(),
+  humanizationEnabled: z.boolean().optional(),
   messages: z.array(
     z.object({
       role: z.string(), // TS2554 Fix: z.enum failing

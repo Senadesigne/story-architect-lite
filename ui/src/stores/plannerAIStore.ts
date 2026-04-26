@@ -35,6 +35,9 @@ interface PlannerAIState {
   // Model Selector
   workerModel: string;
 
+  // Humanization toggle
+  humanizationEnabled: boolean;
+
   isLoading: boolean;
   aiPhase: AIPhase;
   lastResponse: string | null; // Zadnji generirani odgovor za Keep All
@@ -61,6 +64,7 @@ interface PlannerAIState {
   setMode: (mode: 'planner' | 'brainstorming' | 'writer') => void;
   setActiveView: (view: 'planner' | 'studio') => void;
   setWorkerModel: (modelId: string) => void;
+  toggleHumanization: () => void;
   setPendingApplication: (content: string | null) => void;
   setEditorContent: (content: string | null) => void;
   setPendingGhostText: (content: string | null) => void;
@@ -94,6 +98,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   mode: 'planner', // Default mode
   activeView: 'planner',
   workerModel: 'claude-sonnet-4-6',
+  humanizationEnabled: false,
   pendingApplication: null,
   editorContent: null,
   pendingGhostText: null,
@@ -270,6 +275,8 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
     set({ workerModel: modelId });
   },
 
+  toggleHumanization: () => set(state => ({ humanizationEnabled: !state.humanizationEnabled })),
+
   setAiPhase: (phase) => {
     set({ aiPhase: phase });
   },
@@ -354,12 +361,13 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       // Pozovi API s plannerContext, messages i MODE parametrom
       const finalState = await api.chat(state.projectId, {
         userInput: content.trim(),
-        sessionId: sessionId || undefined, // Send sessionId
+        sessionId: sessionId || undefined,
         plannerContext: freshState.context || undefined,
-        mode: freshState.mode, // Šaljemo odabrani mod
-        workerModel: freshState.workerModel, // Šaljemo odabrani model za Workera
-        editorContent: currentEditorContent || freshState.editorContent || undefined, // Šaljemo sadržaj editora ako postoji
-        selection: selection || undefined, // Šaljemo selekciju ako postoji
+        mode: freshState.mode,
+        workerModel: freshState.workerModel,
+        humanizationEnabled: freshState.humanizationEnabled,
+        editorContent: currentEditorContent || freshState.editorContent || undefined,
+        selection: selection || undefined,
         messages: [...currentMessages, userMessage].map(msg => ({
           role: msg.role,
           content: msg.content,
@@ -493,6 +501,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
       projectId: null,
       mode: 'planner',
       activeView: 'planner',
+      humanizationEnabled: false,
       pendingApplication: null,
       editorContent: null,
       pendingGhostText: null,
