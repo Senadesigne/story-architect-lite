@@ -152,14 +152,7 @@ export const createMockScene = (overrides?: Partial<Scene>): Scene => ({
   ...overrides,
 });
 
-/**
- * Creates a test Hono application with mocks
- * TODO: Implement when needed for integration tests
- */
-export const createTestApp = (mocks?: TestMocks) => {
-  // Placeholder for future implementation
-  // This will be implemented when we create integration tests
-  console.log('createTestApp called with mocks:', mocks);
+export const createTestApp = (_mocks?: TestMocks) => {
   return null;
 };
 

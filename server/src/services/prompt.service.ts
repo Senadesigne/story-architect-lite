@@ -1,7 +1,7 @@
 // Prompt Service - Upravljanje AI promptovima
 // Zadatak 3.3.3 - Kreiran prema tehničkom planu
 
-import { SceneContext, CharacterContext, ProjectContext } from './context.builder.js';
+import { SceneContext } from './context.builder.js';
 
 // Pomoćna funkcija za formatiranje liste
 function formatList(items: any[], placeholder = 'N/A'): string {
@@ -40,27 +40,4 @@ Based *only* on the data provided above, write a 1-2 sentence synopsis for this 
 `;
   }
 
-  /**
-   * Kreira prompt za razvoj lika
-   */
-  static buildCharacterDevelopmentPrompt(context: CharacterContext): string {
-    // TODO: Implementirati u sljedećem koraku
-    return 'Placeholder prompt for character development';
-  }
-
-  /**
-   * Kreira prompt za outline priče
-   */
-  static buildPlotOutlinePrompt(context: ProjectContext): string {
-    // TODO: Implementirati u sljedećem koraku
-    return 'Placeholder prompt for plot outline';
-  }
-
-  /**
-   * Pomoćna metoda za formatiranje konteksta u čitljiv oblik
-   */
-  private static formatContextForPrompt(context: any): string {
-    // TODO: Implementirati formatiranje konteksta
-    return JSON.stringify(context, null, 2);
-  }
 }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PromptService } from '../prompt.service';
-import { SceneContext, CharacterContext, ProjectContext } from '../context.builder';
-import { createMockScene, createMockCharacter, createMockLocation, createMockProject } from '@test/helpers';
+import { SceneContext } from '../context.builder';
+import { createMockScene, createMockCharacter, createMockLocation } from '@test/helpers';
 
 describe('PromptService', () => {
   describe('buildSceneSynopsisPrompt', () => {
@@ -190,47 +190,4 @@ describe('PromptService', () => {
     });
   });
 
-  describe('buildCharacterDevelopmentPrompt', () => {
-    it('should return placeholder prompt', () => {
-      // Arrange
-      const mockCharacter = createMockCharacter();
-      const mockProject = createMockProject();
-      const mockScenes = [createMockScene()];
-
-      const context: CharacterContext = {
-        character: mockCharacter,
-        project: mockProject,
-        scenes: mockScenes
-      };
-
-      // Act
-      const prompt = PromptService.buildCharacterDevelopmentPrompt(context);
-
-      // Assert
-      expect(prompt).toBe('Placeholder prompt for character development');
-    });
-  });
-
-  describe('buildPlotOutlinePrompt', () => {
-    it('should return placeholder prompt', () => {
-      // Arrange
-      const mockProject = createMockProject();
-      const mockCharacters = [createMockCharacter()];
-      const mockLocations = [createMockLocation()];
-      const mockScenes = [createMockScene()];
-
-      const context: ProjectContext = {
-        project: mockProject,
-        characters: mockCharacters,
-        locations: mockLocations,
-        scenes: mockScenes
-      };
-
-      // Act
-      const prompt = PromptService.buildPlotOutlinePrompt(context);
-
-      // Assert
-      expect(prompt).toBe('Placeholder prompt for plot outline');
-    });
-  });
 });

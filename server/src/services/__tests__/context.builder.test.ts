@@ -209,21 +209,4 @@ describe('ContextBuilder', () => {
     });
   });
 
-  describe('buildProjectContext', () => {
-    it('should throw "Not implemented yet" error', async () => {
-      // Act & Assert
-      await expect(
-        ContextBuilder.buildProjectContext('project-1', mockDb as any)
-      ).rejects.toThrow('Not implemented yet');
-    });
-  });
-
-  describe('buildCharacterContext', () => {
-    it('should throw "Not implemented yet" error', async () => {
-      // Act & Assert
-      await expect(
-        ContextBuilder.buildCharacterContext('char-1', 'project-1', mockDb as any)
-      ).rejects.toThrow('Not implemented yet');
-    });
-  });
 });

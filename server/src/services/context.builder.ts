@@ -27,11 +27,6 @@ export interface ProjectContext {
   scenes: SceneData[];
 }
 
-export interface CharacterContext {
-  character: CharacterData;
-  project: ProjectData;
-  scenes: SceneData[];
-}
 
 /**
  * ContextBuilder klasa za pripremu konteksta iz baze podataka
@@ -100,18 +95,6 @@ export class ContextBuilder {
       locations: projectData.locations,
       scenes: projectData.scenes
     };
-  }
-
-  /**
-   * Priprema kontekst za lika s povezanim podacima
-   */
-  static async buildCharacterContext(
-    characterId: string,
-    projectId: string,
-    db: DatabaseConnection
-  ): Promise<CharacterContext> {
-    // TODO: Implementirati u sljedećem koraku
-    throw new Error('Not implemented yet');
   }
 
   /**
