@@ -7,7 +7,8 @@ import {
 } from '../middleware/errorHandler.js';
 import { getDatabase } from '../lib/db.js';
 import { getDatabaseUrl } from '../lib/env.js';
-import { chatMessages } from '../schema/schema.js';
+import { chatMessages, userStyleFingerprints } from '../schema/schema.js';
+import { eq } from 'drizzle-orm';
 import { aiRateLimiter } from '../middleware/rateLimiter.js';
 import { createDefaultAIProvider } from '../services/ai.service.js';
 import { ContextBuilder } from '../services/context.builder.js';
@@ -241,7 +242,21 @@ aiRouter.post(
         m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)
       ) || [];
 
-      // styleFingerprint lookup added in Korak 7 (requires style.routes.ts + DB table)
+      const styleRow = humanizationEnabled
+        ? (await db.query.userStyleFingerprints.findFirst({
+            where: eq(userStyleFingerprints.userId, user.id),
+          })) ?? null
+        : null;
+      const styleFingerprint = (styleRow?.avgSentenceLength != null && styleRow.tone != null && styleRow.signaturePhrases != null && styleRow.sentencePatterns != null && styleRow.vocabularyLevel != null)
+        ? {
+            avgSentenceLength: styleRow.avgSentenceLength,
+            tone: styleRow.tone as { formal: number; casual: number; poetic: number },
+            signaturePhrases: styleRow.signaturePhrases,
+            sentencePatterns: styleRow.sentencePatterns,
+            vocabularyLevel: styleRow.vocabularyLevel as 'simple' | 'moderate' | 'sophisticated',
+          }
+        : null;
+
       return await runStoryArchitectGraph(
         userInput,
         storyContext,
@@ -252,7 +267,7 @@ aiRouter.post(
         selection,
         workerModel,
         humanizationEnabled ?? false,
-        null,
+        styleFingerprint,
         audienceHint
       );
     });

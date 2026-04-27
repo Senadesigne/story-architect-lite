@@ -13,6 +13,7 @@ import {
   critiqueDraftNode,
   refineDraftNode,
   modifyTextNode,
+  humanizationNode,
   finalOutputNode
 } from "./nodes.js";
 
@@ -124,6 +125,9 @@ export function createStoryArchitectGraph() {
   // ✅ TEXT MODIFICATION ČVOR:
   graph.addNode("modify_text", modifyTextNode);
 
+  // ✅ HUMANIZATION ČVOR (Faza 5):
+  graph.addNode("humanization_node", humanizationNode);
+
   // ✅ FINALIZACIJA ČVOR:
   graph.addNode("final_output", finalOutputNode);
 
@@ -144,6 +148,9 @@ export function createStoryArchitectGraph() {
 
   // ✅ TEXT MODIFICATION EDGE:
   graph.addEdge("modify_text" as any, END); // Modificirani tekst ide direktno na završetak
+
+  // ✅ HUMANIZATION → FINALIZACIJA EDGE:
+  graph.addEdge("humanization_node" as any, "final_output" as any);
 
   // ✅ FINALIZACIJA EDGE:
   graph.addEdge("final_output" as any, END);
@@ -176,10 +183,10 @@ export function createStoryArchitectGraph() {
   // Usmjeravanje nakon critique_draft čvora na temelju draftCount i critique.stop
   graph.addConditionalEdges(
     "critique_draft" as any,
-    reflectionCondition, // koristi postojeću funkciju na liniji 189
+    reflectionCondition,
     {
-      "refine_draft": "refine_draft", // nastavi petlju
-      "final_output": "final_output" // završi petlju kroz finalizaciju
+      "refine_draft": "refine_draft",        // nastavi petlju
+      "humanization_node": "humanization_node" // završi petlju → humanizacija → final_output
     } as any
   );
 
@@ -306,8 +313,8 @@ export function reflectionCondition(state: AgentState): string {
 
   // Provjeri je li postignuto maksimalno iteracija
   if (state.draftCount >= MAX_DRAFT_ITERATIONS) {
-    console.log(`[REFLECTION_CONDITION] Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, ending reflection loop`);
-    return "final_output";
+    console.log(`[REFLECTION_CONDITION] Maximum iterations (${MAX_DRAFT_ITERATIONS}) reached, routing to humanization`);
+    return "humanization_node";
   }
 
   // Provjeri stop zastavicu iz kritike (ako postoji)
@@ -317,8 +324,8 @@ export function reflectionCondition(state: AgentState): string {
       console.log(`[REFLECTION_CONDITION] Parsed critique: score=${critiqueData.score}, stop=${critiqueData.stop}`);
 
       if (critiqueData.stop === true) {
-        console.log("[REFLECTION_CONDITION] Critique indicates draft is satisfactory, ending reflection loop");
-        return "final_output";
+        console.log("[REFLECTION_CONDITION] Critique satisfied, routing to humanization");
+        return "humanization_node";
       }
     } catch (error) {
       console.warn("[REFLECTION_CONDITION] Could not parse critique JSON, continuing with iteration");

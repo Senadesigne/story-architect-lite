@@ -4,6 +4,9 @@ import { getDatabase } from '../lib/db.js';
 import { getDatabaseUrl } from '../lib/env.js';
 import { userWritingSamples, userStyleFingerprints } from '../schema/schema.js';
 import { eq, desc } from 'drizzle-orm';
+import { createManagerProvider } from '../services/ai.factory.js';
+import { buildStyleAnalysisPrompt } from '../services/ai/prompts/humanization.prompt.js';
+import type { StyleFingerprint } from '../services/ai/prompts/humanization.prompt.js';
 
 export const styleRouter = new Hono();
 
@@ -87,10 +90,81 @@ styleRouter.get('/users/style-fingerprint', async (c) => {
   return c.json(fingerprint ?? null);
 });
 
-// POST /api/users/style-fingerprint/analyze — stub (implementira se u Koraku 7 kad je HPE #1 dostupan)
+// POST /api/users/style-fingerprint/analyze — pokreće Qwen analizu stil uzoraka
 styleRouter.post('/users/style-fingerprint/analyze', async (c) => {
-  return c.json(
-    { error: 'Analiza stila zahtijeva HPE #1 server (Ollama/Qwen). Implementirano u Koraku 7.' },
-    503
+  const user = c.get('user');
+  const db = await getDatabase(getDatabaseUrl());
+
+  const samples = await db.query.userWritingSamples.findMany({
+    where: eq(userWritingSamples.userId, user.id),
+    orderBy: [desc(userWritingSamples.createdAt)],
+    columns: { text: true },
+    limit: 10,
+  });
+
+  if (samples.length < 3) {
+    return c.json({ error: 'Potrebno minimalno 3 uzorka za analizu stila' }, 400);
+  }
+
+  let manager;
+  try {
+    manager = await createManagerProvider();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return c.json({ error: `Ollama nije dostupan: ${msg}` }, 503);
+  }
+
+  const prompt = buildStyleAnalysisPrompt(samples.map(s => s.text));
+
+  let rawResult: string;
+  try {
+    rawResult = await manager.generateText(prompt, {
+      temperature: 0.1,
+      maxTokens: 500,
+      timeout: 45000,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return c.json({ error: `Qwen analiza nije uspjela: ${msg}` }, 500);
+  }
+
+  const jsonMatch = rawResult.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error('[STYLE_ANALYSIS] No JSON found in response:', rawResult.substring(0, 200));
+    return c.json({ error: 'Qwen nije vratio validan JSON. Pokušaj ponovo.' }, 500);
+  }
+
+  let fingerprint: StyleFingerprint;
+  try {
+    fingerprint = JSON.parse(jsonMatch[0]) as StyleFingerprint;
+  } catch {
+    return c.json({ error: 'Greška pri parsiranju JSON odgovora. Pokušaj ponovo.' }, 500);
+  }
+
+  await handleDatabaseOperation(async () =>
+    db.insert(userStyleFingerprints)
+      .values({
+        userId: user.id,
+        avgSentenceLength: fingerprint.avgSentenceLength,
+        tone: fingerprint.tone,
+        signaturePhrases: fingerprint.signaturePhrases,
+        sentencePatterns: fingerprint.sentencePatterns,
+        vocabularyLevel: fingerprint.vocabularyLevel,
+        sampleCount: samples.length,
+      })
+      .onConflictDoUpdate({
+        target: userStyleFingerprints.userId,
+        set: {
+          avgSentenceLength: fingerprint.avgSentenceLength,
+          tone: fingerprint.tone,
+          signaturePhrases: fingerprint.signaturePhrases,
+          sentencePatterns: fingerprint.sentencePatterns,
+          vocabularyLevel: fingerprint.vocabularyLevel,
+          sampleCount: samples.length,
+          updatedAt: new Date(),
+        },
+      })
   );
+
+  return c.json({ status: 'success', fingerprint });
 });

@@ -3,6 +3,7 @@ import { getRelevantContext } from '../ai.retriever.js';
 import { createManagerProvider, createWorkerProvider } from '../../ai.factory.js';
 import type { AIGenerationOptions } from '../../ai.service.js';
 import { getPlannerSystemPrompt } from '../planner.prompts.js';
+import { buildHumanizationPrompt } from '../prompts/humanization.prompt.js';
 
 /**
  * Ovaj modul sadrži implementacije čvorova koji se koriste u LangGraph grafu
@@ -533,6 +534,58 @@ MODIFICIRANI TEKST: `;
   } catch (error) {
     console.error("[MODIFY_TEXT] Error:", error);
     return { draft: "Greška pri modifikaciji." };
+  }
+}
+
+/**
+ * Čvor za humanizaciju — uklanja AI obrasce iz teksta (Qwen post-processing).
+ * Ulazi IZMEĐU reflection petlje i finalOutputNode.
+ * KRITIČNO: vraća { draft: humanized }, NE { finalOutput }, jer finalOutputNode
+ * uvijek prepisuje finalOutput iz state.draft.
+ */
+export async function humanizationNode(state: AgentState): Promise<AgentStateUpdate> {
+  console.log("[HUMANIZATION] Starting, enabled:", state.humanizationEnabled);
+
+  if (!state.humanizationEnabled || !state.draft) {
+    console.log("[HUMANIZATION] Skipping (disabled or no draft)");
+    return {};
+  }
+
+  const originalLength = state.draft.length;
+
+  try {
+    const manager = await createManagerProvider();
+    const options: AIGenerationOptions = {
+      temperature: parseFloat(process.env.HUMANIZATION_TEMPERATURE ?? '0.65'),
+      maxTokens: 3000,
+      timeout: parseInt(process.env.HUMANIZATION_TIMEOUT ?? '60000'),
+    };
+
+    const prompt = buildHumanizationPrompt(
+      state.draft,
+      state.styleFingerprint ?? null,
+      state.audienceHint ?? null
+    );
+
+    const humanized = await manager.generateText(prompt, options);
+    const trimmed = humanized.trim();
+
+    if (!trimmed || trimmed.length < 10) {
+      console.warn("[HUMANIZATION] Empty/too-short output, keeping original");
+      return {};
+    }
+
+    if (trimmed.length > originalLength * 1.5) {
+      console.warn(`[HUMANIZATION] Output too long (${trimmed.length} > ${originalLength * 1.5}), keeping original`);
+      return {};
+    }
+
+    console.log(`[HUMANIZATION] Done: ${originalLength} → ${trimmed.length} chars`);
+    return { draft: trimmed };
+
+  } catch (error) {
+    console.error("[HUMANIZATION] Error, keeping original draft:", error);
+    return {};
   }
 }
 
