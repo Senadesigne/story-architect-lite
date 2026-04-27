@@ -10,6 +10,7 @@ import {
   refineDraftNode,
   modifyTextNode,
   finalOutputNode,
+  humanizationNode,
 } from './nodes.js'
 import type { AgentState } from './state.js'
 
@@ -380,5 +381,78 @@ describe('finalOutputNode', () => {
   it('returns undefined finalOutput when draft is absent', async () => {
     const result = await finalOutputNode(makeState())
     expect(result.finalOutput).toBeUndefined()
+  })
+})
+
+// ─── humanizationNode ─────────────────────────────────────────────────────────
+
+describe('humanizationNode', () => {
+  it('returns {} when humanizationEnabled is false', async () => {
+    const result = await humanizationNode(makeState({ humanizationEnabled: false, draft: 'Some text' }))
+    expect(result).toEqual({})
+  })
+
+  it('returns {} when humanizationEnabled is undefined', async () => {
+    const result = await humanizationNode(makeState({ draft: 'Some text' }))
+    expect(result).toEqual({})
+  })
+
+  it('returns {} when draft is empty', async () => {
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: '' }))
+    expect(result).toEqual({})
+  })
+
+  it('returns {} when draft is absent', async () => {
+    const result = await humanizationNode(makeState({ humanizationEnabled: true }))
+    expect(result).toEqual({})
+  })
+
+  it('returns humanized draft when manager returns valid text', async () => {
+    vi.mocked(createManagerProvider).mockResolvedValue(mockProvider('Humanized text') as any)
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: 'Original text' }))
+    expect(result.draft).toBe('Humanized text')
+  })
+
+  it('trims whitespace from manager output', async () => {
+    vi.mocked(createManagerProvider).mockResolvedValue(mockProvider('  Trimmed output  ') as any)
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: 'Original text' }))
+    expect(result.draft).toBe('Trimmed output')
+  })
+
+  it('returns {} when manager output is too short (< 10 chars)', async () => {
+    vi.mocked(createManagerProvider).mockResolvedValue(mockProvider('Hi') as any)
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: 'Original text here' }))
+    expect(result).toEqual({})
+  })
+
+  it('returns {} when manager output exceeds 1.5x original length', async () => {
+    const original = 'A'.repeat(100)
+    const tooLong = 'B'.repeat(160)
+    vi.mocked(createManagerProvider).mockResolvedValue(mockProvider(tooLong) as any)
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: original }))
+    expect(result).toEqual({})
+  })
+
+  it('returns {} (fail-safe) when manager throws', async () => {
+    vi.mocked(createManagerProvider).mockRejectedValue(new Error('Ollama down'))
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: 'Original text' }))
+    expect(result).toEqual({})
+  })
+
+  it('passes styleFingerprint to buildHumanizationPrompt when provided', async () => {
+    const mockGen = vi.fn().mockResolvedValue('Humanized with style applied here now')
+    vi.mocked(createManagerProvider).mockResolvedValue({ generateText: mockGen } as any)
+    const fingerprint = {
+      avgSentenceLength: 12,
+      tone: { formal: 0.7, casual: 0.2, poetic: 0.1 },
+      signaturePhrases: ['naime', 'međutim'],
+      sentencePatterns: 'kratke rečenice s inverzijom',
+      vocabularyLevel: 'moderate' as const,
+    }
+    const longDraft = 'Original draft text that is long enough to pass the guard check easily.'
+    const result = await humanizationNode(makeState({ humanizationEnabled: true, draft: longDraft, styleFingerprint: fingerprint }))
+    expect(result.draft).toBe('Humanized with style applied here now')
+    const calledPrompt: string = mockGen.mock.calls[0][0]
+    expect(calledPrompt).toContain('naime')
   })
 })
