@@ -51,7 +51,6 @@ interface StudioState {
 
   // UI stanje
   isSidebarOpen: boolean;
-  isCommandBarVisible: boolean;
 
   // AI Processing stanje - za sprječavanje race conditiona
   isAIProcessing: boolean;
@@ -107,7 +106,6 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   scenes: [],
   chapters: [],
   isSidebarOpen: true,
-  isCommandBarVisible: true,
   isAIProcessing: false,
   aiProcessingLock: null,
 
