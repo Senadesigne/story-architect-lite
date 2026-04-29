@@ -64,7 +64,7 @@ Ovo je checklist. Kad se nešto završi — Claude Code samo zamijeni `[ ]` u `[
 - [x] Registrirati 4 untracked fajla (2026-04-29)
 - [x] Ažurirati README (2026-04-29)
 - [x] Provjeriti da li je migracija 0007_add_style_profile.sql primijenjena (2026-04-29) — stvarno ime: 0005_tiresome_slapstick, primijenjena
-- [ ] Identificirati i obrisati dead code (Claude Code prijedlog)
+- [x] Identificirati i obrisati dead code (Claude Code prijedlog) (2026-04-29)
 
 **Procjena:** 0.5 dana
 
@@ -170,6 +170,7 @@ _(prazno)_
 - Commit RAG cross-project fix + timeout izmjene + utility skripte pushano na origin/main (ce3ff3e)
 - Provjereno stanje Neon baze i lokalnih migracija — migracija 0005_tiresome_slapstick (style_profiles) potvrđena primijenjena
 - README ažuriran: Humanizer dodan u Stack i arhitektura dijagram, Faza 5 raspisana na 5-A/5-B/7-8
+- Dead code cleanup: 22 fajla obrisana (knip 36→14), TS clean, pushano (5bd62b6)
 
 ---
 
