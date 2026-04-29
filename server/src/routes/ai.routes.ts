@@ -61,7 +61,7 @@ aiRouter.get('/ai/test-rag', async (c) => {
 
     console.log('Testing RAG with query: [SENSITIVE]');
 
-    const result = await getRelevantContext(query);
+    const result = await getRelevantContext(query, 'test');
 
     return c.json({
       status: 'success',
@@ -89,7 +89,7 @@ aiRouter.get('/ai/test-graph', async (c) => {
 
     console.log('Testing Graph with query: [SENSITIVE]');
 
-    const initialState = createInitialState(query, '');
+    const initialState = createInitialState(query, 'test', '');
 
     console.log('Created initial state (sanitized):', {
       userInputLength: initialState.userInput.length,
@@ -146,6 +146,7 @@ aiRouter.post('/ai/test-agent', async (c) => {
 
     const finalState = await runStoryArchitectGraph(
       userInput,
+      'test',
       storyContext || 'Nema pruženog globalnog konteksta priče.'
     );
 
@@ -259,6 +260,7 @@ aiRouter.post(
 
       return await runStoryArchitectGraph(
         userInput,
+        projectId,
         storyContext,
         plannerContext,
         mode as 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',

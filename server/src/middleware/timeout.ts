@@ -1,7 +1,7 @@
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
 
-const REQUEST_TIMEOUT_MS = 15000; // 15 seconds
+const REQUEST_TIMEOUT_MS = 120000; // 120 seconds
 
 export const requestTimeout = () => {
     return createMiddleware(async (c, next) => {

@@ -112,7 +112,8 @@ async function checkTableExists(tableName: string): Promise<boolean> {
  * @param k - Broj dokumenata za dohvat (default 5)
  * @returns String koji sadrži spojeni kontekst.
  */
-export async function getRelevantContext(query: string, k: number = 5): Promise<string> {
+export async function getRelevantContext(query: string, projectId: string, k: number = 5): Promise<string> {
+  if (!projectId) throw new Error('projectId required');
   try {
     // Provjeri postoji li tablica prije pokušaja dohvaćanja
     const tableExists = await checkTableExists('story_architect_embeddings');
@@ -123,7 +124,7 @@ export async function getRelevantContext(query: string, k: number = 5): Promise<
 
     // Postojeći kod za dohvaćanje...
     const store = await getVectorStore();
-    const results = await store.similaritySearch(query, k);
+    const results = await store.similaritySearch(query, k, { projectId });
 
     if (results.length === 0) {
       return "Nema pronađenog relevantnog konteksta.";

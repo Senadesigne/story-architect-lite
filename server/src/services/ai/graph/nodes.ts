@@ -30,7 +30,7 @@ export async function retrieveContextNode(state: AgentState): Promise<AgentState
       };
     }
 
-    const ragContext = await getRelevantContext(query, 5);
+    const ragContext = await getRelevantContext(query, state.projectId, 5);
 
     return {
       ragContext
@@ -61,7 +61,7 @@ export async function transformQueryNode(state: AgentState): Promise<AgentStateU
     const options: AIGenerationOptions = {
       temperature: 0.3,
       maxTokens: 200,
-      timeout: 10000
+      timeout: 60000
     };
 
     const systemPrompt = `Ti si AI Mentor, ekspert za RAG pretraživanje.
@@ -115,7 +115,7 @@ export async function routeTaskNode(state: AgentState): Promise<AgentStateUpdate
     const options: AIGenerationOptions = {
       temperature: 0.1,
       maxTokens: 50,
-      timeout: 5000
+      timeout: 60000
     };
 
     const systemPrompt = `Ti si AI Router. Tvoj zadatak je klasificirati korisnički upit u jednu od 3 kategorije:

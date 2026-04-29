@@ -26,7 +26,7 @@ async function basicTest() {
     const testUserInput = "Napiši scenu gdje se Ana i Marko svađaju oko nasljedstva";
     const testStoryContext = "Ana je glavna protagonistica. Marko je njen brat.";
     
-    const initialState = createInitialState(testUserInput, testStoryContext);
+    const initialState = createInitialState(testUserInput, 'test', testStoryContext);
     console.log('✅ Initial state created successfully');
     console.log('   Properties:', {
       userInput: initialState.userInput.substring(0, 30) + '...',
@@ -40,6 +40,7 @@ async function basicTest() {
     console.log('3️⃣ Testing TypeScript types...');
     const testState: AgentState = {
       userInput: "test",
+      projectId: "test",
       storyContext: "test context",
       draftCount: 0,
       messages: []

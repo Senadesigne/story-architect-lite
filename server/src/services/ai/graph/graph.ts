@@ -33,6 +33,9 @@ const graphConfig: StateGraphArgs<AgentState> = {
     userInput: {
       value: (x, y) => y ?? x,
     },
+    projectId: {
+      value: (x, y) => y ?? x,
+    },
     storyContext: {
       value: (x, y) => y ?? x,
     },
@@ -214,6 +217,7 @@ export async function compileStoryArchitectGraph() {
  */
 export async function runStoryArchitectGraph(
   userInput: string,
+  projectId: string,
   storyContext: string,
   plannerContext?: string,
   mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
@@ -228,7 +232,7 @@ export async function runStoryArchitectGraph(
 
   // Kreiranje početnog stanja
   const initialState = createInitialState(
-    userInput, storyContext, plannerContext, mode, editorContent,
+    userInput, projectId, storyContext, plannerContext, mode, editorContent,
     messages, selection, workerModel,
     humanizationEnabled, styleFingerprint, audienceHint
   );

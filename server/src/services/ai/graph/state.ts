@@ -20,6 +20,11 @@ export interface AgentState {
   userInput: string;
 
   /**
+   * ID projekta — koristi se za RAG filter (vrača samo embeddings tog projekta)
+   */
+  projectId: string;
+
+  /**
    * Statički sažetak cijele priče dohvaćen iz schema.ts
    * Uključuje osnovne informacije o projektu, likovima, lokacijama
    */
@@ -153,6 +158,7 @@ export type AgentStateUpdate = Partial<AgentState>;
  */
 export function createInitialState(
   userInput: string,
+  projectId: string,
   storyContext: string,
   plannerContext?: string,
   mode?: 'planner' | 'brainstorming' | 'writer' | 'contextual-edit',
@@ -166,6 +172,7 @@ export function createInitialState(
 ): AgentState {
   return {
     userInput,
+    projectId,
     storyContext,
     plannerContext,
     mode,

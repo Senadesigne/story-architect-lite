@@ -17,7 +17,7 @@ export class OllamaProvider implements AIProvider {
   public async validateConnection(): Promise<boolean> {
     try {
       const res = await fetch(`${this.baseUrl}/api/tags`, {
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(15000),
       });
       return res.ok;
     } catch {
@@ -51,8 +51,13 @@ export class OllamaProvider implements AIProvider {
         throw new AIProviderError(this.getProviderName(), `HTTP ${res.status}: ${body}`);
       }
 
-      const json = await res.json() as { choices?: { message?: { content?: string } }[] };
-      const content = json.choices?.[0]?.message?.content;
+      type ContentPart = { type: string; text?: string };
+      const json = await res.json() as { choices?: { message?: { content?: string | ContentPart[] } }[] };
+      console.log('[OLLAMA_DEBUG] Raw response:', JSON.stringify(json).substring(0, 500));
+      const raw = json.choices?.[0]?.message?.content;
+      const content = Array.isArray(raw)
+        ? raw.find((p) => p.type === 'text')?.text
+        : raw;
       if (!content) throw new AIInvalidResponseError(this.getProviderName(), 'Empty response from Ollama');
       return content;
 
