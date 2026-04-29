@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, User, BrainCircuit } from "lucide-react";
+import { BookOpen, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -20,12 +20,12 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
   const { user } = useAuth();
   const isStudio = location.pathname.includes('/studio');
   // console.log('[ProjectNav] Location:', location.pathname, 'isStudio:', isStudio);
-  const { openModal, setMode } = usePlannerAIStore();
+  const { openModal, setMode, lastActiveAITab } = usePlannerAIStore();
   const { setIsOpen } = useChiefEditorStore();
 
-  const handleBrainstormingClick = () => {
-    setMode('brainstorming');
-    openModal('brainstorming', '', projectId); // bez konteksta i targetField-a
+  const handleAICoAuthorClick = () => {
+    setMode(lastActiveAITab);
+    openModal(lastActiveAITab, '', projectId);
   };
 
   return (
@@ -65,15 +65,15 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
 
       {/* User section */}
       <div className="flex items-center gap-3 ml-auto">
-        {/* Brainstorming gumb */}
+        {/* AI Co-Author gumb */}
         <Button
           variant="outline"
           size="sm"
-          onClick={handleBrainstormingClick}
+          onClick={handleAICoAuthorClick}
           className="gap-2"
         >
-          <BrainCircuit className="h-4 w-4" />
-          Brainstorming
+          <Sparkles className="h-4 w-4" />
+          AI Co-Author
         </Button>
         <Button
           variant="outline"

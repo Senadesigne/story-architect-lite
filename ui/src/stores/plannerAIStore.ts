@@ -16,6 +16,7 @@ interface PlannerAIState {
   targetField: string | null; // npr. "logline" (ime polja u formi)
   projectId: string | null;
   mode: 'planner' | 'brainstorming' | 'writer'; // Novi mod rada
+  lastActiveAITab: 'writer' | 'brainstorming'; // Zadnji odabrani AI tab (pamti se u sesiji)
   pendingApplication: string | null; // Sadržaj koji čeka na "Keep All"
 
   // Studio specifično stanje
@@ -96,6 +97,7 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   targetField: null,
   projectId: null,
   mode: 'planner', // Default mode
+  lastActiveAITab: 'writer', // Default — Writer je primarni mode
   activeView: 'planner',
   workerModel: 'claude-sonnet-4-6',
   humanizationEnabled: false,
@@ -264,7 +266,11 @@ export const usePlannerAIStore = create<PlannerAIState>((set, get) => ({
   },
 
   setMode: (mode) => {
-    set({ mode });
+    const updates: Partial<PlannerAIState> = { mode };
+    if (mode === 'writer' || mode === 'brainstorming') {
+      updates.lastActiveAITab = mode;
+    }
+    set(updates);
   },
 
   setActiveView: (view) => {
