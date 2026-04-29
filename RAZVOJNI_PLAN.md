@@ -1,7 +1,7 @@
 # RAZVOJNI PLAN — story-architect-lite
 
 **Datum kreiranja:** 2026-04-28
-**Zadnje ažurirano:** 2026-04-28
+**Zadnje ažurirano:** 2026-04-29
 **Status:** ŽIVI DOKUMENT
 **Vlasnik:** Senad
 **Suradnik:** Claude (Sonnet 4.7) + Claude Code
@@ -53,17 +53,17 @@ Ovo je checklist. Kad se nešto završi — Claude Code samo zamijeni `[ ]` u `[
 - [x] Ažurirati nodes.ts pozive (2026-04-28)
 - [x] TypeScript prolazi (2026-04-28)
 - [x] Obrisani test podaci iz baze (2026-04-28)
-- [ ] Commit izmjena
+- [x] Commit izmjena (2026-04-29)
 - [ ] Test u praksi (treba upaljen HPE #1 + napunjeni embeddinzi)
 
 ---
 
 ### Prioritet 2 — Faza 4 cleanup + commit pending izmjena
 
-- [ ] Commit 3 modificirana fajla
-- [ ] Registrirati 4 untracked fajla (TEHNICKI_PLAN_FAZA5.md, TEST_REZULTATI_2026-04-27.md, test-humanization-e2e.ts, test-ollama-connection.ts)
-- [ ] Ažurirati README (Faza 5 status)
-- [ ] Provjeriti da li je migracija 0007_add_style_profile.sql primijenjena
+- [x] Commit 3 modificirana fajla (2026-04-29)
+- [x] Registrirati 4 untracked fajla (2026-04-29)
+- [x] Ažurirati README (2026-04-29)
+- [x] Provjeriti da li je migracija 0007_add_style_profile.sql primijenjena (2026-04-29) — stvarno ime: 0005_tiresome_slapstick, primijenjena
 - [ ] Identificirati i obrisati dead code (Claude Code prijedlog)
 
 **Procjena:** 0.5 dana
@@ -164,6 +164,14 @@ _(prazno)_
 ---
 
 ## DNEVNIK NAPRETKA
+
+### 2026-04-29
+
+- Commit RAG cross-project fix + timeout izmjene + utility skripte pushano na origin/main (ce3ff3e)
+- Provjereno stanje Neon baze i lokalnih migracija — migracija 0005_tiresome_slapstick (style_profiles) potvrđena primijenjena
+- README ažuriran: Humanizer dodan u Stack i arhitektura dijagram, Faza 5 raspisana na 5-A/5-B/7-8
+
+---
 
 ### 2026-04-28
 

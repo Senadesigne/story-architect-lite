@@ -11,7 +11,7 @@ razvojem likova, pisanjem scena i brainstormingom — uz kontekst cijele knjige.
 | Backend | Hono (Node.js) + Drizzle ORM |
 | Baza | Neon PostgreSQL + pgvector (RAG embeddings) |
 | Auth | Firebase Auth (Google Sign-In) |
-| AI orchestracija | LangGraph (Manager → Worker → Critique petlja) |
+| AI orchestracija | LangGraph (Manager → Worker → Critique → Humanizer) |
 | Deployment | Vercel (frontend + backend kao serverless funkcije) |
 
 ## AI arhitektura — hibridni setup
@@ -21,6 +21,7 @@ Request → LangGraph Graph
            ├── Manager   → qwen3:30b-a3b     (HPE #1, Ollama, lokalno via Tailscale)
            ├── Worker    → claude-sonnet-4-6  (Anthropic API, cloud)
            ├── Critique  → qwen3:30b-a3b     (HPE #1, Ollama)
+           ├── Humanizer → qwen3:30b-a3b     (HPE #1, Ollama)
            └── Embeddings→ nomic-embed-text  (HPE #1, Ollama, 768 dim)
 ```
 
@@ -77,5 +78,7 @@ pnpm db:migrate    # primjenjuje migracije
 | Faza 1 | Kritični bugovi (timeout, schema, RAG, testovi) | ✅ DONE |
 | Faza 2 | AI Factory unifikacija | ✅ DONE (3be2b66) |
 | Faza 3 | LLM migracija — hibridni env config | ✅ DONE (partial — testiranje čeka HPE #1) |
-| Faza 4 | Čišćenje (dead code, README) | 🔄 IN PROGRESS |
-| Faza 5 | Humanization Layer (Qwen post-processing) | ⏸ PENDING |
+| Faza 4       | Čišćenje (dead code, README)                    | 🟡 U TIJEKU (većina završena) |
+| Faza 5-A     | Humanization Layer temelj (state, DB, settings) | ✅ DONE                       |
+| Faza 5-B     | humanizationNode + graph routing                | ✅ DONE                       |
+| Faza 5 (7-8) | Style Profile API i UI                          | ❌ OSTALO                     |
