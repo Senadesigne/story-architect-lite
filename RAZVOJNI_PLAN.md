@@ -70,6 +70,46 @@ Ovo je checklist. Kad se nešto završi — Claude Code samo zamijeni `[ ]` u `[
 
 ---
 
+### Prioritet 2.5 🆕 — UI fix: Writer kao primarni mode
+
+**Problem:** U Studio modu nema direktnog pristupa Writer assistantu.
+Korisnik mora kliknuti "Brainstorming" gumb pa unutar AI Assistant panela
+prebaciti tab na "Writer". Writer je primarni mode za generiranje sadržaja
+i mora biti default ili barem jednako dostupan kao Brainstorming.
+
+**Otkriveno:** 2026-04-29 tijekom P4 pre-flight testa.
+
+- [ ] Identificirati komponentu koja sadrži gumbe "Planner | Studio | Brainstorming | Chief Editor" u top baru
+- [ ] Dodati "Writer" gumb pored "Brainstorming" (ili promijeniti default tab u AI Assistant panelu na Writer)
+- [ ] Provjeriti da klik na Writer otvara AI Assistant s aktivnim Writer tabom
+- [ ] Vizualno testirati u oba teme (light + dark)
+
+**Procjena:** 1-2h
+**Preduvjet:** nema (UI only)
+
+---
+
+### Prioritet 2.6 🆕 — Lokalizacija UI stringova na engleski
+
+**Problem:** Tržište je engleski (vidi PROJECT_VISION). Više UI stringova je
+ostalo na hrvatskom: "Humanizacija (Qwen)", "Pišem...", potencijalno drugi.
+
+**Otkriveno:** 2026-04-29 tijekom P4 pre-flight testa.
+
+- [ ] Grep cijeli ui/src/ za hrvatske stringove (npr. "Pišem", "Humanizacija", "Struktura", "Novo Poglavlje", "Scena")
+- [ ] Lista svih hrvatskih stringova s lokacijama
+- [ ] Zamijeniti engleskim ekvivalentima
+- [ ] TypeScript provjera + build
+- [ ] Vizualni pregled u Studiu i Planneru
+
+**Procjena:** 1-2h
+**Preduvjet:** nema (UI only)
+**Napomena:** Ovo je quick fix bez i18n infrastrukture. Pravi i18n (više
+jezika kroz library tipa react-i18next) ostavljamo za kasnije ako bude
+potreba.
+
+---
+
 ### Prioritet 3 — Faza 5 dovršetak (Korak 7 + 8)
 
 - [ ] Korak 7 — Style Profile API (CRUD za writing samples)
@@ -171,6 +211,10 @@ _(prazno)_
 - Provjereno stanje Neon baze i lokalnih migracija — migracija 0005_tiresome_slapstick (style_profiles) potvrđena primijenjena
 - README ažuriran: Humanizer dodan u Stack i arhitektura dijagram, Faza 5 raspisana na 5-A/5-B/7-8
 - Dead code cleanup: 22 fajla obrisana (knip 36→14), TS clean, pushano (5bd62b6)
+- P4 pre-flight: pokušaj generirati scenu otkrio UX bug (Writer skriven iza Brainstorming) i hrvatske UI stringove
+- Dodani novi prioriteti P2.5 (UI fix) i P2.6 (lokalizacija) prije P4
+- Test napravljen na hrvatskom — humanization stack je dizajniran za engleski, P4 se mora ponoviti na engleskom kad UI bude spreman
+- Bilješka: humanization toggle možda primjenjuje stanje tek od sljedećeg poziva (provjeriti tijekom P4)
 
 ---
 
@@ -191,6 +235,7 @@ _(prazno)_
 | Datum | Verzija | Što se promijenilo |
 |---|---|---|
 | 2026-04-28 | 1.0 | Inicijalna verzija s checkbox formatom |
+| 2026-04-29 | 1.1 | Dodani P2.5 (UI Writer fix) i P2.6 (lokalizacija) — P4 odgođen dok UI ne bude spreman za pošten test |
 
 ---
 
