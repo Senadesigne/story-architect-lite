@@ -1,7 +1,7 @@
 # RAZVOJNI PLAN — story-architect-lite
 
 **Datum kreiranja:** 2026-04-28
-**Zadnje ažurirano:** 2026-04-29
+**Zadnje ažurirano:** 2026-04-30
 **Status:** ŽIVI DOKUMENT
 **Vlasnik:** Senad
 **Suradnik:** Claude (Sonnet 4.7) + Claude Code
@@ -79,9 +79,9 @@ i mora biti default ili barem jednako dostupan kao Brainstorming.
 
 **Otkriveno:** 2026-04-29 tijekom P4 pre-flight testa.
 
-- [ ] Identificirati komponentu koja sadrži gumbe "Planner | Studio | Brainstorming | Chief Editor" u top baru
-- [ ] Dodati "Writer" gumb pored "Brainstorming" (ili promijeniti default tab u AI Assistant panelu na Writer)
-- [ ] Provjeriti da klik na Writer otvara AI Assistant s aktivnim Writer tabom
+- [x] Identificirati komponentu koja sadrži gumbe "Planner | Studio | Brainstorming | Chief Editor" u top baru (2026-04-29)
+- [x] Dodati "Writer" gumb pored "Brainstorming" (ili promijeniti default tab u AI Assistant panelu na Writer) (2026-04-29)
+- [x] Provjeriti da klik na Writer otvara AI Assistant s aktivnim Writer tabom (2026-04-29)
 - [ ] Vizualno testirati u oba teme (light + dark)
 
 **Procjena:** 1-2h
@@ -96,10 +96,10 @@ ostalo na hrvatskom: "Humanizacija (Qwen)", "Pišem...", potencijalno drugi.
 
 **Otkriveno:** 2026-04-29 tijekom P4 pre-flight testa.
 
-- [ ] Grep cijeli ui/src/ za hrvatske stringove (npr. "Pišem", "Humanizacija", "Struktura", "Novo Poglavlje", "Scena")
-- [ ] Lista svih hrvatskih stringova s lokacijama
-- [ ] Zamijeniti engleskim ekvivalentima
-- [ ] TypeScript provjera + build
+- [x] Grep cijeli ui/src/ za hrvatske stringove (2026-04-30)
+- [x] Lista svih hrvatskih stringova s lokacijama (2026-04-30)
+- [x] Zamijeniti engleskim ekvivalentima (2026-04-30)
+- [x] TypeScript provjera + build (2026-04-30)
 - [ ] Vizualni pregled u Studiu i Planneru
 
 **Procjena:** 1-2h
@@ -205,6 +205,20 @@ _(prazno)_
 
 ## DNEVNIK NAPRETKA
 
+### 2026-04-30
+
+- P2.5 zatvoren prethodnog dana (Brainstorming → AI Co-Author, Writer default tab + bonus session memory)
+- P2.6 implementiran: ~150 hrvatskih stringova prevedeno na engleski u 21 fajlu
+- AI prompts u FloatingMenuUI prevedeni na engleski (utječe na AI ponašanje — buduće generacije idu s EN instrukcijama)
+- Phase3 worldbuilding options prevedeni — stari projekti s HR section titlovima ostaju legacy
+- Auto-generated naslova prevedeni — postojeći HR naslovi u bazi preserved (no data migration)
+- useSessionTimeout potvrđen kao live hook (App.tsx)
+- Build i typecheck PASS
+- Vizualni pregled je preostao — Senad provjerava manualno prije zatvaranja P2.6
+- Sljedeće: P4 (eksperiment kvalitete) — sad valjano testiranje na engleskom kad UI bude vizualno potvrđen
+
+---
+
 ### 2026-04-29
 
 - Commit RAG cross-project fix + timeout izmjene + utility skripte pushano na origin/main (ce3ff3e)
@@ -236,6 +250,7 @@ _(prazno)_
 |---|---|---|
 | 2026-04-28 | 1.0 | Inicijalna verzija s checkbox formatom |
 | 2026-04-29 | 1.1 | Dodani P2.5 (UI Writer fix) i P2.6 (lokalizacija) — P4 odgođen dok UI ne bude spreman za pošten test |
+| 2026-04-30 | 1.2 | P2.5 i P2.6 implementirani — UI spreman za pošten P4 test |
 
 ---
 
