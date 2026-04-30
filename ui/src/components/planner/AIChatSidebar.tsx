@@ -200,7 +200,7 @@ export const AIChatSidebar: React.FC = () => {
                     {/* Humanization Toggle — samo za writer/planner mode */}
                     {(mode === 'writer' || mode === 'planner') && (
                         <div className="flex items-center justify-between px-1">
-                            <span className="text-xs text-muted-foreground">Humanizacija (Qwen)</span>
+                            <span className="text-xs text-muted-foreground">Humanization (Qwen)</span>
                             <button
                                 onClick={toggleHumanization}
                                 className={cn(
@@ -209,7 +209,7 @@ export const AIChatSidebar: React.FC = () => {
                                         ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
                                         : "text-stone-500 border-transparent hover:text-stone-400"
                                 )}
-                                title={humanizationEnabled ? "Humanizacija uključena" : "Humanizacija isključena"}
+                                title={humanizationEnabled ? "Humanization on" : "Humanization off"}
                             >
                                 {humanizationEnabled ? '✦ ON' : '○ OFF'}
                             </button>
@@ -305,11 +305,11 @@ export const AIChatSidebar: React.FC = () => {
                                     <div className="w-2 h-2 bg-primary/50 rounded-full animate-bounce"></div>
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                    {aiPhase === 'analyzing' && 'Analiziram kontekst...'}
-                                    {aiPhase === 'routing' && 'Pronalažem pristup...'}
-                                    {aiPhase === 'generating' && 'Pišem...'}
-                                    {aiPhase === 'reviewing' && 'Provjeravam kvalitetu...'}
-                                    {(aiPhase === 'idle' || aiPhase === 'done') && 'AI razmišlja...'}
+                                    {aiPhase === 'analyzing' && 'Analyzing context...'}
+                                    {aiPhase === 'routing' && 'Finding approach...'}
+                                    {aiPhase === 'generating' && 'Writing...'}
+                                    {aiPhase === 'reviewing' && 'Checking quality...'}
+                                    {(aiPhase === 'idle' || aiPhase === 'done') && 'Thinking...'}
                                 </span>
                             </div>
                         )}

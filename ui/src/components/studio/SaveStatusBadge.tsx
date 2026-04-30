@@ -39,12 +39,12 @@ export function SaveStatusBadge() {
                                 />
                             </TooltipTrigger>
                             <TooltipContent>
-                                <p>Greška pri spremanju: {lastSaveError}</p>
-                                <p className="text-xs opacity-70">Klikni za ponovni pokušaj</p>
+                                <p>Save error: {lastSaveError}</p>
+                                <p className="text-xs opacity-70">Click to retry</p>
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-                    <span className="text-xs text-destructive font-semibold">Greška: Nije spremljeno</span>
+                    <span className="text-xs text-destructive font-semibold">Error: Not saved</span>
                 </div>
             )}
         </div>

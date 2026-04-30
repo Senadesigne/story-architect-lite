@@ -33,7 +33,7 @@ export function useSessionTimeout() {
       
       // Možete dodati confirm dialog za produženje sessije
       const extendSession = window.confirm(
-        'Vaša sesija će isteći za 5 minuta. Želite li je produžiti?'
+        'Your session will expire in 5 minutes. Do you want to extend it?'
       );
       
       if (extendSession) {

@@ -51,15 +51,15 @@ export function DeleteProjectDialog({ open, onOpenChange, project, onSuccess }: 
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Jeste li sigurni?</AlertDialogTitle>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Ova radnja se ne može poništiti. Ovo će trajno obrisati projekt
+                        This action cannot be undone. This will permanently delete project
                         <span className="font-semibold text-foreground"> "{project?.title}" </span>
-                        i sve povezane podatke (likove, scene, lokacije).
+                        and all associated data (characters, scenes, locations).
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isLoading}>Odustani</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={(e) => {
                             e.preventDefault();
@@ -68,7 +68,7 @@ export function DeleteProjectDialog({ open, onOpenChange, project, onSuccess }: 
                         disabled={isLoading}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
-                        {isLoading ? 'Brisanje...' : 'Obriši'}
+                        {isLoading ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

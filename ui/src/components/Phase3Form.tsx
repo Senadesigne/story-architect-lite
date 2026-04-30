@@ -135,7 +135,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
             title="Rules Definition"
             value={formData.rules_definition}
             onChange={(value) => onFieldChange('rules_definition', value)}
-            options={['Fizika', 'Magija', 'Tehnologija', 'Zakoni prirode']}
+            options={['Physics', 'Magic', 'Technology', 'Laws of Nature']}
             onMagicClick={handleRulesMagicClick}
             magicTooltip="AI Rules Assistant"
             renderSaveIndicator={() => renderSaveIndicator('rules_definition')}
@@ -146,7 +146,7 @@ export function Phase3Form({ project, onFieldChange, renderSaveIndicator, formDa
             title="Culture, Society & History"
             value={formData.culture_and_history}
             onChange={(value) => onFieldChange('culture_and_history', value)}
-            options={['Magija', 'Kultura', 'Običaji', 'Povijest']}
+            options={['Magic', 'Culture', 'Customs', 'History']}
             onMagicClick={handleCultureMagicClick}
             magicTooltip="AI Culture & History Assistant"
             renderSaveIndicator={() => renderSaveIndicator('culture_and_history')}

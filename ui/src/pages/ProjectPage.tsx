@@ -248,7 +248,7 @@ export function ProjectPage() {
             className="ml-2 h-6 px-2 text-xs"
             onClick={() => retryFieldSave(field)}
           >
-            Pokušaj ponovno
+            Retry
           </Button>
         </div>
       );

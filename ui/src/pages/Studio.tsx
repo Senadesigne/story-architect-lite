@@ -103,7 +103,7 @@ export function Studio() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges || saveStatus === 'saving') {
         e.preventDefault();
-        e.returnValue = 'Imate nespremljene promjene. Jeste li sigurni da želite napustiti stranicu?';
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
         return e.returnValue;
       }
     };
@@ -211,8 +211,8 @@ export function Studio() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8 text-center">
-              <p className="text-lg font-medium mb-2">Editor nije aktivan</p>
-              <p>Odaberite scenu ili poglavlje iz izbornika lijevo za početak pisanja.</p>
+              <p className="text-lg font-medium mb-2">No scene selected</p>
+              <p>Select a scene or chapter from the panel on the left to start writing.</p>
             </div>
           )}
         </div>

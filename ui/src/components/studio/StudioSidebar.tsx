@@ -107,7 +107,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
         setChapters(chaptersData);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Greška pri dohvaćanju podataka');
+        setError('Error loading data');
       }
     };
 
@@ -142,7 +142,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     try {
       const phaseChapters = chapters.filter(c => c.phase === phaseId);
       const newChapterData = {
-        title: `Novo Poglavlje ${phaseChapters.length + 1}`,
+        title: `New Chapter ${phaseChapters.length + 1}`,
         phase: phaseId,
         order: phaseChapters.length
       };
@@ -156,7 +156,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       }
     } catch (err) {
       console.error('Error creating chapter:', err);
-      setError('Greška pri kreiranju poglavlja');
+      setError('Error creating chapter');
     }
   };
 
@@ -166,7 +166,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     try {
       const chapterScenes = scenes.filter(s => s.chapterId === chapterId);
       const newSceneData = {
-        title: `Scena ${chapterScenes.length + 1}`,
+        title: `Scene ${chapterScenes.length + 1}`,
         summary: '',
         order: chapterScenes.length,
         chapterId: chapterId
@@ -181,7 +181,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       }
     } catch (err) {
       console.error('Error creating scene:', err);
-      setError('Greška pri kreiranju scene');
+      setError('Error creating scene');
     }
   };
 
@@ -201,7 +201,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       setSelectedItem(null);
     } catch (err) {
       console.error('Error renaming:', err);
-      setError('Greška pri preimenovanju');
+      setError('Error renaming');
       // Revert would go here
     } finally {
       setIsOperationLoading(false);
@@ -224,7 +224,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       setSelectedItem(null);
     } catch (err) {
       console.error('Error deleting:', err);
-      setError('Greška pri brisanju');
+      setError('Error deleting');
     } finally {
       setIsOperationLoading(false);
     }
@@ -238,7 +238,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
     <div className="w-64 h-full bg-sidebar-background/95 backdrop-blur-sm border-r border-border/50 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border/50 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-muted-foreground">Struktura</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground">Structure</h3>
       </div>
 
       {/* Content */}
@@ -247,7 +247,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
               {error}
-              <Button variant="ghost" size="sm" className="h-6 mt-2" onClick={() => setError(null)}>Zatvori</Button>
+              <Button variant="ghost" size="sm" className="h-6 mt-2" onClick={() => setError(null)}>Close</Button>
             </div>
           )}
 
@@ -274,7 +274,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                       e.stopPropagation();
                       handleCreateChapter(phase.id);
                     }}
-                    title="Dodaj Poglavlje"
+                    title="Add Chapter"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -316,7 +316,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                   e.stopPropagation();
                                   handleCreateScene(chapter.id);
                                 }}
-                                title="Dodaj Scenu"
+                                title="Add Scene"
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -337,7 +337,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                     setIsRenameDialogOpen(true);
                                     setOpenDropdownId(null);
                                   }}>
-                                    <Edit className="h-4 w-4 mr-2" /> Preimenuj
+                                    <Edit className="h-4 w-4 mr-2" /> Rename
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -349,7 +349,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                       setOpenDropdownId(null);
                                     }}
                                   >
-                                    <Trash2 className="h-4 w-4 mr-2" /> Izbriši
+                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -396,7 +396,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                         setIsRenameDialogOpen(true);
                                         setOpenDropdownId(null);
                                       }}>
-                                        <Edit className="h-4 w-4 mr-2" /> Preimenuj
+                                        <Edit className="h-4 w-4 mr-2" /> Rename
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
@@ -408,7 +408,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                                           setOpenDropdownId(null);
                                         }}
                                       >
-                                        <Trash2 className="h-4 w-4 mr-2" /> Izbriši
+                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
@@ -416,7 +416,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                               ))}
                               {chapterScenes.length === 0 && (
                                 <div className="p-2 text-xs text-muted-foreground italic ml-2">
-                                  Nema scena
+                                  No scenes
                                 </div>
                               )}
                             </div>
@@ -426,7 +426,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
                     })}
                     {phaseChapters.length === 0 && (
                       <div className="p-2 text-xs text-muted-foreground italic ml-2">
-                        Nema poglavlja
+                        No chapters
                       </div>
                     )}
                   </div>
@@ -441,7 +441,7 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Preimenuj {selectedItem?.type === 'chapter' ? 'poglavlje' : 'scenu'}</DialogTitle>
+            <DialogTitle>Rename {selectedItem?.type === 'chapter' ? 'chapter' : 'scene'}</DialogTitle>
           </DialogHeader>
           <Input
             value={renameValue}
@@ -450,8 +450,8 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
             autoFocus
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Odustani</Button>
-            <Button onClick={handleRenameSubmit} disabled={isOperationLoading}>Spremi</Button>
+            <Button variant="outline" onClick={() => setIsRenameDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleRenameSubmit} disabled={isOperationLoading}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -459,14 +459,14 @@ export function StudioSidebar({ projectId }: StudioSidebarProps) {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Izbriši {selectedItem?.type === 'chapter' ? 'poglavlje' : 'scenu'}</AlertDialogTitle>
+            <AlertDialogTitle>Delete {selectedItem?.type === 'chapter' ? 'chapter' : 'scene'}</AlertDialogTitle>
             <AlertDialogDescription>
-              Jeste li sigurni? Ova radnja je nepovratna.
+              Are you sure? This action is irreversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Odustani</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive">Izbriši</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

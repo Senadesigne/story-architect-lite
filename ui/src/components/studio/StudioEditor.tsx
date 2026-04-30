@@ -18,7 +18,7 @@ interface StudioEditorProps {
 const extensions = [
   StarterKit,
   Placeholder.configure({
-    placeholder: 'Započnite pisati svoju priču...',
+    placeholder: 'Start writing your story...',
   }),
   FloatingMenu.configure({
     shouldShow: ({ editor }) => {

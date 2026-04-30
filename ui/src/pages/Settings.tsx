@@ -7,9 +7,9 @@ export function Settings() {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Postavke</h1>
+          <h1 className="text-3xl font-bold">Settings</h1>
           <p className="text-muted-foreground">
-            Upravljajte postavkama računa i preferencijama.
+            Manage your account settings and preferences.
           </p>
         </div>
 
@@ -23,9 +23,9 @@ export function Settings() {
           <div>
             <h2 className="text-xl font-semibold">Writing Style Profile</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              Dodaj uzorke svog pisanja da AI asistent nauči tvoj glas i stil.
-              Humanization Agent koristi ove uzorke pri generiranju teksta kad je
-              humanizacija uključena u AI sidebaru.
+              Add writing samples so the AI assistant can learn your voice and style.
+              The Humanization Agent uses these samples when generating text with
+              humanization enabled in the AI sidebar.
             </p>
           </div>
           <WritingSamplesManager />

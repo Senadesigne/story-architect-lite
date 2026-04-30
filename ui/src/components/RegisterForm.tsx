@@ -31,22 +31,22 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
   const validateForm = () => {
     if (!formData.email.trim()) {
-      setError('Email adresa je obavezna');
+      setError('Email is required');
       return false;
     }
-    
+
     if (!formData.email.includes('@')) {
-      setError('Unesite valjanu email adresu');
+      setError('Enter a valid email address');
       return false;
     }
 
     if (formData.password.length < 6) {
-      setError('Lozinka mora imati najmanje 6 znakova');
+      setError('Password must be at least 6 characters');
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Lozinke se ne podudaraju');
+      setError("Passwords don't match");
       return false;
     }
 
@@ -84,19 +84,19 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       // Prilagodi error poruke
       switch (err.code) {
         case 'auth/email-already-in-use':
-          setError('Email adresa se već koristi. Pokušajte se prijaviti.');
+          setError('Email already in use. Please sign in.');
           break;
         case 'auth/invalid-email':
-          setError('Neispravna email adresa');
+          setError('Invalid email address');
           break;
         case 'auth/weak-password':
-          setError('Lozinka je preslaba. Koristite najmanje 6 znakova.');
+          setError('Password is too weak. Use at least 6 characters.');
           break;
         case 'auth/network-request-failed':
-          setError('Greška mreže. Provjerite internetsku vezu.');
+          setError('Network error. Check your internet connection.');
           break;
         default:
-          setError('Greška pri registraciji. Pokušajte ponovno.');
+          setError('Registration failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -108,16 +108,16 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <UserPlus className="h-5 w-5" />
-          Registracija
+          Sign Up
         </CardTitle>
         <CardDescription>
-          Stvorite novi račun za Story Architect
+          Create a new Story Architect account
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="email">Email adresa *</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input
               id="email"
               type="email"
@@ -130,27 +130,27 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="displayName">Ime za prikaz</Label>
+            <Label htmlFor="displayName">Display Name</Label>
             <Input
               id="displayName"
               type="text"
               value={formData.displayName}
               onChange={handleInputChange('displayName')}
-              placeholder="Vaše ime (opcionalno)"
+              placeholder="Your name (optional)"
               maxLength={100}
               disabled={isLoading}
             />
           </div>
           
           <div>
-            <Label htmlFor="password">Lozinka *</Label>
+            <Label htmlFor="password">Password *</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={handleInputChange('password')}
-                placeholder="Najmanje 6 znakova"
+                placeholder="At least 6 characters"
                 required
                 disabled={isLoading}
                 className="pr-10"
@@ -173,14 +173,14 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="confirmPassword">Potvrdite lozinku *</Label>
+            <Label htmlFor="confirmPassword">Confirm Password *</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
                 onChange={handleInputChange('confirmPassword')}
-                placeholder="Ponovite lozinku"
+                placeholder="Repeat password"
                 required
                 disabled={isLoading}
                 className="pr-10"
@@ -211,20 +211,20 @@ export function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
           )}
           
           <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Registracija u tijeku...' : 'Registriraj se'}
+            {isLoading ? 'Signing up...' : 'Sign up'}
           </Button>
 
           {onSwitchToLogin && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
-                Već imate račun?{' '}
-                <Button 
-                  variant="link" 
+                Already have an account?{' '}
+                <Button
+                  variant="link"
                   className="p-0 h-auto font-normal"
                   onClick={onSwitchToLogin}
                   disabled={isLoading}
                 >
-                  Prijavite se
+                  Sign in
                 </Button>
               </p>
             </div>

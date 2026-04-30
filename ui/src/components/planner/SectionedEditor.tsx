@@ -42,7 +42,7 @@ export function SectionedEditor({
         const parts = text.split(/(?=^### )/gm); // Split by line starting with ### 
         return parts.map((part, index) => {
             const lines = part.split('\n');
-            let title = 'Uvod';
+            let title = 'Introduction';
             let content = part;
 
             if (lines[0].startsWith('### ')) {
@@ -55,7 +55,7 @@ export function SectionedEditor({
             }
 
             // Filter out empty "Uvod" if it's just whitespace
-            if (title === 'Uvod' && !content.trim()) return null;
+            if (title === 'Introduction' && !content.trim()) return null;
 
             return {
                 id: `${title}-${index}`, // Stable-ish key
@@ -69,7 +69,7 @@ export function SectionedEditor({
 
     const updateParent = (newSections: Section[]) => {
         const newValue = newSections.map(s => {
-            if (s.title === 'Uvod') return s.content;
+            if (s.title === 'Introduction') return s.content;
             return `### ${s.title}\n${s.content}`;
         }).join('\n\n');
         onChange(newValue);
@@ -81,7 +81,7 @@ export function SectionedEditor({
     };
 
     const handleDeleteSection = (index: number) => {
-        if (!confirm('Jeste li sigurni da želite obrisati ovu sekciju?')) return;
+        if (!confirm('Are you sure you want to delete this section?')) return;
         const newSections = [...derivedSections];
         newSections.splice(index, 1);
         updateParent(newSections);
@@ -106,7 +106,7 @@ export function SectionedEditor({
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-7 gap-1">
                                 <Plus className="h-3.5 w-3.5" />
-                                Dodaj
+                                Add
                                 <ChevronDown className="h-3.5 w-3.5 opacity-50" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -127,7 +127,7 @@ export function SectionedEditor({
 
             {derivedSections.length === 0 && (
                 <div className="text-sm text-muted-foreground italic border border-dashed rounded-md p-4 text-center">
-                    Nema dodanih sekcija. Kliknite "Dodaj" za početak.
+                    No sections added. Click "Add" to get started.
                 </div>
             )}
 
@@ -150,7 +150,7 @@ export function SectionedEditor({
                                 value={section.content}
                                 onChange={(e) => handleContentChange(index, e.target.value)}
                                 className="min-h-[100px] border-0 focus-visible:ring-0 resize-none p-0 shadow-none"
-                                placeholder={`Unesite detalje za ${section.title}...`}
+                                placeholder={`Enter details for ${section.title}...`}
                             />
                         </CardContent>
                     </Card>

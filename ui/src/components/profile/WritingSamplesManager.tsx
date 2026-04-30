@@ -43,7 +43,7 @@ export function WritingSamplesManager() {
       setSamples(samplesData);
       setFingerprint(fingerprintData);
     } catch {
-      setError('Greška pri učitavanju podataka.');
+      setError('Error loading data.');
     } finally {
       setIsLoading(false);
     }
@@ -57,22 +57,22 @@ export function WritingSamplesManager() {
       const sample = await api.uploadWritingSample(newText.trim());
       setSamples(prev => [sample, ...prev]);
       setNewText('');
-      showSuccess('Uzorak dodan.');
+      showSuccess('Sample added.');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Greška pri uploadu.');
+      setError(e instanceof Error ? e.message : 'Upload error.');
     } finally {
       setIsUploading(false);
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Obriši ovaj uzorak?')) return;
+    if (!confirm('Delete this sample?')) return;
     try {
       await api.deleteWritingSample(id);
       setSamples(prev => prev.filter(s => s.id !== id));
-      showSuccess('Uzorak obrisan.');
+      showSuccess('Sample deleted.');
     } catch {
-      setError('Greška pri brisanju.');
+      setError('Delete error.');
     }
   }
 
@@ -83,9 +83,9 @@ export function WritingSamplesManager() {
     try {
       await api.analyzeStyle();
       await loadData();
-      showSuccess('Stil analiziran.');
+      showSuccess('Style analyzed.');
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Analiza nije uspjela. Provjeri je li HPE #1 server upaljen.');
+      setError(e instanceof Error ? e.message : 'Analysis failed. The local AI service is unavailable.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -100,7 +100,7 @@ export function WritingSamplesManager() {
     return (
       <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Učitavam...
+        Loading...
       </div>
     );
   }
@@ -113,10 +113,10 @@ export function WritingSamplesManager() {
           <div className="flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-foreground">Stil analiziran</p>
+              <p className="font-medium text-foreground">Style analyzed</p>
               <p className="text-muted-foreground text-xs mt-0.5">
-                {fingerprint.sampleCount} uzoraka • Vokabular: {fingerprint.vocabularyLevel ?? '—'} •{' '}
-                Ažurirano: {new Date(fingerprint.updatedAt).toLocaleDateString('hr')}
+                {fingerprint.sampleCount} samples • Vocabulary: {fingerprint.vocabularyLevel ?? '—'} •{' '}
+                Updated: {new Date(fingerprint.updatedAt).toLocaleDateString('en')}
               </p>
             </div>
           </div>
@@ -124,9 +124,9 @@ export function WritingSamplesManager() {
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-foreground">Stil nije analiziran</p>
+              <p className="font-medium text-foreground">Style not analyzed</p>
               <p className="text-muted-foreground text-xs mt-0.5">
-                Dodaj minimalno 3 uzorka i klikni "Analiziraj stil".
+                Add at least 3 samples and click "Analyze style".
               </p>
             </div>
           </div>
@@ -147,7 +147,7 @@ export function WritingSamplesManager() {
 
       {/* Upload novi uzorak */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Dodaj uzorak pisanja</label>
+        <label className="text-sm font-medium text-foreground">Add writing sample</label>
         <textarea
           value={newText}
           onChange={e => setNewText(e.target.value)}
@@ -162,7 +162,7 @@ export function WritingSamplesManager() {
             charCount > 5000 ? "text-red-500" :
             "text-green-600"
           )}>
-            {charCount} / 5000 znakova{charCount < 100 ? ` (još ${100 - charCount} za min.)` : ''}
+            {charCount} / 5000 characters{charCount < 100 ? ` (${100 - charCount} more to min.)` : ''}
           </span>
           <button
             onClick={handleUpload}
@@ -170,7 +170,7 @@ export function WritingSamplesManager() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-            Dodaj uzorak
+            Add sample
           </button>
         </div>
       </div>
@@ -180,7 +180,7 @@ export function WritingSamplesManager() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">
-              Uzorci ({samples.length})
+              Samples ({samples.length})
             </label>
             <button
               onClick={handleAnalyze}
@@ -188,7 +188,7 @@ export function WritingSamplesManager() {
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-amber-500/40 text-amber-600 rounded-md hover:bg-amber-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-              {isAnalyzing ? 'Analiziram...' : `Analiziraj stil${samples.length < 3 ? ` (još ${3 - samples.length})` : ''}`}
+              {isAnalyzing ? 'Analyzing...' : `Analyze style${samples.length < 3 ? ` (${3 - samples.length} more)` : ''}`}
             </button>
           </div>
           <div className="space-y-1.5">
@@ -198,13 +198,13 @@ export function WritingSamplesManager() {
                 className="flex items-center justify-between p-2.5 rounded-md border border-border bg-muted/10 text-sm"
               >
                 <span className="text-muted-foreground">
-                  {sample.wordCount ?? '?'} riječi •{' '}
-                  {new Date(sample.createdAt).toLocaleDateString('hr')}
+                  {sample.wordCount ?? '?'} words •{' '}
+                  {new Date(sample.createdAt).toLocaleDateString('en')}
                 </span>
                 <button
                   onClick={() => handleDelete(sample.id)}
                   className="p-1 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                  title="Obriši uzorak"
+                  title="Delete sample"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -216,7 +216,7 @@ export function WritingSamplesManager() {
 
       {samples.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          Nema uzoraka. Dodaj minimalno 3 da bi AI naučio tvoj stil.
+          No samples. Add at least 3 so the AI can learn your style.
         </p>
       )}
     </div>

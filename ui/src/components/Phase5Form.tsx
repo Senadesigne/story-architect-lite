@@ -141,7 +141,7 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
       if (response.status === 'success' && response.synopsis) {
         setSceneForm(prev => ({ ...prev, summary: response.synopsis }));
       } else {
-        throw new Error('Neočekivani odgovor od AI servisa');
+        throw new Error('Unexpected response from AI service');
       }
     } catch (error) {
       console.error('Error generating synopsis:', error);
@@ -375,8 +375,8 @@ export function Phase5Form({ project, onFieldChange, renderSaveIndicator, formDa
                 }}
               />
               <div className="hidden text-center text-muted-foreground">
-                <p>Slika strukture tri čina će biti prikazana ovdje.</p>
-                <p className="text-sm mt-2">Molimo dodajte sliku u /public/images/three-act-structure.png</p>
+                <p>The three-act structure image will be displayed here.</p>
+                <p className="text-sm mt-2">Please add the image to /public/images/three-act-structure.png</p>
               </div>
             </div>
           </div>

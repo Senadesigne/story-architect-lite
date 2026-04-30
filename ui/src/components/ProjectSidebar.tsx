@@ -23,45 +23,45 @@ export function ProjectSidebar() {
   const phases = [
     {
       path: "/story-idea",
-      label: "Faza 0: Ideja Priče",
+      label: "Phase 0: Story Idea",
       icon: Sparkles,
       description: "Brain Dump"
     },
     {
       path: "/ideation",
-      label: "Faza 1: Ideja",
+      label: "Phase 1: Idea",
       icon: Lightbulb,
-      description: "Ideja i Koncept"
+      description: "Idea & Concept"
     },
     {
       path: "/planning",
-      label: "Faza 2: Planiranje",
+      label: "Phase 2: Planning",
       icon: Search,
-      description: "Planiranje i Istraživanje"
+      description: "Planning & Research"
     },
     {
       path: "/worldbuilding",
-      label: "Faza 3: Svijet",
+      label: "Phase 3: World",
       icon: Globe,
-      description: "Izgradnja Svijeta"
+      description: "Worldbuilding"
     },
     {
       path: "/characters",
-      label: "Faza 4: Likovi",
+      label: "Phase 4: Characters",
       icon: Users,
-      description: "Razvoj Likova"
+      description: "Character Development"
     },
     {
       path: "/structure",
-      label: "Faza 5: Struktura",
+      label: "Phase 5: Structure",
       icon: BarChart3,
-      description: "Strukturiranje Radnje"
+      description: "Plot Structure"
     },
     {
       path: "/finalization",
-      label: "Faza 6: Završetak",
+      label: "Phase 6: Completion",
       icon: CheckCircle,
-      description: "Završne Pripreme"
+      description: "Final Preparations"
     }
   ];
 
@@ -83,7 +83,7 @@ export function ProjectSidebar() {
   return (
     <div className="w-64 h-screen bg-sidebar-background/95 border-r border-border/50 sticky top-0 overflow-y-auto backdrop-blur-sm flex flex-col">
       <div className="p-4 flex-1">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-4">Faze Projekta</h3>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-4">Project Phases</h3>
         <nav className="space-y-2">
           {phases.map((phase) => {
             const Icon = phase.icon;

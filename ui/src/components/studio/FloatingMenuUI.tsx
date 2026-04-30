@@ -18,10 +18,10 @@ interface AIAction {
 }
 
 const AI_ACTIONS: AIAction[] = [
-  { label: "Prepravi", prompt: "Prepravi ovo da bude bolje." },
-  { label: "Skrati", prompt: "Skrati ovo." },
-  { label: "Proširi", prompt: "Proširi ovo." },
-  { label: "Promijeni ton", prompt: "Promijeni ton u formalniji." },
+  { label: "Rewrite", prompt: "Rewrite this to be better." },
+  { label: "Shorten", prompt: "Shorten this." },
+  { label: "Expand", prompt: "Expand this." },
+  { label: "Change tone", prompt: "Change the tone to be more formal." },
 ];
 
 export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
@@ -318,7 +318,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
           ) : (
             <Wand2 className="h-3.5 w-3.5" />
           )}
-          <span>AI Akcije</span>
+          <span>AI Actions</span>
         </Button>
 
         {/* Custom Dropdown Menu */}
@@ -349,7 +349,7 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
       <div className="text-sm max-w-[300px] truncate mr-2 border-r pr-2 text-muted-foreground italic">
         "{activeSuggestion}"
       </div>
-      <Button size="sm" variant="ghost" onClick={handleDiscard} title="Odbaci" className="rounded-full h-8 w-8 p-0">
+      <Button size="sm" variant="ghost" onClick={handleDiscard} title="Discard" className="rounded-full h-8 w-8 p-0">
         <X className="h-4 w-4" />
       </Button>
       {/* Retry is only available for local actions (Contextual Edit) for now */}
@@ -359,14 +359,14 @@ export function FloatingMenuUI({ editor }: FloatingMenuUIProps) {
           variant="outline"
           onClick={handleRetry}
           disabled={isLoading}
-          title="Ponovo"
+          title="Retry"
           className="cursor-pointer hover:bg-accent rounded-full h-8 w-8 p-0"
         >
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
         </Button>
       )}
-      <Button size="sm" onClick={handleKeep} title="Zadrži" className="rounded-full px-4">
-        <Check className="h-4 w-4 mr-1" /> Zadrži sve
+      <Button size="sm" onClick={handleKeep} title="Keep" className="rounded-full px-4">
+        <Check className="h-4 w-4 mr-1" /> Keep all
       </Button>
     </div>
   ) : null;

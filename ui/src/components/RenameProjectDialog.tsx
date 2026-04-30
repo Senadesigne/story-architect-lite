@@ -51,16 +51,16 @@ export function RenameProjectDialog({ open, onOpenChange, project, onSuccess }: 
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Preimenuj projekt</DialogTitle>
+                    <DialogTitle>Rename project</DialogTitle>
                     <DialogDescription>
-                        Unesite novi naziv za projekt.
+                        Enter a new name for the project.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-4 py-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="title" className="text-right">
-                                Naziv
+                                Name
                             </Label>
                             <Input
                                 id="title"
@@ -72,10 +72,10 @@ export function RenameProjectDialog({ open, onOpenChange, project, onSuccess }: 
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                            Odustani
+                            Cancel
                         </Button>
                         <Button type="submit" disabled={isLoading || !title.trim()}>
-                            {isLoading ? 'Spremanje...' : 'Spremi'}
+                            {isLoading ? 'Saving...' : 'Save'}
                         </Button>
                     </DialogFooter>
                 </form>

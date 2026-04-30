@@ -31,7 +31,7 @@ export function UserProfileForm() {
         setAvatarUrl(userProfile.avatarUrl || '');
       } catch (error) {
         console.error('Error loading user profile:', error);
-        setMessage({ type: 'error', text: 'Greška pri učitavanju profila' });
+        setMessage({ type: 'error', text: 'Error loading profile' });
       }
     };
 
@@ -52,17 +52,17 @@ export function UserProfileForm() {
       });
       
       updateProfile(updatedUser);
-      setMessage({ type: 'success', text: 'Profil je uspješno ažuriran!' });
+      setMessage({ type: 'success', text: 'Profile updated successfully.' });
     } catch (error) {
       console.error('Error updating profile:', error);
-      setMessage({ type: 'error', text: 'Greška pri ažuriranju profila' });
+      setMessage({ type: 'error', text: 'Error updating profile' });
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm('Jeste li sigurni da želite obrisati svoj račun? Ova akcija je nepovratna i obrisat će sve vaše projekte.')) {
+    if (!window.confirm('Are you sure you want to delete your account? This action is irreversible and will delete all your projects.')) {
       return;
     }
 
@@ -77,7 +77,7 @@ export function UserProfileForm() {
       // Korisnik će biti preusmjeren na login stranicu
     } catch (error) {
       console.error('Error deleting account:', error);
-      setMessage({ type: 'error', text: 'Greška pri brisanju računa' });
+      setMessage({ type: 'error', text: 'Error deleting account' });
       setIsDeleting(false);
     }
   };
@@ -92,16 +92,16 @@ export function UserProfileForm() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Korisnički profil
+            User Profile
           </CardTitle>
           <CardDescription>
-            Upravljajte svojim korisničkim podacima
+            Manage your account details
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email adresa</Label>
+              <Label htmlFor="email">Email address</Label>
               <Input 
                 id="email" 
                 value={user.email || ''} 
@@ -109,26 +109,26 @@ export function UserProfileForm() {
                 className="bg-muted"
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Email adresa se ne može mijenjati
+                Email address cannot be changed
               </p>
             </div>
             
             <div>
-              <Label htmlFor="displayName">Ime za prikaz</Label>
+              <Label htmlFor="displayName">Display Name</Label>
               <Input
                 id="displayName"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Vaše ime"
+                placeholder="Your name"
                 maxLength={100}
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Ime koje će se prikazivati u aplikaciji
+                Your display name in the app
               </p>
             </div>
             
             <div>
-              <Label htmlFor="avatarUrl">URL avatara</Label>
+              <Label htmlFor="avatarUrl">Avatar URL</Label>
               <Input
                 id="avatarUrl"
                 type="url"
@@ -137,17 +137,17 @@ export function UserProfileForm() {
                 placeholder="https://example.com/avatar.jpg"
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Poveznica na vašu profilnu sliku
+                Link to your profile picture
               </p>
             </div>
 
             {avatarUrl && (
               <div>
-                <Label>Pregled avatara</Label>
+                <Label>Avatar preview</Label>
                 <div className="mt-2">
                   <img 
                     src={avatarUrl} 
-                    alt="Avatar pregled" 
+                    alt="Avatar preview"
                     className="w-16 h-16 rounded-full object-cover border"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -159,7 +159,7 @@ export function UserProfileForm() {
             
             <Button type="submit" disabled={isSaving} className="w-full">
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Spremanje...' : 'Spremi promjene'}
+              {isSaving ? 'Saving...' : 'Save changes'}
             </Button>
           </form>
 
@@ -175,9 +175,9 @@ export function UserProfileForm() {
 
       <Card className="border-destructive/20">
         <CardHeader>
-          <CardTitle className="text-destructive">Opasna zona</CardTitle>
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
           <CardDescription>
-            Brisanje računa je nepovratno i obrisat će sve vaše projekte
+            Account deletion is irreversible and will delete all your projects
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -188,7 +188,7 @@ export function UserProfileForm() {
             className="w-full"
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            {isDeleting ? 'Brisanje računa...' : 'Obriši račun'}
+            {isDeleting ? 'Deleting account...' : 'Delete account'}
           </Button>
         </CardContent>
       </Card>

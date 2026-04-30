@@ -57,22 +57,22 @@ export function LoginForm() {
       // Detaljnije error handling
       switch (err.code) {
         case 'auth/user-not-found':
-          setError("Korisnik s ovim emailom ne postoji. Molimo registrirajte se.");
+          setError("No account found with this email. Please sign up.");
           break;
         case 'auth/wrong-password':
-          setError("Neispravna lozinka. Molimo pokušajte ponovo.");
+          setError("Incorrect password. Please try again.");
           break;
         case 'auth/invalid-email':
-          setError("Neispravna email adresa.");
+          setError("Invalid email address.");
           break;
         case 'auth/network-request-failed':
-          setError("Greška mreže. Provjerite internetsku vezu i pokušajte ponovo.");
+          setError("Network error. Check your internet connection.");
           break;
         case 'auth/too-many-requests':
-          setError("Previše neuspješnih pokušaja. Molimo pričekajte i pokušajte ponovo.");
+          setError("Too many failed attempts. Please wait and try again.");
           break;
         default:
-          setError(`Greška pri prijavi: ${err.message || 'Nepoznata greška'}`);
+          setError(`Sign in error: ${err.message || 'Unknown error'}`);
       }
     } finally {
       setIsLoading(false)
@@ -86,7 +86,7 @@ export function LoginForm() {
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (err) {
-      setError("Greška pri prijavi s Google računom.")
+      setError("Google sign-in failed.")
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -129,14 +129,14 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Prijavljivanje..." : "Prijavi se"}
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
           <div className="relative w-full">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Ili nastavi s</span>
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
             </div>
           </div>
           <Button
@@ -147,18 +147,18 @@ export function LoginForm() {
             disabled={isLoading}
           >
             <GoogleIcon />
-            Prijavi se s Google
+            Sign in with Google
           </Button>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Nemate račun?{' '}
+              Don't have an account?{' '}
               <Button
                 variant="link"
                 className="p-0 h-auto font-normal"
                 onClick={() => setShowRegister(true)}
                 disabled={isLoading}
               >
-                Registrirajte se
+                Sign up
               </Button>
             </p>
           </div>

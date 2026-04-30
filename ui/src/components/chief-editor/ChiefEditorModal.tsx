@@ -57,9 +57,9 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent className="max-w-4xl w-[90vw] max-h-[90vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl font-serif">Analiza Glavnog Urednika</DialogTitle>
+                    <DialogTitle className="text-2xl font-serif">Chief Editor Analysis</DialogTitle>
                     <DialogDescription>
-                        Zatražite dubinsku analizu vašeg rukopisa od AI urednika (Gemini 1.5 Pro).
+                        Request a deep analysis of your manuscript from the AI editor (Gemini 1.5 Pro).
                     </DialogDescription>
                 </DialogHeader>
 
@@ -71,7 +71,7 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
                         {isLoading ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 backdrop-blur-sm z-10">
                                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                                <p className="text-muted-foreground animate-pulse">Glavni urednik čita vaš rukopis...</p>
+                                <p className="text-muted-foreground animate-pulse">Chief Editor is reading your manuscript...</p>
                             </div>
                         ) : null}
 
@@ -80,8 +80,8 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
                         ) : (
                             <div className="h-full flex items-center justify-center text-muted-foreground border rounded-md bg-muted/20">
                                 <div className="text-center p-8">
-                                    <p className="mb-2">Nema odabrane analize.</p>
-                                    <p className="text-sm">Postavite pitanje u nastavku ili odaberite prošlu analizu iz lijevog izbornika.</p>
+                                    <p className="mb-2">No analysis selected.</p>
+                                    <p className="text-sm">Ask a question below or select a past analysis from the left panel.</p>
                                 </div>
                             </div>
                         )}
@@ -91,12 +91,12 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
                     {showConfirm && (
                         <Alert variant="default" className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
                             <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                            <AlertTitle className="text-yellow-800 dark:text-yellow-500">Potvrda analize</AlertTitle>
+                            <AlertTitle className="text-yellow-800 dark:text-yellow-500">Confirm Analysis</AlertTitle>
                             <AlertDescription className="text-yellow-700 dark:text-yellow-400 flex flex-col gap-2">
-                                <p>Ova radnja će pročitati CIJELU vašu knjigu. To može potrajati i troši AI kredite.</p>
+                                <p>This will read your ENTIRE manuscript. It may take a while and uses AI credits.</p>
                                 <div className="flex gap-2 mt-2">
-                                    <Button size="sm" onClick={executeAnalysis}>Razumijem, nastavi</Button>
-                                    <Button size="sm" variant="ghost" onClick={() => setShowConfirm(false)}>Odustani</Button>
+                                    <Button size="sm" onClick={executeAnalysis}>Got it, continue</Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setShowConfirm(false)}>Cancel</Button>
                                 </div>
                             </AlertDescription>
                         </Alert>
@@ -105,7 +105,7 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
                     {/* 3. INPUT AREA */}
                     <div className="flex gap-2 items-end pt-2 border-t">
                         <Textarea
-                            placeholder="Što želite da urednik provjeri? (npr. 'Prati razvoj lika Marka', 'Analiziraj tempo radnje')"
+                            placeholder="What should the editor check? (e.g. 'Track the character development of Mark', 'Analyze the pacing')"
                             className="resize-none min-h-[80px]"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -121,7 +121,7 @@ export const ChiefEditorModal: React.FC<ChiefEditorModalProps> = ({ projectId, u
                             onClick={handleGenerateClick}
                             disabled={isLoading || !prompt.trim()}
                         >
-                            Analiziraj
+                            Analyze
                         </Button>
                     </div>
                 </div>

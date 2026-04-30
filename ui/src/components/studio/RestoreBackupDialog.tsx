@@ -26,7 +26,7 @@ interface RestoreBackupDialogProps {
 
 function formatDate(timestamp: number): string {
     const date = new Date(timestamp);
-    return date.toLocaleString('hr-HR', {
+    return date.toLocaleString('en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -61,9 +61,9 @@ export function RestoreBackupDialog({
         <Dialog open={open}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>🔄 Pronađen Nespremljen Rad</DialogTitle>
+                    <DialogTitle>🔄 Unsaved Work Found</DialogTitle>
                     <DialogDescription>
-                        Postoji lokalni backup koji je noviji od verzije na serveru.
+                        A local backup was found that is newer than the server version.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -83,11 +83,11 @@ export function RestoreBackupDialog({
                     {/* Backup Info */}
                     <div className="bg-muted p-4 rounded-md space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Duljina sadržaja:</span>
-                            <span className="font-medium">{backup.content.length} znakova</span>
+                            <span className="text-muted-foreground">Content length:</span>
+                            <span className="font-medium">{backup.content.length} characters</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Verzija backup-a:</span>
+                            <span className="text-muted-foreground">Backup version:</span>
                             <span className="font-medium">#{backup.version}</span>
                         </div>
                     </div>
@@ -95,7 +95,7 @@ export function RestoreBackupDialog({
                     {/* Warning */}
                     <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 p-3 rounded-md">
                         <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                            ⚠️ Odabirom "Zadrži Server Verziju" trajno ćete izgubiti lokalni backup.
+                            ⚠️ Choosing "Keep Server Version" will permanently discard your local backup.
                         </p>
                     </div>
                 </div>
@@ -106,7 +106,7 @@ export function RestoreBackupDialog({
                         onClick={onKeepServer}
                         disabled={isRestoring}
                     >
-                        Zadrži Server Verziju
+                        Keep Server Version
                     </Button>
                     <Button
                         onClick={handleRestore}
@@ -114,10 +114,10 @@ export function RestoreBackupDialog({
                     >
                         {isRestoring ? (
                             <>
-                                <span className="mr-2">Vraćam...</span>
+                                <span className="mr-2">Restoring...</span>
                             </>
                         ) : (
-                            <>🔄 Vrati Backup</>
+                            <>🔄 Restore Backup</>
                         )}
                     </Button>
                 </DialogFooter>
