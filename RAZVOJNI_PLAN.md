@@ -1,7 +1,7 @@
 # RAZVOJNI PLAN — story-architect-lite
 
 **Datum kreiranja:** 2026-04-28
-**Zadnje ažurirano:** 2026-04-30
+**Zadnje ažurirano:** 2026-05-01
 **Status:** ŽIVI DOKUMENT
 **Vlasnik:** Senad
 **Suradnik:** Claude (Sonnet 4.7) + Claude Code
@@ -82,7 +82,7 @@ i mora biti default ili barem jednako dostupan kao Brainstorming.
 - [x] Identificirati komponentu koja sadrži gumbe "Planner | Studio | Brainstorming | Chief Editor" u top baru (2026-04-29)
 - [x] Dodati "Writer" gumb pored "Brainstorming" (ili promijeniti default tab u AI Assistant panelu na Writer) (2026-04-29)
 - [x] Provjeriti da klik na Writer otvara AI Assistant s aktivnim Writer tabom (2026-04-29)
-- [ ] Vizualno testirati u oba teme (light + dark)
+- [x] Vizualno testirati u oba teme (2026-04-30)
 
 **Procjena:** 1-2h
 **Preduvjet:** nema (UI only)
@@ -100,7 +100,7 @@ ostalo na hrvatskom: "Humanizacija (Qwen)", "Pišem...", potencijalno drugi.
 - [x] Lista svih hrvatskih stringova s lokacijama (2026-04-30)
 - [x] Zamijeniti engleskim ekvivalentima (2026-04-30)
 - [x] TypeScript provjera + build (2026-04-30)
-- [ ] Vizualni pregled u Studiu i Planneru
+- [x] Vizualni pregled u Studiu i Planneru (2026-04-30)
 
 **Procjena:** 1-2h
 **Preduvjet:** nema (UI only)
@@ -128,11 +128,11 @@ potreba.
 
 ### Prioritet 4 — Eksperiment kvalitete (reality check)
 
-- [ ] Kreirati testni projekt s minimumom konteksta (1 lik, 1 lokacija, premisa)
-- [ ] Pokrenuti `db:populate` da se napune embeddinzi
-- [ ] Generirati jednu scenu kroz puni pipeline
-- [ ] Senad čita naglas, ocjenjuje
-- [ ] Diskusija rezultata: nastavljamo ili refine humanization prompt?
+- [x] Kreirati testni projekt s minimumom konteksta (2026-04-30)
+- [x] Pokrenuti `db:populate` da se napune embeddinzi (2026-04-30)
+- [x] Generirati jednu scenu kroz puni pipeline (2026-04-30)
+- [x] Senad čita naglas, ocjenjuje (2026-04-30)
+- [x] Diskusija rezultata: nastavljamo bez promjena (2026-04-30)
 
 **Procjena:** 1-2h
 **Preduvjet:** HPE #1 upaljen, Prioritet 1 commit-an
@@ -205,6 +205,14 @@ _(prazno)_
 
 ## DNEVNIK NAPRETKA
 
+### 2026-05-01
+
+- P4 eksperiment kvalitete PASS — scena generirana za Ninth Ring kroz puni pipeline (Manager→Worker→Critique→Humanizer). Output bez AI klišeja, prirodan ritam. Humanization radi.
+- P2.5 i P2.6 vizualno potvrđeni
+- Sljedeće: P3 (Style Profile API + UI)
+
+---
+
 ### 2026-04-30
 
 - P2.5 zatvoren prethodnog dana (Brainstorming → AI Co-Author, Writer default tab + bonus session memory)
@@ -251,6 +259,7 @@ _(prazno)_
 | 2026-04-28 | 1.0 | Inicijalna verzija s checkbox formatom |
 | 2026-04-29 | 1.1 | Dodani P2.5 (UI Writer fix) i P2.6 (lokalizacija) — P4 odgođen dok UI ne bude spreman za pošten test |
 | 2026-04-30 | 1.2 | P2.5 i P2.6 implementirani — UI spreman za pošten P4 test |
+| 2026-05-01 | 1.3 | P4 PASS — quality experiment potvrđen, P2.5 i P2.6 vizualno zatvoreni |
 
 ---
 
