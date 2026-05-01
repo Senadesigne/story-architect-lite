@@ -152,11 +152,11 @@ export async function getRelevantContext(query: string, projectId: string, k: nu
 export async function addDocumentsToVectorStore(docs: Array<{ pageContent: string, metadata: object }>) {
   try {
     const store = await getVectorStore();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await store.addDocuments(docs, { ids: docs.map(d => (d.metadata as Record<string, any>).docId) });
+    await store.addDocuments(docs);
     console.log(`Successfully added ${docs.length} documents to vector store.`);
   } catch (error) {
     console.error("Error adding documents to vector store:", error);
+    throw error;
   }
 }
 

@@ -3,6 +3,7 @@ import { dirname } from 'path';
 import 'dotenv/config';
 import path from 'path';
 import { getDatabase } from '../src/lib/db.js';
+import { sql } from 'drizzle-orm';
 import {
   projects,
   characters,
@@ -150,9 +151,13 @@ async function main(): Promise<void> {
 
     console.log('✅ Environment varijable provjerene');
 
-    // Korak 2: Dohvati database konekciju
-    console.log('📊 Dohvaćanje podataka iz baze...');
+    // Korak 2: Dohvati database konekciju i očisti stare embeddings
+    console.log('🗑️  Brisanje starih embeddings...');
     const db = await getDatabase();
+    await db.execute(sql`TRUNCATE TABLE story_architect_embeddings`);
+    console.log('✅ Stari embeddings obrisani');
+
+    console.log('📊 Dohvaćanje podataka iz baze...');
 
     // Korak 3: Dohvati sve podatke paralelno
     const [
