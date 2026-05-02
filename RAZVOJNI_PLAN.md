@@ -198,8 +198,8 @@ Visoki nivo:
 
 #### Tjedan 1 — Skeleton + Editor-in-Chief
 
-- [ ] Nove DB tablice — `blog_articles`, `blog_research_dossiers`
-- [ ] Drizzle migracija
+- [x] Nove DB tablice — `blog_articles`, `blog_research_dossiers` (2026-05-02)
+- [x] Drizzle migracija (2026-05-02)
 - [ ] Nova ruta `/blog` + `/blog/:id`
 - [ ] UI: Blog tab, lista članaka, forma za novi članak (tema + audience)
 - [ ] Editor-in-Chief LangGraph node (Qwen) — generira plan: keyword + 3 angle-a
@@ -272,6 +272,18 @@ _(prazno)_
 
 ## DNEVNIK NAPRETKA
 
+### 2026-05-02
+
+- P8 W1 (DB sloj) — kreirane tablice `blog_articles` (14 kolona) i `blog_research_dossiers` (9 kolona) u server/src/schema/schema.ts
+- Drizzle migracija 0006_icy_excalibur.sql generirana i primijenjena na lokalnu bazu
+- FK relacije: blog_articles.user_id → users.id (cascade), blog_research_dossiers.article_id → blog_articles.id (cascade)
+- Indeksi: idx_blog_articles_user_id, idx_blog_research_dossiers_article_id
+- relations() blokovi dodani za navigacijski API
+- Verificirano u bazi: information_schema.columns + pg_indexes + drizzle journal — sve sinkronizirano
+- Sljedeće: nova ruta `/blog` + `/blog/:id` (backend + frontend skeleton)
+
+---
+
 ### 2026-05-01
 
 - P4 eksperiment kvalitete PASS — scena generirana za Ninth Ring kroz puni pipeline (Manager→Worker→Critique→Humanizer). Output bez AI klišeja, prirodan ritam. Humanization radi.
@@ -328,6 +340,7 @@ _(prazno)_
 | 2026-04-30 | 1.2 | P2.5 i P2.6 implementirani — UI spreman za pošten P4 test |
 | 2026-05-01 | 1.3 | P4 PASS — quality experiment potvrđen, P2.5 i P2.6 vizualno zatvoreni |
 | 2026-05-02 | 1.4 | Dodan P8 — Blog Article Writer (Multi-Agent), Anthropic-aligned arhitektura |
+| 2026-05-02 | 1.5 | P8 W1 task 1 — DB tablice za Blog Article Writer (blog_articles, blog_research_dossiers) primijenjene |
 
 ---
 
