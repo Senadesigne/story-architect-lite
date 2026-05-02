@@ -292,3 +292,59 @@ export const editorAnalysesRelations = relations(editorAnalyses, ({ one }) => ({
   project: one(projects, { fields: [editorAnalyses.projectId], references: [projects.id] }),
   user: one(users, { fields: [editorAnalyses.userId], references: [users.id] }),
 }));
+
+
+// ------------------------------------------------------------------
+// BLOG ARTICLE WRITER — Multi-agent pipeline za pisanje članaka
+// ------------------------------------------------------------------
+
+export const blogArticles = pgTable('blog_articles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 256 }).notNull(),
+  topic: text('topic').notNull(),
+  audience: text('audience'),
+  status: text('status')
+    .$type<'draft' | 'planning' | 'researching' | 'writing' | 'reviewing' | 'done' | 'failed'>()
+    .notNull()
+    .default('draft'),
+  researchPlan: jsonb('research_plan').$type<{ keyword: string; angles: string[] }>(),
+  researchBrief: text('research_brief'),
+  content: text('content'),
+  metaTitle: varchar('meta_title', { length: 256 }),
+  metaDescription: text('meta_description'),
+  citationReport: jsonb('citation_report').$type<{
+    claims: Array<{ claim: string; status: 'verified' | 'unverified'; url?: string }>;
+    status: string;
+  }>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index('idx_blog_articles_user_id').on(table.userId),
+}));
+
+export const blogResearchDossiers = pgTable('blog_research_dossiers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  articleId: uuid('article_id').notNull().references(() => blogArticles.id, { onDelete: 'cascade' }),
+  angle: text('angle').notNull(),
+  queries: jsonb('queries').$type<string[]>(),
+  sources: jsonb('sources').$type<Array<{ url: string; title: string; excerpt: string }>>(),
+  dossierContent: text('dossier_content'),
+  status: text('status')
+    .$type<'pending' | 'running' | 'done' | 'failed'>()
+    .notNull()
+    .default('pending'),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  articleIdIdx: index('idx_blog_research_dossiers_article_id').on(table.articleId),
+}));
+
+export const blogArticlesRelations = relations(blogArticles, ({ one, many }) => ({
+  user: one(users, { fields: [blogArticles.userId], references: [users.id] }),
+  dossiers: many(blogResearchDossiers),
+}));
+
+export const blogResearchDossiersRelations = relations(blogResearchDossiers, ({ one }) => ({
+  article: one(blogArticles, { fields: [blogResearchDossiers.articleId], references: [blogArticles.id] }),
+}));
