@@ -182,6 +182,73 @@ Visoki nivo:
 
 ---
 
+### Prioritet 8 — Blog Article Writer (Multi-Agent) 🆕
+
+**Pristup:** Multi-Agent Orchestrator po uzoru na Anthropicov "How we built our multi-agent research system" (lipanj 2025).
+
+**4 agenta:**
+1. **Editor-in-Chief** (Qwen lokalno) — planira istraživanje, dijeli temu na 3 angle-a, sintetizira mini-dossiere u finalni brief
+2. **3x Researcher** (Qwen + Tavily, paralelno) — svaki istražuje svoj angle, vraća mini-dossier s citatima
+3. **Writer** (Sonnet 4.6) — piše cijeli članak iz briefa odjednom (1M context, prompt caching)
+4. **Citation Agent** (Qwen lokalno) — provjeri da svaka tvrdnja u članku ima izvor u dossieru
+
+**UI:** Novi 'Blog' tab u alatu, odvojen od Studio (fikcije). Dijele auth, bazu, infrastrukturu. Pipeline i UI su odvojeni.
+
+**Bez Humanizera** — uključuje se kasnije kad bude dovršen i validiran.
+
+#### Tjedan 1 — Skeleton + Editor-in-Chief
+
+- [ ] Nove DB tablice — `blog_articles`, `blog_research_dossiers`
+- [ ] Drizzle migracija
+- [ ] Nova ruta `/blog` + `/blog/:id`
+- [ ] UI: Blog tab, lista članaka, forma za novi članak (tema + audience)
+- [ ] Editor-in-Chief LangGraph node (Qwen) — generira plan: keyword + 3 angle-a
+- [ ] UI: korisnik potvrđuje plan prije nego krene research
+
+#### Tjedan 2 — Paralelni Researcheri + Tavily
+
+- [ ] Tavily API integracija (search + extract u jednom pozivu)
+- [ ] Tavily account, API key u env
+- [ ] LangGraph fan-out — 3 paralelna Researcher node-a
+- [ ] Svaki Researcher: 3-5 query-ja, extract sadržaja, mini-dossier output
+- [ ] Error handling: ako jedan Researcher padne, ostala dva nastavljaju
+- [ ] Sinteza mini-dossiera natrag u Editor-in-Chief (finalni brief s citatima)
+
+#### Tjedan 3 — Writer (Sonnet)
+
+- [ ] Writer LangGraph node (Sonnet 4.6)
+- [ ] Anthropic prompt caching za dossier (obavezno — bez ovog cijena 5x)
+- [ ] Writer dobiva: brief + outline + dossier
+- [ ] Output: cijeli članak s H2/H3 strukturom, FAQ blokom, meta description
+- [ ] Spremanje u `blog_articles` tablicu
+- [ ] UI: prikaz članka u editoru
+
+#### Tjedan 4 — Citation Agent + UI polish
+
+- [ ] Citation Agent LangGraph node (Qwen)
+- [ ] Provjera: svaka konkretna tvrdnja (broj, datum, citat) ima referencu na URL iz dossiera
+- [ ] Output: lista zastavica (claim → status: ✅ verified / ⚠️ unverified)
+- [ ] UI: highlight zastavica u editoru, klik na zastavicu otvara izvor
+- [ ] SEO meta polja u UI-u (title, description, OG tags)
+- [ ] Export članka kao markdown ili HTML (copy-to-clipboard)
+
+#### Tjedan 5 — Buffer + SaaS priprema
+
+- [ ] Test s 3-5 pravih tema (osobne stranice)
+- [ ] Cost tracking — provjera stvarne cijene po članku
+- [ ] LiteLLM Gateway integracija (priprema za cloud Qwen kad bude SaaS)
+- [ ] Switch lokalno/cloud Qwen kao config
+- [ ] Dokumentacija u README
+
+**Procjena:** 4-5 tjedana
+**Preduvjet:** HPE #1 upaljen (sva 4 Qwen agenta su lokalna), Anthropic API key, Tavily API key
+**Cijena po članku:** ~$0.45-0.65 (Tavily $0.12 + Sonnet s caching $0.30-0.50)
+**Mjesečno za 20 članaka:** ~$10-15
+
+**Cilj:** Funkcionalan alat za autonomno pisanje istraživanih članaka. Dugoročno: ponuda kao SaaS uz dijeljenu LiteLLM infrastrukturu.
+
+---
+
 ## SPOZNAJE TIJEKOM RADA
 
 _Ovdje idu otkrića o sustavu — stvari koje smo naučili i koje su važne za buduće odluke._
@@ -260,6 +327,7 @@ _(prazno)_
 | 2026-04-29 | 1.1 | Dodani P2.5 (UI Writer fix) i P2.6 (lokalizacija) — P4 odgođen dok UI ne bude spreman za pošten test |
 | 2026-04-30 | 1.2 | P2.5 i P2.6 implementirani — UI spreman za pošten P4 test |
 | 2026-05-01 | 1.3 | P4 PASS — quality experiment potvrđen, P2.5 i P2.6 vizualno zatvoreni |
+| 2026-05-02 | 1.4 | Dodan P8 — Blog Article Writer (Multi-Agent), Anthropic-aligned arhitektura |
 
 ---
 
