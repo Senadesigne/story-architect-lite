@@ -200,8 +200,8 @@ Visoki nivo:
 
 - [x] Nove DB tablice — `blog_articles`, `blog_research_dossiers` (2026-05-02)
 - [x] Drizzle migracija (2026-05-02)
-- [ ] Nova ruta `/blog` + `/blog/:id`
-- [ ] UI: Blog tab, lista članaka, forma za novi članak (tema + audience)
+- [x] Nova ruta `/blog` + `/blog/:id` (2026-05-03)
+- [x] UI: Blog tab, lista članaka, forma za novi članak (tema + audience) (2026-05-03)
 - [ ] Editor-in-Chief LangGraph node (Qwen) — generira plan: keyword + 3 angle-a
 - [ ] UI: korisnik potvrđuje plan prije nego krene research
 
@@ -272,6 +272,16 @@ _(prazno)_
 
 ## DNEVNIK NAPRETKA
 
+### 2026-05-03
+
+- Vercel build fix: installCommand filter za ui workspace + regeneriran lockfile (aaf68f3)
+- P8 W1 backend rute: GET/POST /api/blog, GET/PATCH/DELETE /api/blog/:id — auth, ownership, Zod validacija (700793e)
+- P8 W1 frontend: BlogList.tsx (grid + CreateArticleDialog), BlogDetail.tsx (5 sekcija s placeholderima), 5 API funkcija u serverComm.ts, tipovi u types.ts
+- Blog tab dodan u sidebar (Newspaper ikona), rute /blog i /blog/:articleId u App.tsx
+- Sljedeće: Editor-in-Chief LangGraph node (Qwen) — planira istraživanje, dijeli temu na 3 angle-a
+
+---
+
 ### 2026-05-02
 
 - P8 W1 (DB sloj) — kreirane tablice `blog_articles` (14 kolona) i `blog_research_dossiers` (9 kolona) u server/src/schema/schema.ts
@@ -341,6 +351,7 @@ _(prazno)_
 | 2026-05-01 | 1.3 | P4 PASS — quality experiment potvrđen, P2.5 i P2.6 vizualno zatvoreni |
 | 2026-05-02 | 1.4 | Dodan P8 — Blog Article Writer (Multi-Agent), Anthropic-aligned arhitektura |
 | 2026-05-02 | 1.5 | P8 W1 task 1 — DB tablice za Blog Article Writer (blog_articles, blog_research_dossiers) primijenjene |
+| 2026-05-03 | 1.6 | P8 W1 tasks 3-4 — blog backend rute + frontend skeleton (BlogList, BlogDetail, sidebar) |
 
 ---
 
