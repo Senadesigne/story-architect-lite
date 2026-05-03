@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BlogArticleFull, BlogArticleStatus } from '@/lib/types';
-import { ArrowLeft, Trash2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Trash2, Sparkles, Loader2 } from 'lucide-react';
 
 function statusBadgeClass(status: BlogArticleStatus): string {
   switch (status) {
@@ -221,8 +221,14 @@ export function BlogDetail() {
                     disabled={isPlanning}
                     size="sm"
                   >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    {isPlanning ? 'Generating plan...' : 'Generate Research Plan'}
+                    {isPlanning
+                      ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      : <Sparkles className="w-4 h-4 mr-2" />
+                    }
+                    {isPlanning
+                      ? 'Generating plan... This may take up to a minute'
+                      : 'Generate Research Plan'
+                    }
                   </Button>
                 )}
               </div>

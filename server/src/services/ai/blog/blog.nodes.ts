@@ -22,8 +22,8 @@ export async function editorInChiefNode(
     const provider = await createBlogManagerProvider();
     const options: AIGenerationOptions = {
       temperature: 0.7,
-      maxTokens: 1000,
-      timeout: 30000,
+      maxTokens: 4000,
+      timeout: 60000,
     };
 
     const prompt = `You are an Editor-in-Chief planning a blog article research strategy.
