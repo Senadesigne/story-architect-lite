@@ -202,8 +202,8 @@ Visoki nivo:
 - [x] Drizzle migracija (2026-05-02)
 - [x] Nova ruta `/blog` + `/blog/:id` (2026-05-03)
 - [x] UI: Blog tab, lista članaka, forma za novi članak (tema + audience) (2026-05-03)
-- [ ] Editor-in-Chief LangGraph node (Qwen) — generira plan: keyword + 3 angle-a
-- [ ] UI: korisnik potvrđuje plan prije nego krene research
+- [x] Editor-in-Chief LangGraph node (Qwen) — generira plan: keyword + 3 angle-a (2026-05-03)
+- [x] UI: korisnik potvrđuje plan prije nego krene research (2026-05-03)
 
 #### Tjedan 2 — Paralelni Researcheri + Tavily
 
@@ -278,7 +278,13 @@ _(prazno)_
 - P8 W1 backend rute: GET/POST /api/blog, GET/PATCH/DELETE /api/blog/:id — auth, ownership, Zod validacija (700793e)
 - P8 W1 frontend: BlogList.tsx (grid + CreateArticleDialog), BlogDetail.tsx (5 sekcija s placeholderima), 5 API funkcija u serverComm.ts, tipovi u types.ts
 - Blog tab dodan u sidebar (Newspaper ikona), rute /blog i /blog/:articleId u App.tsx
-- Sljedeće: Editor-in-Chief LangGraph node (Qwen) — planira istraživanje, dijeli temu na 3 angle-a
+- Blog AI infrastruktura: blog.factory.ts (HPE #2 → HPE #1 fallback), blog.state.ts (BlogAgentState), blog.nodes.ts (editorInChiefNode), blog.graph.ts (LangGraph StateGraph)
+- POST /api/blog/:id/plan ruta — pokreće Editor-in-Chief pipeline
+- Editor-in-Chief testiran LIVE na Qwen3.5:35b (HPE #2) — keyword + 3 angle-a generiran uspješno
+- maxTokens povećan 1000→4000 (Qwen3.5 reasoning troši tokene iz istog budžeta)
+- Loading UX: Loader2 spinner + "This may take up to a minute" poruka
+- P8 W1 KOMPLETIRAN — svi checkboxovi zatvoreni
+- Sljedeće: P8 W2 — Tavily API integracija + paralelni Researcher nodeovi
 
 ---
 
@@ -352,6 +358,7 @@ _(prazno)_
 | 2026-05-02 | 1.4 | Dodan P8 — Blog Article Writer (Multi-Agent), Anthropic-aligned arhitektura |
 | 2026-05-02 | 1.5 | P8 W1 task 1 — DB tablice za Blog Article Writer (blog_articles, blog_research_dossiers) primijenjene |
 | 2026-05-03 | 1.6 | P8 W1 tasks 3-4 — blog backend rute + frontend skeleton (BlogList, BlogDetail, sidebar) |
+| 2026-05-03 | 1.7 | P8 W1 KOMPLETIRAN — DB, rute, UI skeleton, Editor-in-Chief agent testirani LIVE na Qwen3.5 |
 
 ---
 
