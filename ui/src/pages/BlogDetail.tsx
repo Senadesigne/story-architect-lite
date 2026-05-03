@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BlogArticleFull, BlogArticleStatus } from '@/lib/types';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Sparkles } from 'lucide-react';
 
 function statusBadgeClass(status: BlogArticleStatus): string {
   switch (status) {
@@ -39,6 +39,7 @@ export function BlogDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPlanning, setIsPlanning] = useState(false);
 
   const fetchArticle = useCallback(async () => {
     if (!user || !articleId) return;
@@ -57,6 +58,19 @@ export function BlogDetail() {
   }, [user, articleId]);
 
   useEffect(() => { fetchArticle(); }, [fetchArticle]);
+
+  const handleGeneratePlan = async () => {
+    if (!articleId) return;
+    setIsPlanning(true);
+    try {
+      await api.startBlogPlanning(articleId);
+      await fetchArticle();
+    } catch (err) {
+      console.error('Error generating research plan:', err);
+    } finally {
+      setIsPlanning(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!articleId) return;
@@ -199,7 +213,19 @@ export function BlogDetail() {
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">No research plan yet.</p>
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">No research plan yet.</p>
+                {article.status === 'draft' && (
+                  <Button
+                    onClick={handleGeneratePlan}
+                    disabled={isPlanning}
+                    size="sm"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {isPlanning ? 'Generating plan...' : 'Generate Research Plan'}
+                  </Button>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

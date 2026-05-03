@@ -18,6 +18,7 @@ import type {
   UpdateBlogArticleBody,
 } from '../schemas/validation.js';
 import type { DatabaseUpdateData } from '../types/api.js';
+import { runBlogPipeline } from '../services/ai/blog/blog.graph.js';
 
 export const blogRouter = new Hono();
 
@@ -139,6 +140,53 @@ blogRouter.patch('/blog/:id', validateBody(UpdateBlogArticleBodySchema), async (
   if (!updatedArticle) {
     throw new NotFoundError('Blog article not found');
   }
+
+  return c.json(updatedArticle);
+});
+
+blogRouter.post('/blog/:id/plan', async (c) => {
+  const user = c.get('user');
+  const articleId = c.req.param('id');
+
+  requireValidUUID(articleId, 'article ID');
+
+  const databaseUrl = getDatabaseUrl();
+  const db = await getDatabase(databaseUrl);
+
+  const [article] = await db
+    .select()
+    .from(blogArticles)
+    .where(and(eq(blogArticles.id, articleId), eq(blogArticles.userId, user.id)))
+    .limit(1);
+
+  if (!article) {
+    throw new NotFoundError('Blog article not found');
+  }
+
+  if (article.status !== 'draft') {
+    return c.json({ error: 'Planning is only allowed for articles with draft status' }, 400);
+  }
+
+  const pipelineResult = await runBlogPipeline({
+    articleId,
+    topic: article.topic,
+    audience: article.audience ?? '',
+  });
+
+  const newStatus = pipelineResult.currentPhase === 'failed' ? 'failed' : 'planning';
+
+  const updatedArticle = await handleDatabaseOperation(async () => {
+    const [row] = await db
+      .update(blogArticles)
+      .set({
+        status: newStatus,
+        researchPlan: pipelineResult.researchPlan ?? undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogArticles.id, articleId))
+      .returning();
+    return row;
+  });
 
   return c.json(updatedArticle);
 });

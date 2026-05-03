@@ -434,6 +434,13 @@ export async function deleteBlogArticle(articleId: string) {
   return response.json();
 }
 
+export async function startBlogPlanning(articleId: string) {
+  const response = await fetchWithAuth(`/api/blog/${articleId}/plan`, {
+    method: 'POST',
+  });
+  return response.json();
+}
+
 export const api = {
   getCurrentUser,
   updateUser,
@@ -475,6 +482,7 @@ export const api = {
   createBlogArticle,
   updateBlogArticle,
   deleteBlogArticle,
+  startBlogPlanning,
 };
 
 export const clearTokenCache = () => {
