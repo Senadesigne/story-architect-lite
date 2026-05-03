@@ -1,5 +1,6 @@
 {
     "buildCommand": "cd ui && pnpm run build",
+    "installCommand": "pnpm install --filter ./ui --filter './ui...' --no-frozen-lockfile",
     "outputDirectory": "ui/dist",
     "rewrites": [
         {
