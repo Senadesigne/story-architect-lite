@@ -15,6 +15,7 @@ import { chaptersRouter } from './routes/chapters.routes.js';
 import { scenesRouter } from './routes/scenes.routes.js';
 import { aiRouter } from './routes/ai.routes.js';
 import { styleRouter } from './routes/style.routes.js';
+import { blogRouter } from './routes/blog.routes.js';
 
 const app = new Hono();
 
@@ -39,5 +40,6 @@ app.route('/api', chaptersRouter);
 app.route('/api', scenesRouter);
 app.route('/api', aiRouter);
 app.route('/api', styleRouter);
+app.route('/api', blogRouter);
 
 export default app;

@@ -122,6 +122,27 @@ export const UpdateSceneBodySchema = z.object({
   { message: 'At least one field must be provided' }
 );
 
+// ========== BLOG VALIDATION SCHEMAS ==========
+
+export const CreateBlogArticleBodySchema = z.object({
+  title: z.string().min(1, 'Title is required').trim(),
+  topic: z.string().min(1, 'Topic is required').trim(),
+  audience: z.string().optional(),
+});
+
+export const UpdateBlogArticleBodySchema = z.object({
+  title: z.string().min(1, 'Title cannot be empty').trim().optional(),
+  topic: z.string().optional(),
+  audience: z.string().optional(),
+  content: z.string().optional(),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  status: z.string().optional(), // 'draft' | 'planning' | 'researching' | 'writing' | 'reviewing' | 'done' | 'failed'
+}).refine(
+  (data) => Object.values(data).some(value => value !== undefined),
+  { message: 'At least one field must be provided' }
+);
+
 // ========== AI VALIDATION SCHEMAS ==========
 
 export const GenerateSceneSynopsisBodySchema = z.object({
@@ -160,4 +181,6 @@ export type CreateChapterBody = z.infer<typeof CreateChapterBodySchema>;
 export type UpdateChapterBody = z.infer<typeof UpdateChapterBodySchema>;
 export type GenerateSceneSynopsisBody = z.infer<typeof GenerateSceneSynopsisBodySchema>;
 export type ChatRequestBody = z.infer<typeof ChatRequestBodySchema>;
+export type CreateBlogArticleBody = z.infer<typeof CreateBlogArticleBodySchema>;
+export type UpdateBlogArticleBody = z.infer<typeof UpdateBlogArticleBodySchema>;
 
