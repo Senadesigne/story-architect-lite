@@ -395,6 +395,45 @@ export async function deleteSession(sessionId: string) {
   return response.json();
 }
 
+// Blog API
+export async function getBlogArticles() {
+  const response = await fetchWithAuth('/api/blog');
+  return response.json();
+}
+
+export async function getBlogArticle(articleId: string) {
+  const response = await fetchWithAuth(`/api/blog/${articleId}`);
+  return response.json();
+}
+
+export async function createBlogArticle(data: { title: string; topic: string; audience?: string }) {
+  const response = await fetchWithAuth('/api/blog', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function updateBlogArticle(
+  articleId: string,
+  data: Partial<{ title: string; topic: string; audience: string; content: string; metaTitle: string; metaDescription: string; status: string }>
+) {
+  const response = await fetchWithAuth(`/api/blog/${articleId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
+
+export async function deleteBlogArticle(articleId: string) {
+  const response = await fetchWithAuth(`/api/blog/${articleId}`, {
+    method: 'DELETE',
+  });
+  return response.json();
+}
+
 export const api = {
   getCurrentUser,
   updateUser,
@@ -431,6 +470,11 @@ export const api = {
   deleteWritingSample,
   getStyleFingerprint,
   analyzeStyle,
+  getBlogArticles,
+  getBlogArticle,
+  createBlogArticle,
+  updateBlogArticle,
+  deleteBlogArticle,
 };
 
 export const clearTokenCache = () => {

@@ -9,6 +9,8 @@ import { Settings } from '@/pages/Settings';
 import { Page1 } from '@/pages/Page1';
 import { Page2 } from '@/pages/Page2';
 import { ProjectPage } from '@/pages/ProjectPage';
+import { BlogList } from '@/pages/BlogList';
+import { BlogDetail } from '@/pages/BlogDetail';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
@@ -44,6 +46,8 @@ function AppContent() {
           <Route path="/page1" element={<MainLayout><Page1 /></MainLayout>} />
           <Route path="/page2" element={<MainLayout><Page2 /></MainLayout>} />
           <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
+          <Route path="/blog" element={<MainLayout><BlogList /></MainLayout>} />
+          <Route path="/blog/:articleId" element={<MainLayout><BlogDetail /></MainLayout>} />
           <Route path="/project/:projectId/*" element={<ProjectLayout><ProjectPage /></ProjectLayout>} />
         </Routes>
       )}

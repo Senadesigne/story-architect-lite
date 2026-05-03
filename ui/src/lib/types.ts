@@ -102,3 +102,41 @@ export interface Character {
   arcEnd?: string;
   projectId: string;
 }
+
+export type BlogArticleStatus = 'draft' | 'planning' | 'researching' | 'writing' | 'reviewing' | 'done' | 'failed';
+
+export interface BlogArticle {
+  id: string;
+  title: string;
+  topic: string;
+  audience?: string;
+  status: BlogArticleStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BlogDossier {
+  id: string;
+  articleId: string;
+  angle: string;
+  queries: string[];
+  sources: { url: string; title: string; excerpt: string }[];
+  dossierContent: string | null;
+  status: 'pending' | 'running' | 'done' | 'failed';
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+export interface BlogArticleFull extends BlogArticle {
+  userId: string;
+  researchPlan: { keyword: string; angles: string[] } | null;
+  researchBrief: string | null;
+  content: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  citationReport: {
+    claims: { claim: string; status: 'verified' | 'unverified'; url?: string }[];
+    status: string;
+  } | null;
+  dossiers: BlogDossier[];
+}

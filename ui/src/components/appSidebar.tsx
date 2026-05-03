@@ -1,8 +1,9 @@
-import { 
-  Home, 
-  Settings, 
+import {
+  Home,
+  Settings,
   FileText,
   Layers,
+  Newspaper,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -34,6 +35,14 @@ export function AppSidebar() {
                   <Link to="/">
                     <Home className="w-4 h-4" />
                     <span>Home</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Blog" isActive={isActive('/blog')} asChild>
+                  <Link to="/blog">
+                    <Newspaper className="w-4 h-4" />
+                    <span>Blog</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
